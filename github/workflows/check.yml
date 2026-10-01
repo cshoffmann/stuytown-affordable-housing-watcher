@@ -25,7 +25,8 @@ jobs:
       - name: Check for new units
         id: check
         env:
-          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
+          PUSHOVER_USER: ${{ secrets.PUSHOVER_USER }}
         run: python check_units.py
 
       - name: Install Playwright (only runs if a new unit was found)

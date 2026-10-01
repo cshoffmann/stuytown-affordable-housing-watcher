@@ -1,10 +1,11 @@
 """
 StuyTown / Peter Cooper Village Affordable Housing Watcher
 ------------------------------------------------------------
-Polls the real affordable-housing.stuytown.com listings API and sends a
-push notification (via ntfy.sh) the moment a new unit appears. When that
-happens, it also appends an entry to events.json (timestamp, unit count,
-bedroom breakdown) recording what was found.
+Polls the real affordable-housing.stuytown.com listings API and sends an
+Emergency-priority Pushover notification (bypasses silent/Do Not Disturb)
+the moment a new unit appears. When that happens, it also appends an entry
+to events.json (timestamp, unit count, bedroom breakdown) recording what
+was found.
 
 Meant to run under GitHub Actions on a schedule -- see
 .github/workflows/check.yml. Runs every 5 minutes but only actually checks
@@ -14,6 +15,7 @@ immediately without hitting the network.
 
 import json
 import os
+import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
@@ -24,7 +26,8 @@ ITEMS_PER_PAGE = 21  # matches what the site's own frontend requests
 
 STATE_FILE = "last_seen.json"
 EVENTS_FILE = "events.json"
-NTFY_TOPIC = os.environ.get("NTFY_TOPIC")
+PUSHOVER_TOKEN = os.environ.get("PUSHOVER_TOKEN")  # application API token
+PUSHOVER_USER = os.environ.get("PUSHOVER_USER")  # your personal user key
 
 WINDOW_START_HOUR = 7   # 7:00am ET, inclusive
 WINDOW_END_HOUR = 10    # 10:00am ET, exclusive
@@ -93,13 +96,30 @@ def save_last_seen(ids) -> None:
 
 
 def notify(message: str) -> None:
-    if not NTFY_TOPIC:
-        print("NTFY_TOPIC not set -- skipping notification. Message was:", message)
+    if not (PUSHOVER_TOKEN and PUSHOVER_USER):
+        print("PUSHOVER_TOKEN/PUSHOVER_USER not set -- skipping notification. Message was:", message)
         return
+    data = urllib.parse.urlencode(
+        {
+            "token": PUSHOVER_TOKEN,
+            "user": PUSHOVER_USER,
+            "title": "StuyTown affordable unit alert",
+            "message": message,
+            # Priority 2 = Emergency: bypasses silent mode/Do Not Disturb and
+            # keeps re-alerting until you acknowledge it or it expires.
+            # Required alongside priority=2: retry (seconds between repeats,
+            # 30 min) and expire (total seconds before giving up, 10800 max).
+            "priority": 2,
+            "retry": 60,
+            "expire": 3600,
+            # No "sound" set on purpose -- set your preferred Emergency-
+            # priority sound in the Pushover app itself (Settings -> sounds),
+            # so you control it from your phone rather than from this code.
+        }
+    ).encode()
     req = urllib.request.Request(
-        f"https://ntfy.sh/{NTFY_TOPIC}",
-        data=message.encode("utf-8"),
-        headers={"Title": "StuyTown affordable unit alert", "Priority": "urgent"},
+        "https://api.pushover.net/1/messages.json",
+        data=data,
         method="POST",
     )
     urllib.request.urlopen(req, timeout=10)
