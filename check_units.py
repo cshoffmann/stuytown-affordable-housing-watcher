@@ -24,13 +24,8 @@ from zoneinfo import ZoneInfo
 BASE_URL = "https://units.stuytown.com/api/ah-units"
 ITEMS_PER_PAGE = 21  # matches what the site's own frontend requests
 
-<<<<<<< HEAD
-STATE_FILE = "last_seen.json"
-EVENTS_FILE = "events.json"
-=======
 STATE_FILE = "data/last_seen.json"
 EVENTS_FILE = "data/events.json"
->>>>>>> continuous-watch-loop
 PUSHOVER_TOKEN = os.environ.get("PUSHOVER_TOKEN")  # application API token
 PUSHOVER_USER = os.environ.get("PUSHOVER_USER")  # your personal user key
 

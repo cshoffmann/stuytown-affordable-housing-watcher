@@ -1,14 +1,5 @@
 # StuyTown / PCV Affordable Housing Watcher
 
-<<<<<<< HEAD
-Checks the real StuyTown/PCV affordable housing listings every 5 minutes
-between 7-10am ET and sends an Emergency-priority Pushover notification
-(bypasses silent mode / Do Not Disturb) the moment a new unit appears.
-Also saves a screenshot and logs the details (unit count, bedrooms,
-timestamp) to `events.json`. Runs free on GitHub Actions -- nothing needs
-to stay running on your own computer, and it's already live now that the
-repo is pushed; there's no separate cron job to set up.
-=======
 Checks the real StuyTown/PCV affordable housing listings roughly every 15
 seconds between 7-10am ET (units reportedly go to only the first three
 applicants in order, so detection speed matters) and sends an
@@ -25,7 +16,6 @@ separate cron job to set up.
   random jitter) until just after 10am, when it exits on its own.
 - **`check.yml`** -- a single on-demand check, kept around for manual
   testing. No automatic schedule; only runs when you click "Run workflow."
->>>>>>> continuous-watch-loop
 
 ## Setup
 
@@ -36,20 +26,6 @@ separate cron job to set up.
 2. In this repo on GitHub: **Settings → Secrets and variables → Actions**,
    add two secrets: `PUSHOVER_TOKEN` (the API token) and `PUSHOVER_USER`
    (your user key).
-<<<<<<< HEAD
-3. That's it -- the schedule in `.github/workflows/check.yml` is already
-   active. Go to the **Actions** tab and run the workflow manually once
-   (`Run workflow`) to confirm it works right away, rather than waiting
-   for the next 7-10am ET window.
-
-## Confirming it's actually running
-
-The **Actions** tab shows every run, automatic or manual, with a
-timestamp and pass/fail status. During 7-10am ET you should see a new run
-roughly every 5 minutes; outside that window, runs still fire every 5
-minutes but each one just logs "Outside the 7-10am ET window" and exits
-immediately. Click into any run to see its logs.
-=======
 3. That's it -- the schedule in `.github/workflows/watch.yml` is already
    active. To confirm it works right away rather than waiting for
    tomorrow's window: Actions tab → **StuyTown continuous watcher (7-10am
@@ -83,19 +59,11 @@ are wired up correctly.
 All three start out empty (`data/` and `screenshots/` each ship with a
 placeholder `.gitkeep` file so the folders exist in the repo from the
 start) and fill in over time as the workflow commits to them.
->>>>>>> continuous-watch-loop
 
 ## Testing
 
 There are 0 real units listed right now, so test with fake data rather
 than waiting for a real one. Two different scripts, for two different
-<<<<<<< HEAD
-purposes:
-
-**`test_notification.py`** -- fires one real Pushover alert and does
-nothing else (no state or log files touched). Safe to run over and over
-while you tune your phone: silence it, run this, see what happens, adjust
-=======
 purposes -- and neither can ever touch the real `data/` or `screenshots/`
 folders, so there's nothing to clean up afterward and no risk of polluting
 real state (see "On test vs. production" below):
@@ -103,7 +71,6 @@ real state (see "On test vs. production" below):
 **`test_notification.py`** -- fires one real Pushover alert and does
 nothing else, no files touched at all. Safe to run over and over while
 you tune your phone: silence it, run this, see what happens, adjust
->>>>>>> continuous-watch-loop
 Pushover's Emergency-priority sound or your phone's Focus/DND exceptions,
 repeat.
 
@@ -111,33 +78,6 @@ repeat.
 PUSHOVER_TOKEN=your-token PUSHOVER_USER=your-user-key python3 test_notification.py
 ```
 
-<<<<<<< HEAD
-**`test_check_units.py`** -- run this once (not repeatedly) to confirm
-the full pipeline end to end: fakes a unit and the time window, then runs
-the real detection logic, writes a real `events.json` entry, and sends a
-real Pushover push. It prints the `events.json` content so you can
-eyeball that the bedroom count and timestamp look right.
-
-```bash
-PUSHOVER_TOKEN=your-token PUSHOVER_USER=your-user-key python3 test_check_units.py
-```
-
-Delete `last_seen.json` and `events.json` afterward so the real deployed
-workflow starts from an honest, empty baseline instead of this fake data.
-
-**Screenshot capture** -- no faking needed, it always screenshots
-whatever's live right now:
-
-```bash
-pip install playwright
-playwright install chromium
-python screenshot.py
-```
-
-## How duplicates and screenshots are handled
-
-- **No duplicate alerts for the same unit.** `last_seen.json` is the
-=======
 **`test_check_units.py`** -- a genuine simulation of the *entire*
 workflow, not just `check_units.py`: fakes a unit and the time window,
 runs the real detection logic, and -- exactly like the real workflow --
@@ -174,7 +114,6 @@ other.
 ## How duplicates are handled
 
 - **No duplicate alerts for the same unit.** `data/last_seen.json` is the
->>>>>>> continuous-watch-loop
   dedup check: a unit only triggers a notification/screenshot/event-log
   entry the moment it first appears relative to that file, never again on
   later runs while it stays listed. If a unit is later taken down and a
@@ -201,11 +140,6 @@ other.
   `check_units.py`'s functions; this is what actually runs live, 7-10am ET
 - `screenshot.py` -- takes the screenshot (only when something's found)
 - `test_notification.py` -- repeatable notification-only test, for tuning your phone
-<<<<<<< HEAD
-- `test_check_units.py` -- one-time full-pipeline test
-- `.github/workflows/check.yml` -- runs everything on a schedule
-=======
 - `test_check_units.py` -- one-time full-pipeline test, fully isolated to `test_output/`
 - `.github/workflows/watch.yml` -- the live schedule: one continuous loop, 7-10am ET
 - `.github/workflows/check.yml` -- manual-only single check, for testing
->>>>>>> continuous-watch-loop
