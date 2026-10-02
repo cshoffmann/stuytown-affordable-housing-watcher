@@ -1,0 +1,41 @@
+name: StuyTown continuous watcher (7-10am ET)
+
+on:
+  schedule:
+    # Fires at both the EDT- and EST-equivalent UTC times for 6:58am ET,
+    # so this never needs manual adjustment for daylight saving. Whichever
+    # one is "wrong" for the current season gets caught by
+    # near_window_start() in watch_loop.py and exits immediately instead
+    # of starting a second, overlapping multi-hour loop.
+    - cron: '58 10,11 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 220
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Playwright up front
+        # Not conditional here, unlike check.yml -- the whole point of
+        # this workflow is minimizing the gap between detection and
+        # notification/screenshot, so we pay the one-time install cost at
+        # job start rather than mid-loop.
+        run: |
+          pip install playwright
+          playwright install --with-deps chromium
+
+      - name: Run continuous watcher
+        env:
+          PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
+          PUSHOVER_USER: ${{ secrets.PUSHOVER_USER }}
+          BOUNDED_LOOP: "true"
+        run: python watch_loop.py
