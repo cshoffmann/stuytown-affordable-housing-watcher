@@ -24,8 +24,13 @@ from zoneinfo import ZoneInfo
 BASE_URL = "https://units.stuytown.com/api/ah-units"
 ITEMS_PER_PAGE = 21  # matches what the site's own frontend requests
 
+<<<<<<< HEAD
 STATE_FILE = "last_seen.json"
 EVENTS_FILE = "events.json"
+=======
+STATE_FILE = "data/last_seen.json"
+EVENTS_FILE = "data/events.json"
+>>>>>>> continuous-watch-loop
 PUSHOVER_TOKEN = os.environ.get("PUSHOVER_TOKEN")  # application API token
 PUSHOVER_USER = os.environ.get("PUSHOVER_USER")  # your personal user key
 
@@ -91,6 +96,7 @@ def load_last_seen():
 
 
 def save_last_seen(ids) -> None:
+    os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
     with open(STATE_FILE, "w") as f:
         json.dump({"unit_ids": sorted(ids)}, f)
 
@@ -164,6 +170,7 @@ def record_event(timestamp: str, new_units: list, screenshot_filename: str) -> N
         }
     )
 
+    os.makedirs(os.path.dirname(EVENTS_FILE), exist_ok=True)
     with open(EVENTS_FILE, "w") as f:
         json.dump(events, f, indent=2)
 
@@ -180,6 +187,11 @@ def set_github_output(name: str, value: str) -> None:
 
 
 def main() -> None:
+    # Prints on every run, in-window or not, so you can confirm GitHub's
+    # secrets are actually wired up by reading any run's log -- without
+    # needing to wait for a real unit to appear and actually trigger notify().
+    print(f"Pushover credentials loaded: {bool(PUSHOVER_TOKEN and PUSHOVER_USER)}")
+
     if not within_window():
         print("Outside the 7-10am ET window -- skipping this run.")
         set_github_output("new_unit_found", "false")
