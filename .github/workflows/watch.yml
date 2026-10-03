@@ -1,14 +1,38 @@
-name: StuyTown continuous watcher (7-10am ET)
+name: StuyTown watcher (7-10am ET, every 15s)
 
 on:
   schedule:
-    # Fires at both the EDT- and EST-equivalent UTC times for 6:58am ET,
-    # so this never needs manual adjustment for daylight saving. Whichever
-    # one is "wrong" for the current season gets caught by
-    # near_window_start() in watch_loop.py and exits immediately instead
-    # of starting a second, overlapping multi-hour loop.
-    - cron: '58 10,11 * * *'
-  workflow_dispatch: {}
+    # Every day at 6:13, 6:43, 7:13 ... 9:43 New York time (daylight saving
+    # handled by GitHub via `timezone`).
+    #
+    # 6:13 is the real start: the job sets up, waits for 7:00, then checks
+    # every 15 seconds until 10:00. Everything after it is a backup, because
+    # GitHub's scheduler can start runs late or skip them (in this repo's
+    # first days it did both -- one run arrived ~4 hours late). If the 6:13
+    # run never shows up, the next one that does takes over for whatever is
+    # left of the window. While a watcher is running, backups wait in line
+    # (see `concurrency` below) and exit within seconds once it's done, so
+    # most of them show as "cancelled" in the Actions tab -- that's normal.
+    # Off the top of the hour on purpose: GitHub's busiest (most delayed)
+    # time is :00.
+    - cron: '13,43 6-9 * * *'
+      timezone: 'America/New_York'
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: 'Test run: check for this many minutes, starting now (0 = normal 7-10am ET run)'
+        type: number
+        default: 0
+      send_test_alert:
+        description: 'Send a [TEST] alert to your phone at startup (proves the Pushover secrets work)'
+        type: boolean
+        default: false
+
+# Only one watcher at a time: a run triggered while another is going waits
+# for it instead of polling (and alerting) twice.
+concurrency:
+  group: stuytown-watcher
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -16,7 +40,8 @@ permissions:
 jobs:
   watch:
     runs-on: ubuntu-latest
-    timeout-minutes: 220
+    # Earliest possible start (6:00) to 10:00 is 4 hours, plus setup.
+    timeout-minutes: 270
     steps:
       - uses: actions/checkout@v4
 
@@ -24,18 +49,23 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Playwright up front
-        # Not conditional here, unlike check.yml -- the whole point of
-        # this workflow is minimizing the gap between detection and
-        # notification/screenshot, so we pay the one-time install cost at
-        # job start rather than mid-loop.
+      - name: Install dependencies
+        # The browser for screenshots is installed up front, so a screenshot
+        # (taken right after an alert goes out) doesn't wait on a download.
         run: |
-          pip install playwright
+          pip install -r requirements.txt
           playwright install --with-deps chromium
 
-      - name: Run continuous watcher
+      - name: Watch for new units
         env:
           PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
           PUSHOVER_USER: ${{ secrets.PUSHOVER_USER }}
-          BOUNDED_LOOP: "true"
-        run: python watch_loop.py
+          COMMIT_RESULTS: "true"
+          PYTHONUNBUFFERED: "1"  # stream the log live instead of in chunks
+          TEST_MINUTES: ${{ inputs.minutes }}
+          SEND_TEST_ALERT: ${{ inputs.send_test_alert }}
+        run: |
+          args=()
+          if [ -n "$TEST_MINUTES" ] && [ "$TEST_MINUTES" != "0" ]; then args+=(--minutes "$TEST_MINUTES"); fi
+          if [ "$SEND_TEST_ALERT" = "true" ]; then args+=(--send-test-alert); fi
+          python watch_loop.py "${args[@]}"

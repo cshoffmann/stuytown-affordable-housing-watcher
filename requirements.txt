@@ -1,0 +1,4 @@
+# Screenshots. After installing, also run once:  playwright install chromium
+playwright>=1.45
+# Time zone data for "7-10am Eastern" -- built into Linux/Mac, missing on Windows.
+tzdata

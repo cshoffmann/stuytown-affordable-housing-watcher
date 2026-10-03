@@ -1,137 +1,199 @@
 """
-Continuous watcher -- checks the live API every POLL_INTERVAL_SECONDS
-instead of relying on a fresh process every 5 minutes. Reuses every
-function from check_units.py and screenshot.py unchanged; this script is
-purely orchestration on top of logic that's already tested elsewhere.
+The live watcher: checks the StuyTown affordable listings every 15 seconds
+from 7:00 to 10:00am ET, then exits. GitHub Actions starts it every morning
+(.github/workflows/watch.yml). All of the "is this new? should I alert?"
+logic lives in check_units.py -- this file is the timing, the screenshot,
+and saving results back to the repo.
 
-Two modes, controlled by the BOUNDED_LOOP env var:
-  - "true" (default): for GitHub Actions. A single job is triggered once
-    near 7am ET and this loops internally until just after 10am ET, then
-    exits. See .github/workflows/watch.yml.
-  - "false": for an always-on server (a cloud VM or a home Pi). Runs
-    forever; polls tightly (every POLL_INTERVAL_SECONDS) only during
-    7-10am ET, and just checks once a minute the rest of the day so it
-    doesn't hammer the site for no reason outside the window that
-    actually matters.
+    python watch_loop.py                     # the real thing: if started before 7:00 ET it waits, then checks until 10:00 ET
+    python watch_loop.py --minutes 5         # test run: check every 15s for 5 minutes starting now, ignoring the window
+    python watch_loop.py --send-test-alert   # also send a [TEST] alert at startup, proving the Pushover keys work
 
-Because units here are reportedly given to only the first three
-applicants in order, the whole point of this script over check_units.py's
-normal 5-minute cadence is cutting detection latency from "up to ~5
-minutes" down to "up to ~15 seconds."
+Results (data/, screenshots/) are committed and pushed only when
+COMMIT_RESULTS=true, which only the workflow sets -- running this on your
+own computer never touches git.
 """
 
+import argparse
+import functools
+import json
 import os
-import random
 import subprocess
+import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 import check_units
-import screenshot
 
-POLL_INTERVAL_SECONDS = 15  # average/nominal -- actual sleep has jitter, see sleep_with_jitter()
-POLL_JITTER_SECONDS = 3  # actual sleep is POLL_INTERVAL_SECONDS +/- this (so 12-18s), to avoid a perfectly fixed interval
-IDLE_CHECK_INTERVAL_SECONDS = 60  # how often to check the clock when outside the window, in always-on mode
-WINDOW_END_HOUR = 10
-EXIT_BUFFER_MINUTES = 5  # bounded mode keeps looping a few minutes past 10am, just in case
-
-
-def near_window_start() -> bool:
-    """True only in the ~10 minutes around 7:00am ET. Used to suppress the
-    redundant one of the two daily triggers in watch.yml (see that file's
-    comments) -- without this, both the EDT- and EST-timed cron entries
-    would each try to start a full multi-hour loop on the same morning."""
-    now_et = datetime.now(ZoneInfo("America/New_York"))
-    start = now_et.replace(hour=6, minute=55, second=0, microsecond=0)
-    end = now_et.replace(hour=7, minute=5, second=0, microsecond=0)
-    return start <= now_et <= end
+POLL_INTERVAL_SECONDS = 15
+WINDOW_START_HOUR = 7  # 7:00am ET
+WINDOW_END_HOUR = 10  # 10:00am ET
+# A run started more than this long before 7:00 exits instead of sitting
+# idle. Only a manual run can do that -- the schedule starts at 6:13.
+MAX_WAIT_BEFORE_WINDOW = timedelta(hours=1)
+# GitHub switches off schedules in public repos after 60 days without a
+# commit. A quiet stretch with no listings would do exactly that, so after
+# this many days without one, the watcher commits a tiny heartbeat file.
+KEEPALIVE_AFTER_DAYS = 45
+HEARTBEAT_FILE = "data/heartbeat.json"
 
 
-def sleep_with_jitter() -> None:
-    time.sleep(POLL_INTERVAL_SECONDS + random.uniform(-POLL_JITTER_SECONDS, POLL_JITTER_SECONDS))
+@functools.cache
+def _eastern() -> ZoneInfo:
+    # Looked up lazily: Windows needs the tzdata package for this, and the
+    # tests don't need it at all.
+    return ZoneInfo("America/New_York")
 
 
-def should_keep_looping(bounded: bool) -> bool:
-    if not bounded:
-        return True  # always-on server: never exits on its own
-    now_et = datetime.now(ZoneInfo("America/New_York"))
-    cutoff = now_et.replace(hour=WINDOW_END_HOUR, minute=EXIT_BUFFER_MINUTES, second=0, microsecond=0)
-    return now_et < cutoff
+def now_et() -> datetime:
+    return datetime.now(_eastern())
 
 
-def git_commit_and_push(message: str) -> None:
-    subprocess.run(["git", "config", "user.name", "github-actions[bot]"], check=False)
-    subprocess.run(
-        ["git", "config", "user.email", "github-actions[bot]@users.noreply.github.com"],
-        check=False,
-    )
-    subprocess.run(["git", "add", "-A"], check=True)
-    nothing_staged = subprocess.run(["git", "diff", "--staged", "--quiet"]).returncode == 0
-    if nothing_staged:
-        return
-    subprocess.run(["git", "commit", "-m", message], check=True)
-    subprocess.run(["git", "push"], check=True)
+def plan(now: datetime) -> tuple:
+    """What a run started at `now` (ET) should do: ("watch", start, end) --
+    waiting for `start` first if it's early -- or "too_early" / "done"."""
+    start = now.replace(hour=WINDOW_START_HOUR, minute=0, second=0, microsecond=0)
+    end = now.replace(hour=WINDOW_END_HOUR, minute=0, second=0, microsecond=0)
+    if now >= end:
+        return "done", start, end
+    if now < start - MAX_WAIT_BEFORE_WINDOW:
+        return "too_early", start, end
+    return "watch", start, end
 
 
-def check_once() -> None:
+def live_screenshot(path: str) -> bool:
+    import screenshot  # here, so Playwright is only needed once a screenshot is actually taken
+
+    screenshot.take(path)
+    return True
+
+
+def poll_once(take_screenshot=live_screenshot, label: str | None = None) -> check_units.Changes:
+    """One check: fetch the listings, compare, alert, and save the results.
+    Pass take_screenshot=None to skip screenshots."""
     units = check_units.fetch_all_units()
-    current_ids = {check_units.unit_id(u) for u in units}
-    previous_ids = check_units.load_last_seen()
-
-    check_units.save_last_seen(current_ids)
-
-    if previous_ids is None:
-        print(f"Baseline -- {len(current_ids)} unit(s) currently listed.")
-        git_commit_and_push("Baseline from continuous watcher")
-        return
-
-    new_ids = current_ids - previous_ids
-    if not new_ids:
-        return  # the common case, every ~15 seconds: nothing changed, don't even touch git
-
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
-    new_units = [u for u in units if check_units.unit_id(u) in new_ids]
-    screenshot_filename = check_units.build_screenshot_filename(timestamp, new_units)
-
-    print(f"NEW UNIT(S) DETECTED: {new_ids} -- notifying immediately")
-    check_units.notify(
-        f"{len(new_ids)} new unit(s) just posted at StuyTown/PCV affordable "
-        f"housing -- affordable-housing.stuytown.com/apartments/"
+    changes = check_units.process_snapshot(
+        units, take_screenshot=take_screenshot, label=label or f"{now_et():%H:%M:%S} ET"
     )
-    check_units.record_event(timestamp, new_units, screenshot_filename)
-
-    # Screenshot failure should never block the notification that already
-    # went out above -- that's the part that actually matters.
-    os.environ["SCREENSHOT_FILENAME"] = screenshot_filename
-    try:
-        screenshot.main()
-    except Exception as e:
-        print(f"Screenshot failed (notification already sent, non-critical): {e}")
-
-    git_commit_and_push(f"New unit(s) detected: {', '.join(sorted(new_ids))}")
+    if changes:
+        commit_and_push(f"Listings changed: {changes.summary()}")
+    return changes
 
 
-def main() -> None:
-    bounded = os.environ.get("BOUNDED_LOOP", "true").lower() == "true"
-
-    if bounded and not near_window_start():
-        print("Not near the 7am ET window start -- this is the redundant "
-              "DST-safety trigger (see watch.yml), exiting without looping.")
-        return
-
-    print(f"Starting watcher (bounded={bounded}, poll interval={POLL_INTERVAL_SECONDS}s)...")
-    while should_keep_looping(bounded):
-        if check_units.within_window():
-            try:
-                check_once()
-            except Exception as e:
-                print(f"Error during check (will retry next iteration): {e}")
-            sleep_with_jitter()
+def watch_until(end: datetime) -> None:
+    print(f"Checking every {POLL_INTERVAL_SECONDS}s until {end:%H:%M} ET -- {check_units.LISTINGS_URL}")
+    checks = failures = 0
+    next_check = time.monotonic()
+    while now_et() < end:
+        checks += 1
+        try:
+            poll_once()
+        except Exception as e:
+            failures += 1
+            print(f"[{now_et():%H:%M:%S} ET] Check failed, trying again next check: {e}")
+        # Keep a steady 15s rhythm measured start-to-start, so a slow check
+        # (e.g. one that took a screenshot) doesn't push everything later.
+        next_check += POLL_INTERVAL_SECONDS
+        delay = next_check - time.monotonic()
+        if delay > 0:
+            time.sleep(delay)
         else:
-            time.sleep(IDLE_CHECK_INTERVAL_SECONDS)
-    print("Loop window ended, exiting.")
+            next_check = time.monotonic()
+    print(f"Done: {checks} checks, {failures} failed.")
+
+
+def commit_and_push(message: str) -> None:
+    """Commit data/ and screenshots/ and push, so the next morning's run
+    starts from today's state (and you can browse it on GitHub). Only when
+    COMMIT_RESULTS=true. Never raises -- a git hiccup must not stop the
+    watcher."""
+    if os.environ.get("COMMIT_RESULTS", "").lower() != "true":
+        return
+    try:
+        _git("config", "user.name", "github-actions[bot]")
+        _git("config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com")
+        _git("add", "--", "data", "screenshots")
+        if _git("diff", "--cached", "--quiet", check=False).returncode == 0:
+            return  # nothing to commit
+        _git("commit", "--quiet", "-m", message[:200])
+        for _ in range(3):
+            if _git("push", "--quiet", check=False).returncode == 0:
+                print("   Results committed and pushed.")
+                return
+            # Something else was pushed to main meanwhile (e.g. a code
+            # change from you) -- replay this commit on top and try again.
+            if _git("pull", "--rebase", "--autostash", "--quiet", check=False).returncode != 0:
+                _git("rebase", "--abort", check=False)
+        print("   WARNING: couldn't push results; they'll go out with the next push.")
+    except Exception as e:
+        print(f"   WARNING: git commit/push failed: {e}")
+
+
+def _git(*args, check=True):
+    return subprocess.run(["git", *args], check=check)
+
+
+def keep_schedule_alive() -> None:
+    if os.environ.get("COMMIT_RESULTS", "").lower() != "true":
+        return
+    result = subprocess.run(["git", "log", "-1", "--format=%ct"], capture_output=True, text=True)
+    last_commit = int(result.stdout.strip() or 0)
+    if time.time() - last_commit < KEEPALIVE_AFTER_DAYS * 86400:
+        return
+    with open(HEARTBEAT_FILE, "w", encoding="utf-8") as f:
+        json.dump({"last_keepalive_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}, f)
+        f.write("\n")
+    commit_and_push("Keepalive: no commits in a while (stops GitHub disabling the daily schedule)")
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(description="Watch the StuyTown affordable listings, 7-10am ET.")
+    parser.add_argument("--minutes", type=float, default=0,
+                        help="test run: check for this many minutes starting now, ignoring the 7-10am window")
+    parser.add_argument("--send-test-alert", action="store_true",
+                        help="send a [TEST] alert at startup, to prove the Pushover keys work")
+    args = parser.parse_args(argv)
+
+    print(f"Pushover credentials loaded: {bool(check_units.PUSHOVER_TOKEN and check_units.PUSHOVER_USER)}")
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        problem = check_units.validate_pushover_credentials()
+        if problem:
+            # Fail loudly (red X + an email from GitHub) rather than watch
+            # all morning with no way to reach your phone.
+            print(f"ERROR: {problem}. Check the PUSHOVER_TOKEN / PUSHOVER_USER repository secrets.")
+            return 1
+
+    if args.send_test_alert and check_units.notify(
+        "[TEST] StuyTown watcher is running",
+        "If you're reading this on your phone, new-unit alerts will reach you too.",
+        url=check_units.LISTINGS_URL,
+        url_title="Open the listings page",
+    ):
+        print("Test alert sent.")
+
+    if args.minutes > 0:
+        end = now_et() + timedelta(minutes=args.minutes)
+    else:
+        status, start, end = plan(now_et())
+        if status == "done":
+            print(f"It's past {WINDOW_END_HOUR}:00 ET, so today's window is over -- nothing to do. "
+                  "(Normal for the backup runs that queue behind the main one; "
+                  "use --minutes N for a test run.)")
+            return 0
+        if status == "too_early":
+            print(f"More than an hour before the {WINDOW_START_HOUR}:00 ET window -- exiting.")
+            return 0
+        wait = (start - now_et()).total_seconds()
+        if wait > 0:
+            print(f"Started early -- waiting {wait / 60:.0f} min for the {WINDOW_START_HOUR}:00 ET window.")
+            time.sleep(wait)
+
+    watch_until(end)
+    commit_and_push("End of watch window: save state")
+    keep_schedule_alive()
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.tmp
+
+# Everything tests/simulate_morning.py writes
+tests/output/
