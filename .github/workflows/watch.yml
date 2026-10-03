@@ -27,6 +27,10 @@ on:
         description: 'Send a [TEST] alert to your phone at startup (proves the Pushover secrets work)'
         type: boolean
         default: false
+      fake_morning:
+        description: 'Test the whole flow instead: replay a fake morning (fake units, real [TEST] alerts + screenshots; no commits)'
+        type: boolean
+        default: false
 
 # Only one watcher at a time: a run triggered while another is going waits
 # for it instead of polling (and alerting) twice.
@@ -64,8 +68,21 @@ jobs:
           PYTHONUNBUFFERED: "1"  # stream the log live instead of in chunks
           TEST_MINUTES: ${{ inputs.minutes }}
           SEND_TEST_ALERT: ${{ inputs.send_test_alert }}
+          FAKE_MORNING: ${{ inputs.fake_morning }}
         run: |
+          if [ "$FAKE_MORNING" = "true" ]; then
+            # tests/simulate_morning.py never commits; its output is uploaded below instead.
+            python tests/simulate_morning.py
+            exit
+          fi
           args=()
           if [ -n "$TEST_MINUTES" ] && [ "$TEST_MINUTES" != "0" ]; then args+=(--minutes "$TEST_MINUTES"); fi
           if [ "$SEND_TEST_ALERT" = "true" ]; then args+=(--send-test-alert); fi
           python watch_loop.py "${args[@]}"
+
+      - name: Upload the fake morning's screenshots and events log
+        if: ${{ always() && inputs.fake_morning }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: fake-morning-output
+          path: tests/output/
