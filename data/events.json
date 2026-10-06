@@ -1,0 +1,113 @@
+[
+  {
+    "event": "new",
+    "detected_at_utc": "2026-10-06T11:15:00Z",
+    "unit_count": 1,
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~245~U~02-D",
+        "apartment": "02-D",
+        "address": "245 Avenue C",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 4405.4,
+        "income_requirement": 151042.3,
+        "available_date": "2026-10-06T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~245~U~02-D",
+        "data": {
+          "unitSpk": "P~NYST31~B~245~U~02-D",
+          "unitFloor": "02",
+          "name": "02-D",
+          "property": {
+            "name": "Stuyvesant Town",
+            "propertySpk": "P~103ST",
+            "commonImages": []
+          },
+          "building": {
+            "address": "245 AVENUE C",
+            "latitude": "40.729164",
+            "longitude": "-73.97565",
+            "buildingId": "350",
+            "buildingName": "245 AVENUE C",
+            "transportationDescription": "Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.",
+            "transports": [
+              {
+                "imageUrl": "/media/t02dfmty/l.png",
+                "description": "22_L"
+              },
+              {
+                "imageUrl": "/media/w4rlarll/m9.png",
+                "description": "29_M9"
+              },
+              {
+                "imageUrl": "/media/hvwoaov3/m14.png",
+                "description": "30_M14"
+              },
+              {
+                "imageUrl": "/media/trsfb4aw/east-river-ferry.jpg",
+                "description": "37_RiverFerry"
+              },
+              {
+                "imageUrl": "/media/1ojhg5wj/citbike.png",
+                "description": "35_CityBike"
+              }
+            ]
+          },
+          "finish": "Classic",
+          "style": {
+            "id": 578,
+            "name": "105"
+          },
+          "incomeRequirement": 151042.3,
+          "bedrooms": 1,
+          "bathrooms": 1,
+          "sqft": 790,
+          "availableDate": "2026-10-06T00:00:00Z",
+          "price": 4405.4,
+          "unitRates": {
+            "12": 4405.4,
+            "24": 4405.4
+          },
+          "isFlex": false,
+          "floorplan": {
+            "floorplanSvg": "/media/qfsa4tig/105.svg",
+            "staticImageUrl": null
+          },
+          "description": null,
+          "virtualTourUrl": null,
+          "version": 4,
+          "amenities": [
+            {
+              "searchCode": null,
+              "code": "NFF",
+              "friendlyDescription": "Natural finish wood flooring"
+            },
+            {
+              "searchCode": null,
+              "code": "FS02",
+              "friendlyDescription": "2nd floor"
+            },
+            {
+              "searchCode": null,
+              "code": "PBGK",
+              "friendlyDescription": "Galley kitchen"
+            },
+            {
+              "searchCode": null,
+              "code": "zMET",
+              "friendlyDescription": "Classic finish"
+            },
+            {
+              "searchCode": null,
+              "code": "MAVM",
+              "friendlyDescription": "Renovated bathroom"
+            }
+          ],
+          "images": []
+        }
+      }
+    ],
+    "screenshot": "screenshots/2026-10-06T11-15-00Z_02-D.png",
+    "alert_sent": true
+  }
+]
