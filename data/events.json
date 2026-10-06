@@ -109,5 +109,23 @@
     ],
     "screenshot": "screenshots/2026-10-06T11-15-00Z_02-D.png",
     "alert_sent": true
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-10-06T12:03:00Z",
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~245~U~02-D",
+        "apartment": "02-D",
+        "address": "245 Avenue C",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 4405.4,
+        "income_requirement": 151042.3,
+        "available_date": "2026-10-06T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~245~U~02-D",
+        "first_seen_utc": "2026-10-06T11:15:00Z"
+      }
+    ]
   }
 ]
