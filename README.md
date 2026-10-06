@@ -6,7 +6,8 @@ alert (bypasses silent mode / Do Not Disturb) the moment a new unit appears —
 with a link straight to that unit's page so you can apply. Each unit closes
 after 3 applications, so speed matters. It also logs the unit's details to
 `data/events.json` and saves a screenshot of the listings page. Runs free on
-GitHub Actions; nothing has to stay running on your computer.
+GitHub Actions, started each morning by Google Cloud Scheduler (free tier);
+nothing has to stay running on your computer.
 
 ## How alerts work (no duplicates)
 
@@ -29,17 +30,32 @@ run: if units are already listed the first time it runs, you're alerted.
 The state is committed back to the repo whenever it changes and at the end of
 each morning, so the next day picks up exactly where the last one left off.
 
-## The schedule (`.github/workflows/watch.yml`)
+## The schedule
 
-- Triggers every day at **6:13am New York time** (daylight saving handled by
-  GitHub's `timezone` setting). The job sets up, waits for 7:00, checks every
-  15 seconds until 10:00, then exits. You'll see one ~4-hour run per day.
-- **Backup triggers** at 6:43, 7:13 … 9:43. GitHub's scheduler can start runs
-  late or skip them (in this repo's first days, one run arrived ~4 hours
-  late), so if the 6:13 run never shows up, the next one that fires takes over
-  for whatever is left of the window. While a watcher is running, backups wait
-  in line and are replaced by newer ones — **"cancelled" runs in the Actions
-  tab are normal** — and the last one exits within seconds after 10:00.
+Two independent triggers start the same workflow
+(`.github/workflows/watch.yml`):
+
+1. **Google Cloud Scheduler — the main trigger.** A job fires every day at
+   **6:13am New York time** and calls GitHub's API to start the workflow
+   (the same as tapping **Run workflow**), so the run starts within seconds
+   and shows as **"via manual request"** in the Actions tab. The job sets up,
+   waits for 7:00, checks every 15 seconds until 10:00, then exits. You'll
+   see one ~4-hour run per day. Setup is under
+   [Google Cloud Scheduler](#google-cloud-scheduler-the-613am-start) below.
+2. **GitHub's own schedule — the backup.** The workflow's `schedule` fires at
+   6:13, 6:43, 7:13 … 9:43 (shows as **"via schedule"**). GitHub's scheduler
+   is best-effort: in this repo's first week its runs arrived 4 to 9 hours
+   late or not at all, which is why it isn't the main trigger. It's kept
+   because it's free and harmless: while a watcher is running, backups wait
+   in line and are replaced by newer ones — **"cancelled" runs in the Actions
+   tab are normal** — and one that arrives after 10:00 exits within a minute.
+   On a morning the Google trigger fails, an on-time backup covers whatever
+   is left of the window.
+
+Only one watcher ever runs at a time, so the two triggers can't double-alert.
+
+Other safeguards:
+
 - If the Pushover secrets are missing or wrong, the run fails immediately with
   a red X (and GitHub emails you) instead of silently watching with no way to
   reach your phone.
@@ -59,6 +75,61 @@ To watch it live: Actions tab → today's **StuyTown watcher** run → expand
    `PUSHOVER_TOKEN` (the API token) and `PUSHOVER_USER` (your user key).
 3. In the Pushover app, pick a sound for Emergency-priority alerts, and allow
    Pushover through your phone's Focus / Do Not Disturb settings.
+4. Set up the 6:13am trigger in Google Cloud Scheduler (next section).
+
+### Google Cloud Scheduler (the 6:13am start)
+
+Free: Cloud Scheduler includes 3 jobs per billing account, and this uses 1.
+Daily runs don't count against that.
+
+**Google Cloud account.** Sign up at cloud.google.com (a card is required to
+verify you, but isn't charged). Then:
+
+- Click **Activate full account** (or upgrade under **Billing**). A free-trial
+  account shuts down after 90 days and stops the job; an upgraded one keeps
+  the free allowance, so this still costs $0.
+- Under **Billing → Budgets & alerts**, create a **$1** budget so Google
+  emails you if anything ever starts to cost money.
+
+**GitHub token.** github.com → Settings → Developer settings → Personal
+access tokens → **Fine-grained tokens** → Generate new token:
+
+- Repository access: **Only select repositories** → this repo
+- Repository permissions: **Actions → Read and write** (nothing else)
+- Expiration: the longest offered. **Put a reminder in your calendar a week
+  before it expires** — an expired token silently stops the 6:13 start (the
+  GitHub backup schedule would still run, but unreliably).
+
+**The job.** In the Google Cloud console, search **Cloud Scheduler** → enable
+the API if asked → **Create job**:
+
+| Field | Value |
+| --- | --- |
+| Name | `start-stuytown-watcher` |
+| Region | any (this repo's uses `us-central1`) |
+| Frequency | `13 6 * * *` |
+| Timezone | `America/New_York` (handles daylight saving) |
+| Target type | HTTP |
+| URL | `https://api.github.com/repos/cshoffmann/stuytown-affordable-housing-watcher/actions/workflows/watch.yml/dispatches` |
+| HTTP method | POST |
+| Body | `{"ref":"main"}` |
+| Header `Authorization` | `Bearer <your github_pat_… token>` |
+| Header `Accept` | `application/vnd.github+json` |
+| Header `X-GitHub-Api-Version` | `2022-11-28` |
+| Header `Content-Type` | `application/json` |
+| Auth header | None |
+| Max retry attempts / Min backoff | `3` / `30s` |
+
+**Test it:** ⋮ → **Force run**. After a minute or two (click the console's
+own **Refresh**), *Status of last execution* should say **Success** and a
+"via manual request" run should appear in the Actions tab. Outside 6–10am
+that run exits in about a minute saying the window is over — that's expected.
+If it says **Failed**, the job's logs show GitHub's answer: 401 = token
+pasted wrong or `Bearer ` missing, 403 = token lacks Actions write, 404 =
+token not scoped to this repo.
+
+**Renewing the token:** generate a new one the same way, then edit the job
+and replace the `Authorization` header value. Force run once to confirm.
 
 ## Testing
 
@@ -135,4 +206,5 @@ there. (Run it outside 7–10am, or it waits for the morning run to finish.)
 - `screenshots/` — one screenshot per new-unit event
 - `tests/` — automated tests, the phone simulation, the test alert, and the
   fake data they use (`tests/fixtures/`)
-- `.github/workflows/watch.yml` — the daily schedule
+- `.github/workflows/watch.yml` — the workflow; Google Cloud Scheduler starts
+  it each morning, and its own `schedule` is the backup
