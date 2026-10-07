@@ -324,5 +324,35 @@
     ],
     "screenshot": "screenshots/2026-10-07T11-30-00Z_04-B.png",
     "alert_sent": true
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-10-07T12:04:00Z",
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~277~U~04-B",
+        "apartment": "04-B",
+        "address": "277 Avenue C",
+        "bedrooms": 2,
+        "bathrooms": 1,
+        "price": 4502.74,
+        "income_requirement": 160093.7,
+        "available_date": "2026-09-15T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~277~U~04-B",
+        "first_seen_utc": "2026-10-07T11:30:00Z"
+      },
+      {
+        "unit_id": "P~NYST31~B~653~U~02-F",
+        "apartment": "02-F",
+        "address": "653 East 14th Street",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 4470.82,
+        "income_requirement": 153285.27,
+        "available_date": "2026-09-19T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~653~U~02-F",
+        "first_seen_utc": "2026-10-07T11:15:00Z"
+      }
+    ]
   }
 ]
