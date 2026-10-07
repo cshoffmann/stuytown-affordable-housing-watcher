@@ -223,5 +223,106 @@
     ],
     "screenshot": "screenshots/2026-10-07T11-15-00Z_02-F.png",
     "alert_sent": true
+  },
+  {
+    "event": "new",
+    "detected_at_utc": "2026-10-07T11:30:00Z",
+    "unit_count": 1,
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~277~U~04-B",
+        "apartment": "04-B",
+        "address": "277 Avenue C",
+        "bedrooms": 2,
+        "bathrooms": 1,
+        "price": 4502.74,
+        "income_requirement": 160093.7,
+        "available_date": "2026-09-15T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~277~U~04-B",
+        "data": {
+          "unitSpk": "P~NYST31~B~277~U~04-B",
+          "unitFloor": "04",
+          "name": "04-B",
+          "property": {
+            "name": "Stuyvesant Town",
+            "propertySpk": "P~103ST",
+            "commonImages": []
+          },
+          "building": {
+            "address": "277 AVENUE C",
+            "latitude": "40.7301",
+            "longitude": "-73.974815",
+            "buildingId": "311",
+            "buildingName": "277 AVENUE C",
+            "transportationDescription": "Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.",
+            "transports": [
+              {
+                "imageUrl": "/media/t02dfmty/l.png",
+                "description": "22_L"
+              },
+              {
+                "imageUrl": "/media/w4rlarll/m9.png",
+                "description": "29_M9"
+              },
+              {
+                "imageUrl": "/media/hvwoaov3/m14.png",
+                "description": "30_M14"
+              },
+              {
+                "imageUrl": "/media/trsfb4aw/east-river-ferry.jpg",
+                "description": "37_RiverFerry"
+              },
+              {
+                "imageUrl": "/media/1ojhg5wj/citbike.png",
+                "description": "35_CityBike"
+              }
+            ]
+          },
+          "finish": "Classic",
+          "style": {
+            "id": 597,
+            "name": "124"
+          },
+          "incomeRequirement": 160093.7,
+          "bedrooms": 2,
+          "bathrooms": 1,
+          "sqft": 932,
+          "availableDate": "2026-09-15T00:00:00Z",
+          "price": 4502.74,
+          "unitRates": {
+            "12": 4502.74,
+            "24": 4502.74
+          },
+          "isFlex": false,
+          "floorplan": {
+            "floorplanSvg": "/media/ftzm0drw/124.svg",
+            "staticImageUrl": null
+          },
+          "description": null,
+          "virtualTourUrl": null,
+          "version": 10,
+          "amenities": [
+            {
+              "searchCode": null,
+              "code": "NFF",
+              "friendlyDescription": "Natural finish wood flooring"
+            },
+            {
+              "searchCode": null,
+              "code": "zMET",
+              "friendlyDescription": "Classic finish"
+            },
+            {
+              "searchCode": null,
+              "code": "FS04",
+              "friendlyDescription": "4th Floor"
+            }
+          ],
+          "images": []
+        }
+      }
+    ],
+    "screenshot": "screenshots/2026-10-07T11-30-00Z_04-B.png",
+    "alert_sent": true
   }
 ]

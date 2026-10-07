@@ -1,5 +1,90 @@
 {
   "units": {
+    "P~NYST31~B~277~U~04-B": {
+      "data": {
+        "amenities": [
+          {
+            "code": "NFF",
+            "friendlyDescription": "Natural finish wood flooring",
+            "searchCode": null
+          },
+          {
+            "code": "zMET",
+            "friendlyDescription": "Classic finish",
+            "searchCode": null
+          },
+          {
+            "code": "FS04",
+            "friendlyDescription": "4th Floor",
+            "searchCode": null
+          }
+        ],
+        "availableDate": "2026-09-15T00:00:00Z",
+        "bathrooms": 1,
+        "bedrooms": 2,
+        "building": {
+          "address": "277 AVENUE C",
+          "buildingId": "311",
+          "buildingName": "277 AVENUE C",
+          "latitude": "40.7301",
+          "longitude": "-73.974815",
+          "transportationDescription": "Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.",
+          "transports": [
+            {
+              "description": "22_L",
+              "imageUrl": "/media/t02dfmty/l.png"
+            },
+            {
+              "description": "29_M9",
+              "imageUrl": "/media/w4rlarll/m9.png"
+            },
+            {
+              "description": "30_M14",
+              "imageUrl": "/media/hvwoaov3/m14.png"
+            },
+            {
+              "description": "37_RiverFerry",
+              "imageUrl": "/media/trsfb4aw/east-river-ferry.jpg"
+            },
+            {
+              "description": "35_CityBike",
+              "imageUrl": "/media/1ojhg5wj/citbike.png"
+            }
+          ]
+        },
+        "description": null,
+        "finish": "Classic",
+        "floorplan": {
+          "floorplanSvg": "/media/ftzm0drw/124.svg",
+          "staticImageUrl": null
+        },
+        "images": [],
+        "incomeRequirement": 160093.7,
+        "isFlex": false,
+        "name": "04-B",
+        "price": 4502.74,
+        "property": {
+          "commonImages": [],
+          "name": "Stuyvesant Town",
+          "propertySpk": "P~103ST"
+        },
+        "sqft": 932,
+        "style": {
+          "id": 597,
+          "name": "124"
+        },
+        "unitFloor": "04",
+        "unitRates": {
+          "12": 4502.74,
+          "24": 4502.74
+        },
+        "unitSpk": "P~NYST31~B~277~U~04-B",
+        "version": 10,
+        "virtualTourUrl": null
+      },
+      "first_seen_utc": "2026-10-07T11:30:00Z",
+      "missing_polls": 0
+    },
     "P~NYST31~B~653~U~02-F": {
       "data": {
         "amenities": [
