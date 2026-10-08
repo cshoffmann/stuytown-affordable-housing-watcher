@@ -733,5 +733,23 @@
     ],
     "screenshot": "screenshots/2026-10-08T11-30-03Z_05-F.png",
     "alert_sent": true
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-10-08T11:35:03Z",
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~005~U~05-F",
+        "apartment": "05-F",
+        "address": "5 Stuyvesant Oval",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 2183.86,
+        "income_requirement": 74875.2,
+        "available_date": "2026-11-14T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~005~U~05-F",
+        "first_seen_utc": "2026-10-08T11:30:03Z"
+      }
+    ]
   }
 ]
