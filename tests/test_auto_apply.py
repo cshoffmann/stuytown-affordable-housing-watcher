@@ -1,9 +1,9 @@
 """
 Automated checks for auto-apply -- no real site, no phone, no git.
 
-The browser tests drive a real (headless) Chromium through the FAKE unit page
-and two-page form in tests/fixtures/apply_site; they're skipped if Playwright
-or its browser isn't installed.
+The browser tests drive a real (headless) Chromium through FAKE copies of a
+StuyTown unit page and its application form, in tests/fixtures/apply_site;
+they're skipped if Playwright or its browser isn't installed.
 
 Run from the repo folder:
     python -m unittest discover -s tests -v
@@ -17,6 +17,7 @@ import os
 import sys
 import tempfile
 import threading
+import time
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -31,6 +32,8 @@ import check_units  # noqa: E402
 FAKE_UNITS = json.loads((REPO_ROOT / "tests" / "fixtures" / "fake_units.json").read_text(encoding="utf-8"))
 EXAMPLE_PROFILE = json.loads((REPO_ROOT / "applicant_profile.example.json").read_text(encoding="utf-8"))
 APPLY_SITE = REPO_ROOT / "tests" / "fixtures" / "apply_site"
+# Every value of the example profile, as it must never appear in public places.
+PERSONAL = ("Jane", "Doe", "jane.doe@example.com", "212-555-0123", "Example Street", "95000", "10009")
 
 
 def unit(apartment="5A", price=2850.0, income_requirement=60000, **extra):
@@ -51,7 +54,13 @@ class EligibilityTests(unittest.TestCase):
         self.assertIsNone(auto_apply.skip_reason(unit(price=3000), EXAMPLE_PROFILE))
 
     def test_rent_over_the_limit_is_skipped(self):
-        self.assertIn("over $3,000", auto_apply.skip_reason(unit(price=3040.84), EXAMPLE_PROFILE))
+        self.assertIn("over $3,000.00", auto_apply.skip_reason(unit(price=3040.84), EXAMPLE_PROFILE))
+
+    def test_the_limit_comes_from_the_setting(self):
+        with mock.patch.object(auto_apply, "MAX_RENT", 3500):
+            self.assertIsNone(auto_apply.skip_reason(unit(price=3040.84), EXAMPLE_PROFILE))
+        with mock.patch.object(auto_apply, "MAX_RENT", None):
+            self.assertIn("isn't set", auto_apply.skip_reason(unit(price=100), EXAMPLE_PROFILE))
 
     def test_without_a_price_the_cheapest_lease_rate_counts(self):
         cheap = unit(price=None, unitRates={"12": 3100, "24": 2950})
@@ -76,6 +85,7 @@ class EligibilityTests(unittest.TestCase):
             self.assertIn("already applied", auto_apply.already_handled(record(("submit", "submitted"))))
             # It may have gone through, so it's never sent a second time.
             self.assertIn("already applied", auto_apply.already_handled(record(("submit", "unconfirmed"))))
+            self.assertIn("rejected", auto_apply.already_handled(record(("submit", "rejected"))))
             self.assertIn("incomplete", auto_apply.already_handled(record(("submit", "incomplete"))))
         with mock.patch.object(auto_apply, "MODE", "dry_run"):
             self.assertIn("already tried", auto_apply.already_handled(record(("dry_run", "filled"))))
@@ -97,6 +107,11 @@ class ProfileTests(unittest.TestCase):
             profile = auto_apply.load_profile()
         return profile, out.getvalue()
 
+    def problems_with(self, **changes):
+        with self.assertRaises(auto_apply.ProfileError) as caught:
+            self.load(json.dumps({**EXAMPLE_PROFILE, **changes}))
+        return str(caught.exception)
+
     def test_secret_holding_the_json_is_read(self):
         profile, _ = self.load(json.dumps(EXAMPLE_PROFILE))
         self.assertEqual(profile["first_name"], "Jane")
@@ -112,30 +127,72 @@ class ProfileTests(unittest.TestCase):
         self.assertIn("isn't valid JSON", str(caught.exception))
         self.assertNotIn("Secretname", str(caught.exception))
 
-    def test_missing_required_details_are_named(self):
-        with self.assertRaises(auto_apply.ProfileError) as caught:
-            self.load(json.dumps({**EXAMPLE_PROFILE, "email": "", "phone": None}))
-        self.assertIn("email, phone", str(caught.exception))
+    def test_every_field_the_form_requires_must_be_there(self):
+        message = self.problems_with(building="", annual_income=None)
+        self.assertIn("missing building, annual_income", message)
+        self.assertEqual(auto_apply.REQUIRED_PROFILE_KEYS, (
+            "first_name", "last_name", "email", "cell_phone", "building", "street_name", "city", "zip",
+            "household_size", "annual_income"))
+
+    def test_malformed_details_are_named_but_not_echoed(self):
+        message = self.problems_with(email="jane.example.com", cell_phone="867-5309", zip="1009",
+                                     household_size="two", annual_income="lots")
+        for key in ("email", "cell_phone", "zip", "household_size", "annual_income"):
+            self.assertIn(key, message)
+        for value in ("jane.example.com", "867-5309", "1009", "lots"):
+            self.assertNotIn(value, message)
+
+    def test_phone_numbers_get_the_us_country_code(self):
+        self.assertEqual(auto_apply.phone_digits("212-555-0123"), "12125550123")
+        self.assertEqual(auto_apply.phone_digits("+1 (212) 555-0123"), "12125550123")
+        self.assertIsNone(auto_apply.phone_digits("+44 20 7946 0958"))
+        self.assertIsNone(auto_apply.phone_digits("555-0123"))
 
     def test_every_value_is_masked_in_github_logs(self):
         _, log = self.load(json.dumps(EXAMPLE_PROFILE), github=True)
-        self.assertIn("::add-mask::Jane\n", log)
-        self.assertIn("::add-mask::jane.doe@example.com\n", log)
-        self.assertIn("::add-mask::95000\n", log)
-        self.assertIn("::add-mask::Example Company\n", log)
+        for value in ("Jane", "jane.doe@example.com", "212-555-0123", "12125550123", "2125550123",
+                      "95000", "Example Street", "10009"):
+            self.assertIn(f"::add-mask::{value}\n", log)
         self.assertNotIn("::add-mask::NY\n", log)  # too short: would blank out the whole log
         self.assertNotIn("Made-up example", log)  # "_" keys are notes, not details
 
     def test_nothing_is_masked_outside_github(self):
         self.assertEqual(self.load(json.dumps(EXAMPLE_PROFILE))[1], "")
 
-    def test_move_in_date_defaults_to_the_units_available_date(self):
-        values = auto_apply.form_values({**EXAMPLE_PROFILE, "move_in_date": ""},
-                                        unit(availableDate="2099-11-01T00:00:00Z"))
-        self.assertEqual(values["move_in_date"], "2099-11-01")
-        self.assertEqual(values["full_name"], "Jane Doe")
-        own_date = auto_apply.form_values({**EXAMPLE_PROFILE, "move_in_date": "2099-12-15"}, unit())
-        self.assertEqual(own_date["move_in_date"], "2099-12-15")
+    def test_auto_apply_stays_off_for_the_run_without_a_rent_limit(self):
+        alerts = []
+        auto_apply._profile_for_run.cache_clear()
+        self.addCleanup(auto_apply._profile_for_run.cache_clear)
+        with mock.patch.object(auto_apply, "MAX_RENT", None), \
+                mock.patch.object(check_units, "notify", lambda **a: alerts.append(a) or True), \
+                mock.patch("builtins.print"):
+            self.assertIsNone(auto_apply._profile_for_run())
+        self.assertIn("AUTO_APPLY_MAX_RENT", alerts[0]["message"])
+
+
+class ReadBackTests(unittest.TestCase):
+    """How a value is judged to have 'taken' in a masked box."""
+
+    def test_phone_box_with_plus_needs_the_us_country_code(self):
+        self.assertTrue(auto_apply._shows("cell_phone", "+1 (212) 555-0123", "212-555-0123"))
+        self.assertFalse(auto_apply._shows("cell_phone", "+212 555 0123", "212-555-0123"))  # that's Morocco
+        self.assertTrue(auto_apply._shows("cell_phone", "(212) 555-0123", "212-555-0123"))  # a plain box
+
+    def test_money_box_formatting_is_fine_but_the_amount_must_match(self):
+        self.assertTrue(auto_apply._shows("annual_income", "95,000.00", 95000))
+        self.assertFalse(auto_apply._shows("annual_income", "950.00", 95000))
+
+    def test_only_complaints_count_as_the_site_refusing_the_form(self):
+        for complaint in ("This field is required", "Invalid phone number", "Something went wrong. Please try again",
+                          "You have already applied for this apartment"):
+            self.assertRegex(complaint, auto_apply.SITE_ERROR)
+        for progress in ("Submitting...", "Sending your application", "Loading"):
+            self.assertNotRegex(progress, auto_apply.SITE_ERROR)
+
+    def test_ways_of_typing_tried_in_order(self):
+        self.assertEqual(auto_apply._spellings("cell_phone", "212-555-0123"), ["+12125550123", "2125550123"])
+        self.assertEqual(auto_apply._spellings("annual_income", 95000), ["95000", "95000.00", "9500000"])
+        self.assertEqual(auto_apply._spellings("household_size", "2"), ["2"])
 
 
 class ActOnListingsTests(unittest.TestCase):
@@ -161,14 +218,14 @@ class ActOnListingsTests(unittest.TestCase):
             patcher.start()
             self.addCleanup(patcher.stop)
         # The browser itself isn't needed: apply_to_unit is faked.
-        fake_playwright = mock.MagicMock()
-        patcher = mock.patch.dict(sys.modules, {"playwright.sync_api": fake_playwright})
+        patcher = mock.patch.dict(sys.modules, {"playwright.sync_api": mock.MagicMock()})
         patcher.start()
         self.addCleanup(patcher.stop)
 
     def fake_apply(self, browser, listed_unit, profile, submit):
         self.tried.append((check_units.apartment(listed_unit), submit))
-        return auto_apply.Attempt(self.status, "test", filled=["first_name"], screenshot=b"\xff\xd8 fake jpeg")
+        return auto_apply.Attempt(self.status, "test", filled=["first_name"], form_url="https://example.test/apply",
+                                  form_fields=["First Name *"], screenshot=b"\xff\xd8 fake jpeg")
 
     def record_alert(self, **alert):
         self.sent.append(alert)
@@ -188,6 +245,7 @@ class ActOnListingsTests(unittest.TestCase):
         self.assertEqual([a["title"] for a in self.sent], ["Applied: Apt 1A, 287 Avenue C",
                                                            "Applied: Apt 2B, 287 Avenue C"])
         self.assertEqual(self.sent[0]["attachment"][2], "image/jpeg")  # the screenshot goes to your phone
+        self.assertIn("within 24 hours", self.sent[0]["message"])  # the detailed application comes next
 
     def test_the_same_unit_on_later_checks_is_not_applied_to_again(self):
         for _ in range(5):
@@ -199,6 +257,13 @@ class ActOnListingsTests(unittest.TestCase):
         for _ in range(4):
             self.run_hook([unit("1A", 2500)])
         self.assertEqual(len(self.tried), auto_apply.MAX_FAILED_ATTEMPTS_PER_UNIT)
+        self.assertIn("apply yourself now", self.sent[0]["title"])
+
+    def test_a_refused_form_tells_you_to_apply_yourself_and_isnt_retried(self):
+        self.status = "rejected"
+        for _ in range(3):
+            self.run_hook([unit("1A", 2500)])
+        self.assertEqual(len(self.tried), 1)
         self.assertIn("apply yourself now", self.sent[0]["title"])
 
     def test_dry_run_never_submits(self):
@@ -216,8 +281,9 @@ class ActOnListingsTests(unittest.TestCase):
         log_text = Path(auto_apply.APPLICATIONS_FILE).read_text(encoding="utf-8")
         record = json.loads(log_text)["P~TEST~U~1A"]
         self.assertEqual((record["apartment"], record["rent"]), ("1A", 2500))
-        self.assertEqual(record["attempts"][0]["status"], "submitted")
-        for value in ("Jane", "Doe", "jane.doe@example.com", "212-555-0123", "95000", "Example Street"):
+        attempt = record["attempts"][0]
+        self.assertEqual((attempt["status"], attempt["form_url"]), ("submitted", "https://example.test/apply"))
+        for value in PERSONAL:
             self.assertNotIn(value, log_text)
 
     def test_runs_right_after_the_new_unit_alert_and_before_the_screenshot(self):
@@ -269,7 +335,17 @@ def _browser_available() -> bool:
 
 @unittest.skipUnless(_browser_available(), "Playwright + Chromium not installed")
 class FormFillingTests(unittest.TestCase):
-    """The real form-filling code, in a real browser, on the fake site."""
+    """The real form-filling code, in a real browser, on the fake copy of
+    StuyTown's unit page and form."""
+
+    EXPECTED = {
+        "firstName": "Jane", "lastName": "Doe", "email": "jane.doe@example.com",
+        "cellPhone": "+1 212 555 0123",  # the US country code, not "+212..."
+        "workPhone": "+",  # optional, left empty
+        "building": "123", "streetName": "Example Street", "apartmentNo": "4B",
+        "city": "New York", "state": "NY", "zip": "10009",
+        "householdSize": "1", "income": "95,000.00",
+    }
 
     @classmethod
     def setUpClass(cls):
@@ -278,7 +354,6 @@ class FormFillingTests(unittest.TestCase):
         handler = functools.partial(_QuietHandler, directory=str(APPLY_SITE))
         cls.server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
         threading.Thread(target=cls.server.serve_forever, daemon=True).start()
-        cls.url = f"http://127.0.0.1:{cls.server.server_port}/unit.html?unitSpk=TEST"
         cls.playwright = sync_playwright().start()
         cls.browser = cls.playwright.chromium.launch()
 
@@ -289,48 +364,103 @@ class FormFillingTests(unittest.TestCase):
         cls.server.shutdown()
         cls.server.server_close()
 
-    def fill(self, profile, submit):
-        context = self.browser.new_context()
+    def apply(self, profile=EXAMPLE_PROFILE, submit=True, site_options=""):
+        context = self.browser.new_context(viewport={"width": 1280, "height": 900})
         self.addCleanup(context.close)
         context.set_default_timeout(5000)
         page = context.new_page()
-        listed = unit(availableDate="2099-11-01T00:00:00Z")
-        attempt = auto_apply.fill_application(page, self.url, auto_apply.form_values(profile, listed), submit=submit)
+        url = f"http://127.0.0.1:{self.server.server_port}/unit.html?unitSpk=TEST{site_options}"
+        started = time.monotonic()
+        attempt = auto_apply.fill_application(page, url, auto_apply.form_values(profile), submit=submit)
+        self.seconds = time.monotonic() - started
         return attempt, context.pages[-1].evaluate("() => window.submitted || null")
 
-    def test_submit_fills_both_pages_and_the_site_confirms(self):
-        attempt, submitted = self.fill(EXAMPLE_PROFILE, submit=True)
+    def test_submit_fills_every_field_and_the_site_confirms(self):
+        attempt, submitted = self.apply()
         self.assertEqual(attempt.status, "submitted", attempt.detail)
-        self.assertTrue(attempt.screenshot)
-        self.assertEqual(submitted, {
-            "first_name": "Jane", "last_name": "Doe",
-            "email": "jane.doe@example.com", "email_confirm": "jane.doe@example.com",
-            "phone": "212-555-0123", "date_of_birth": "1990-01-31",  # a date picker takes YYYY-MM-DD
-            "street": "123 Example Street", "apt": "4B", "city": "New York", "state": "NY", "zip": "10009",
-            "income": "95000", "household_size": "1", "employer": "Example Company",
-            "move_in": "11/01/2099",  # a text box gets MM/DD/YYYY (the unit's available date)
-            "pets": "no", "certify": "on",
-        })
+        self.assertEqual(submitted, self.EXPECTED)
+        self.assertEqual(attempt.problems, [])
+        self.assertTrue(attempt.form_url.endswith("/apply.html?unitSpk=TEST"))
+        self.assertLess(self.seconds, 15)
+
+    def test_it_reads_labels_that_arent_wired_to_their_boxes(self):
+        attempt, _ = self.apply(submit=False)
+        self.assertEqual(attempt.form_fields, [
+            "First Name *", "Last Name *", "Email *", "Cell Phone *", "Work Phone", "Building *",
+            "Street name *", "Apartment No.", "City *", "State", "Zip *", "Household Size * (i)",
+            "Household Gross Annual Income, $ * $",  # not just the "$" beside the box
+        ])
+
+    def test_a_money_box_that_fills_from_the_cents_still_gets_the_right_amount(self):
+        attempt, submitted = self.apply(site_options="&income=cents")
+        self.assertEqual(attempt.status, "submitted", attempt.detail)
+        self.assertEqual(submitted["income"], "95,000.00")
 
     def test_dry_run_fills_everything_but_never_submits(self):
-        attempt, submitted = self.fill(EXAMPLE_PROFILE, submit=False)
+        attempt, submitted = self.apply(submit=False)
         self.assertEqual(attempt.status, "filled", attempt.detail)
-        self.assertEqual(attempt.missing, [])
+        self.assertEqual(attempt.problems, [])
         self.assertIsNone(submitted)
 
-    def test_a_required_field_it_cant_fill_stops_it_and_is_named(self):
-        profile = {k: v for k, v in EXAMPLE_PROFILE.items() if k != "employer"}
-        attempt, submitted = self.fill(profile, submit=True)
+    def test_an_empty_required_field_stops_it_and_is_named(self):
+        attempt, submitted = self.apply({**EXAMPLE_PROFILE, "zip": ""})
         self.assertEqual(attempt.status, "incomplete", attempt.detail)
-        self.assertEqual(attempt.missing, ["Employer *"])
+        self.assertEqual(attempt.problems, ["Zip *"])
         self.assertIsNone(submitted)
 
-    def test_a_missing_answer_on_page_one_stops_before_next(self):
-        profile = {**EXAMPLE_PROFILE, "zip": ""}
-        attempt, submitted = self.fill(profile, submit=True)
-        self.assertEqual(attempt.status, "incomplete")
-        self.assertIn("page 1", attempt.detail)
-        self.assertEqual(attempt.missing, ["ZIP Code *"])
+    def test_a_renamed_field_stops_it_instead_of_sending_a_half_empty_form(self):
+        renamed = [(key, r"^postcode" if key == "zip" else pattern, required)
+                   for key, pattern, required in auto_apply.FORM_FIELDS]
+        with mock.patch.object(auto_apply, "FORM_FIELDS", renamed):
+            attempt, submitted = self.apply()
+        self.assertEqual(attempt.status, "incomplete", attempt.detail)
+        self.assertIn("no field found for zip", attempt.problems)
+        self.assertIsNone(submitted)
+
+    def test_a_refused_submit_is_reported_quickly_as_rejected(self):
+        attempt, submitted = self.apply(site_options="&reject=1")
+        self.assertEqual(attempt.status, "rejected", attempt.detail)
+        self.assertEqual(attempt.site_messages, ["Something went wrong. Please try again later."])
+        self.assertIsNone(submitted)
+        self.assertLess(self.seconds, 15)  # not the full 30s confirmation wait
+
+    def test_extra_fields_fill_boxes_by_label(self):
+        attempt, submitted = self.apply({**EXAMPLE_PROFILE, "work_phone": "",
+                                         "extra_fields": {"Work Phone": "+1 646 555 0199"}})
+        self.assertEqual(attempt.status, "submitted", attempt.detail)
+        self.assertEqual(submitted["workPhone"], "+1 646 555 0199")
+
+
+@unittest.skipUnless(_browser_available(), "Playwright + Chromium not installed")
+class EndToEndTests(unittest.TestCase):
+    """What the watcher does when a cheap unit is listed: the hook, a fresh
+    browser, the fake site standing in for StuyTown, the log and the alert."""
+
+    def test_a_cheap_new_listing_gets_applied_to_once(self):
+        handler = functools.partial(_QuietHandler, directory=str(APPLY_SITE))
+        server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        self.addCleanup(server.server_close)
+        self.addCleanup(server.shutdown)
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        alerts = []
+        with mock.patch.object(check_units, "UNIT_PAGE_URL", f"http://127.0.0.1:{server.server_port}/unit.html"), \
+                mock.patch.object(check_units, "notify", lambda **a: alerts.append(a) or True), \
+                mock.patch.object(auto_apply, "APPLICATIONS_FILE", f"{tmp.name}/applications.json"), \
+                mock.patch.object(auto_apply, "PRIVATE_DIR", f"{tmp.name}/private"), \
+                mock.patch.object(auto_apply, "MODE", "submit"), mock.patch.object(auto_apply, "MAX_RENT", 3000), \
+                mock.patch.object(auto_apply, "_profile_for_run", lambda: EXAMPLE_PROFILE), \
+                mock.patch.object(auto_apply, "_skips_logged", set()), \
+                mock.patch.object(auto_apply, "_submitted_this_run", 0), mock.patch("builtins.print"):
+            for _ in range(2):  # the same listing on the next check
+                auto_apply.act_on_listings([unit("1A", 2850), unit("9F", 4380.54)])
+        self.assertEqual([a["title"] for a in alerts], ["Applied: Apt 1A, 287 Avenue C"])
+        self.assertEqual(alerts[0]["attachment"][1][:2], b"\xff\xd8")  # a JPEG screenshot
+        log = json.loads(Path(f"{tmp.name}/applications.json").read_text(encoding="utf-8"))
+        self.assertEqual(list(log), ["P~TEST~U~1A"])
+        self.assertEqual(log["P~TEST~U~1A"]["attempts"][0]["status"], "submitted")
+        self.assertEqual(len(list(Path(f"{tmp.name}/private").iterdir())), 1)
 
 
 class _QuietHandler(http.server.SimpleHTTPRequestHandler):

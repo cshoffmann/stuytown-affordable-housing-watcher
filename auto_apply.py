@@ -1,21 +1,28 @@
 """
-Auto-apply: when a listed unit's monthly rent is at or under your limit
-(default $3,000), open the unit's page, press Apply Now, fill in the
-application from your saved applicant profile and submit it -- then send the
-result, with a screenshot of the filled-in form, to your phone.
+Auto-apply: when a listed unit's monthly rent is at or under your limit, open
+the unit's page, press APPLY NOW, fill in StuyTown's application form from
+your saved applicant profile and submit it -- then send the result, with a
+screenshot, to your phone.
 
 The watcher (watch_loop.py) calls act_on_listings() on every check, right
-after the new-unit alert has gone out. It's OFF unless AUTO_APPLY_MODE says
-otherwise:
+after the new-unit alert has gone out. Two repository variables control it:
 
-    off      (default) never opens an application
-    dry_run  fills in the whole form and screenshots it, but never presses the
-             final Submit -- use this first, to see exactly what it would send
-    submit   fills in the form and submits it
+    AUTO_APPLY_MODE      off (default) | dry_run (fill, never press Submit) | submit
+    AUTO_APPLY_MAX_RENT  your rent limit in $/month, e.g. 3000 -- required
+                         once the mode isn't off; there is no built-in default
 
 Your details come from APPLICANT_PROFILE -- the whole JSON document, stored as
 ONE GitHub secret -- or, on your own computer, the gitignored
-applicant_profile.json. applicant_profile.example.json shows the shape.
+applicant_profile.json. applicant_profile.example.json shows every key.
+
+The form (affordable-housing.stuytown.com, as recorded 2026-10-08) is one page:
+
+    First Name *   Last Name *   Email *   Cell Phone *   Work Phone
+    Building *  Street name *  Apartment No.  City *  State  Zip *
+    Household Size *   Household Gross Annual Income, $ *        [SUBMIT]
+
+and submitting it gets you an email with a link to the detailed application,
+which has to be completed within 24 hours.
 
 The repo (and its Actions logs) are public, so nothing personal is ever
 printed, committed or logged: in GitHub Actions every profile value is masked
@@ -23,13 +30,14 @@ in the log, form screenshots go only to your phone (as a Pushover image) and
 the gitignored private/ folder, and data/applications.json records only which
 units were tried and how it went.
 
-    python auto_apply.py --selftest              # fill + submit a FAKE form (tests/fixtures/apply_site) with your profile
+    python auto_apply.py --selftest              # fill + submit a FAKE copy of the form (tests/fixtures/apply_site)
     python auto_apply.py --unit-url URL          # dry run against a real unit page -- never submits
     python auto_apply.py --unit-url URL --headed # same, with the browser window visible
 """
 
 import argparse
 import functools
+import html
 import http.server
 import json
 import os
@@ -38,7 +46,7 @@ import sys
 import threading
 import time
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 
 import check_units
@@ -46,27 +54,50 @@ import check_units
 MODES = ("off", "dry_run", "submit")
 _MODE_SETTING = os.environ.get("AUTO_APPLY_MODE", "").strip().lower()
 MODE = _MODE_SETTING if _MODE_SETTING in MODES else "off"
-DEFAULT_MAX_RENT = 3000
 _MAX_RENT_SETTING = os.environ.get("AUTO_APPLY_MAX_RENT", "").strip()
-MAX_RENT = check_units.number(_MAX_RENT_SETTING) or DEFAULT_MAX_RENT  # $/month, inclusive
+MAX_RENT = check_units.number(_MAX_RENT_SETTING)  # $/month, inclusive; None = not set
 
 PROFILE_ENV = "APPLICANT_PROFILE"
 PROFILE_FILE = "applicant_profile.json"
-REQUIRED_PROFILE_KEYS = ("first_name", "last_name", "email", "phone")
 APPLICATIONS_FILE = "data/applications.json"
 PRIVATE_DIR = "private/applications"  # gitignored: form screenshots contain your details
 
-# Safety limits. A unit is applied to at most once, ever; one whose attempt
-# crashed (timeout, site hiccup) gets one more try on a later check.
+# What the form needs, in its order. Label patterns match the start of the
+# field's label, ignoring case. Fields the site adds later can be filled
+# without a code change through the profile's "extra_fields".
+FORM_FIELDS = [
+    # profile key       label pattern                    required by the form
+    ("first_name", r"^first\s*name", True),
+    ("last_name", r"^last\s*name", True),
+    ("email", r"^e-?mail", True),
+    ("cell_phone", r"^(cell|mobile)\s*phone|^phone", True),
+    ("work_phone", r"^work\s*phone", False),
+    ("building", r"^building", True),  # the building NUMBER of your current address, e.g. 123
+    ("street_name", r"^street", True),
+    ("apartment_no", r"^apartment|^apt\b", False),
+    ("city", r"^city", True),
+    ("state", r"^state", False),
+    ("zip", r"^zip|^postal", True),
+    ("household_size", r"^household\s*size", True),
+    ("annual_income", r"income", True),
+]
+REQUIRED_PROFILE_KEYS = tuple(key for key, _, required in FORM_FIELDS if required)
+PHONE_KEYS = ("cell_phone", "work_phone")
+
+# Safety limits. A unit is applied to at most once, ever (the site allows one
+# application per apartment); an attempt that crashed (timeout, site hiccup)
+# gets one more try on a later check.
 MAX_APPLICATIONS_PER_RUN = 3
 MAX_FAILED_ATTEMPTS_PER_UNIT = 2
-MAX_FORM_PAGES = 6  # Next/Continue presses before giving up on a multi-page form
-FORM_TIMEOUT_MS = 20000  # waiting for the Apply button, and for the form after it
+MAX_FORM_PAGES = 6  # Next/Continue presses, in case the form ever grows pages
+FORM_TIMEOUT_MS = 20000  # waiting for APPLY NOW, and for the form after it
 CONFIRMATION_TIMEOUT_MS = 30000
 PUSHOVER_IMAGE_LIMIT = 5_000_000  # bytes
 
 SELFTEST_SITE = Path(__file__).resolve().parent / "tests" / "fixtures" / "apply_site"
 EXAMPLE_PROFILE = Path(__file__).resolve().parent / "applicant_profile.example.json"
+NEXT_STEP_REMINDER = ("Watch your email: StuyTown sends a link to the detailed application, "
+                      "which has to be completed within 24 hours.")
 
 
 class ProfileError(ValueError):
@@ -92,10 +123,43 @@ def load_profile() -> dict | None:
     if not isinstance(profile, dict):
         raise ProfileError(f"{source} must be a JSON object ({{ ... }})")
     mask_in_github_logs(profile)
+    problems = profile_problems(profile)
+    if problems:
+        raise ProfileError(f"{source}: {'; '.join(problems)}")
+    return profile
+
+
+def profile_problems(profile: dict) -> list:
+    """What's missing or malformed -- by key name only, never the values."""
+    problems = []
     missing = [key for key in REQUIRED_PROFILE_KEYS if not str(profile.get(key) or "").strip()]
     if missing:
-        raise ProfileError(f"{source} is missing {', '.join(missing)}")
-    return profile
+        problems.append(f"missing {', '.join(missing)}")
+    email = str(profile.get("email") or "").strip()
+    if email and not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+        problems.append("email doesn't look like an email address")
+    for key in PHONE_KEYS:
+        if str(profile.get(key) or "").strip() and phone_digits(profile[key]) is None:
+            problems.append(f"{key} should be a 10-digit US number, e.g. 212-555-0123")
+    zip_code = str(profile.get("zip") or "").strip()
+    if zip_code and not re.fullmatch(r"\d{5}(-\d{4})?", zip_code):
+        problems.append("zip should be 5 digits")
+    size = check_units.number(profile.get("household_size"))
+    if profile.get("household_size") not in (None, "") and (size is None or size < 1 or size != int(size)):
+        problems.append("household_size should be a whole number, e.g. 1")
+    income = check_units.number(profile.get("annual_income"))
+    if profile.get("annual_income") not in (None, "") and (income is None or income <= 0):
+        problems.append("annual_income should be a number, e.g. 95000")
+    return problems
+
+
+def phone_digits(value) -> str | None:
+    """'212-555-0123' / '+1 (212) 555-0123' -> '12125550123' (US numbers
+    only: the form's phone boxes start with '+', so the country code matters)."""
+    digits = re.sub(r"\D", "", str(value or ""))
+    if len(digits) == 10:
+        digits = "1" + digits
+    return digits if len(digits) == 11 and digits.startswith("1") else None
 
 
 def mask_in_github_logs(profile: dict) -> None:
@@ -121,14 +185,21 @@ def _profile_strings(value):
         text = str(value).strip()
         if text:
             yield text
+            digits = phone_digits(text)
+            if digits:  # the phone as the form shows it, too
+                yield digits
+                yield digits[1:]
 
 
 @functools.cache
 def _profile_for_run() -> dict | None:
-    """The profile, loaded once per run. A problem is reported (log + one
-    alert) and switches auto-apply off for the run; it never stops the
-    watcher -- the alerts matter more."""
+    """The profile, checked once per run along with the rent limit. A problem
+    is reported (log + one alert) and switches auto-apply off for the run; it
+    never stops the watcher -- the alerts matter more."""
     try:
+        if MAX_RENT is None:
+            raise ProfileError("the AUTO_APPLY_MAX_RENT repository variable isn't set to a number "
+                               "(e.g. 3000)")
         profile = load_profile()
         if profile is None:
             raise ProfileError(f"no applicant profile found (set the {PROFILE_ENV} secret, "
@@ -138,7 +209,7 @@ def _profile_for_run() -> dict | None:
         print(f"Auto-apply is OFF for this run: {e}")
         check_units._notify_best_effort({
             "title": "StuyTown auto-apply is off",
-            "message": f"{e}. New-unit alerts still work.",
+            "message": f"{html.escape(str(e))}. New-unit alerts still work.",
             "priority": 0,
         })
         return None
@@ -149,8 +220,6 @@ def startup_check() -> None:
     log before anything else prints). Called once when the watcher starts."""
     if _MODE_SETTING and _MODE_SETTING not in MODES:
         print(f"WARNING: AUTO_APPLY_MODE={_MODE_SETTING!r} isn't one of {', '.join(MODES)} -- treating it as off.")
-    if _MAX_RENT_SETTING and check_units.number(_MAX_RENT_SETTING) is None:
-        print(f"WARNING: AUTO_APPLY_MAX_RENT={_MAX_RENT_SETTING!r} isn't a number -- using ${DEFAULT_MAX_RENT:,}.")
     if MODE == "off":
         print("Auto-apply: off (set AUTO_APPLY_MODE to dry_run or submit to turn it on)")
         return
@@ -166,8 +235,10 @@ def skip_reason(unit: dict, profile: dict) -> str | None:
     rent = check_units.unit_rent(unit)
     if rent is None:
         return "no rent listed"
+    if MAX_RENT is None:
+        return "AUTO_APPLY_MAX_RENT isn't set"
     if rent > MAX_RENT:
-        return f"rent ${rent:,.0f} is over ${MAX_RENT:,.0f}"
+        return f"rent ${rent:,.2f} is over ${MAX_RENT:,.2f}"
     income = check_units.number(profile.get("annual_income"))
     required = check_units.number(unit.get("incomeRequirement"))
     if income is not None and required is not None and income < required:
@@ -246,8 +317,10 @@ def act_on_listings(units: list) -> None:
                           f"-- not applying to {check_units.unit_label(unit)}")
                     break
                 print(f"   Auto-apply ({MODE}): {check_units.unit_label(unit)} -- {check_units.unit_url(unit)}")
+                started = time.monotonic()
                 attempt = apply_to_unit(browser, unit, profile, submit=(MODE == "submit"))
-                print(f"   Auto-apply result: {attempt.status} -- {attempt.detail}")
+                print(f"   Auto-apply result after {time.monotonic() - started:.1f}s: "
+                      f"{attempt.status} -- {attempt.detail}")
                 if attempt.status in ("submitted", "unconfirmed"):
                     _submitted_this_run += 1
                 _record(applications, unit, attempt)
@@ -272,82 +345,106 @@ def _record(applications: dict, unit: dict, attempt: "Attempt") -> None:
         "mode": MODE,
         "status": attempt.status,
         "detail": attempt.detail,
+        "form_url": attempt.form_url,  # where APPLY NOW led (no personal details in it)
         "fields_filled": attempt.filled,  # profile key names only, e.g. "first_name"
-        "required_left_empty": attempt.missing,  # the site's own field labels
+        "problems": attempt.problems,  # the site's own labels for fields it couldn't fill
+        "form_fields_seen": attempt.form_fields,  # the site's labels, to spot form changes
     })
 
 
 # ------------------------------------------------------------- the browser
 
 APPLY_BUTTON = re.compile(r"^\s*apply\b", re.I)
-SUBMIT_BUTTON = re.compile(r"^\s*(submit|send|finish|complete)\b|submit\s+(my\s+)?application|^\s*apply\s*$", re.I)
+SUBMIT_BUTTON = re.compile(r"^\s*(submit|send|finish|complete)\b|submit\s+(my\s+)?application", re.I)
 NEXT_BUTTON = re.compile(r"^\s*(next|continue|proceed|save\s*(and|&)\s*continue)\b", re.I)
-# Fields that mark the application form (as opposed to, say, a newsletter box).
-FORM_ANCHOR = re.compile(r"first\s*name|last\s*name|full\s*name|legal\s*name", re.I)
-_DIALOG = "[role=dialog], dialog, [aria-modal=true]"
 CONFIRMATION = re.compile(
     r"thank\s*you|application\s+(has\s+been\s+|was\s+)?(received|submitted|complete)|"
-    r"successfully\s+submitted|confirmation\s+(number|#|code)", re.I)
+    r"\bsuccess(ful|fully)?\b|submission\s+(received|successful)|"
+    r"check\s+your\s+(e-?mail|inbox)|we('ve|\s+have)\s+(received|sent)|confirmation\s+(number|#|code)", re.I)
+# What a site's complaint about a form sounds like (as opposed to, say, a
+# "Submitting..." progress message).
+SITE_ERROR = re.compile(r"required|invalid|not\s+valid|error|wrong|failed|must|please\s+(enter|provide|check|"
+                        r"correct|try)|try\s+again|already", re.I)
+# Images, video and the cookie banner aren't needed to apply, and skipping them
+# makes the unit page usable sooner.
+SKIPPED_RESOURCE_TYPES = ("image", "media")
 
-# Profile key -> label patterns for the form field it goes in (matched against
-# the field's label or placeholder, ignoring case). Checked in this order, and
-# each form field is filled at most once, so specific patterns come first.
-# Fields this doesn't know go in the profile's "extra_fields" instead.
-FORM_FIELDS = [
-    ("first_name", [r"first\s*name", r"given\s*name"]),
-    ("middle_name", [r"middle\s*(name|initial)"]),
-    ("last_name", [r"last\s*name", r"surname", r"family\s*name"]),
-    ("full_name", [r"^\W*(full\s*|legal\s*|your\s*)?name\W*$"]),
-    ("email", [r"e-?mail"]),
-    ("email", [r"(confirm|re-?enter|verify)\s*(your\s*)?e-?mail"]),
-    ("phone", [r"phone", r"mobile", r"\bcell\b"]),
-    ("date_of_birth", [r"date\s*of\s*birth", r"birth\s*date", r"\bdob\b", r"birthday"]),
-    ("street_address", [r"street", r"address\s*(line\s*)?1", r"^\W*(current\s*|home\s*|mailing\s*)?address\W*$"]),
-    ("apartment", [r"\bapt\b", r"apartment\s*(number|no|#)", r"suite", r"address\s*(line\s*)?2"]),
-    ("city", [r"^\W*city", r"\bcity\b"]),
-    ("state", [r"^\W*state\b", r"\bstate\b"]),
-    ("zip", [r"\bzip", r"postal"]),
-    ("annual_income", [r"(annual|yearly|gross|total)\s*(household\s*)?income", r"household\s*income",
-                       r"^\W*income\W*$", r"salary"]),
-    ("household_size", [r"household\s*size", r"(number|#)\s*of\s*(people|persons|occupants|household)",
-                        r"occupants"]),
-    ("employer", [r"employer", r"company\s*name"]),
-    ("job_title", [r"job\s*title", r"occupation", r"position"]),
-    ("move_in_date", [r"move[\s-]*in", r"(desired|preferred)\s*(lease\s*)?start"]),
-]
-
-_FILLABLE_JS = """el => {
-    if (el.dataset.autofilled || el.disabled || el.readOnly) return false;
-    if (!['INPUT', 'SELECT', 'TEXTAREA'].includes(el.tagName)) return false;
-    if (['hidden', 'submit', 'button', 'reset', 'radio', 'file', 'image'].includes(el.type)) return false;
-    if (el.closest('footer, [role=contentinfo]')) return false;  // newsletter boxes and the like
-    // A checkbox is often visually hidden behind a styled box: judge it by its label.
-    const shown = el.type === 'checkbox' ? (el.closest('label, fieldset') || el.parentElement) : el;
-    const box = shown.getBoundingClientRect();
+# How the page's fields are read: every visible input with the text a person
+# would read as its label. StuyTown's labels might not be wired to their
+# boxes in the HTML, so besides <label for=...> and aria-label this also
+# takes the text of the smallest wrapper that holds just that one field.
+# Fields are tagged data-autoapply-field=N so Python can address them.
+_LABEL_OF_JS = r"""
+const clean = s => (s || '').replace(/\s+/g, ' ').trim();
+const wordy = s => /[a-z]{2}/i.test(s || '');
+const CONTROLS = 'input:not([type=hidden]), select, textarea';
+function labelOf(el) {
+    if (el.labels && el.labels.length && clean(el.labels[0].innerText)) return clean(el.labels[0].innerText);
+    if (clean(el.getAttribute('aria-label'))) return clean(el.getAttribute('aria-label'));
+    const by = el.getAttribute('aria-labelledby');
+    if (by) {
+        const text = clean(by.split(/\s+/).map(id => (document.getElementById(id) || {}).innerText || '').join(' '));
+        if (text) return text;
+    }
+    let node = el;
+    for (let depth = 0; depth < 5 && node.parentElement; depth++) {
+        node = node.parentElement;
+        if (node.querySelectorAll(CONTROLS).length > 1) break;
+        let text = node.innerText || '';
+        if (el.tagName === 'SELECT') text = text.replace(el.innerText, '');
+        if (wordy(text)) return clean(text).slice(0, 120);  // not just the "$" beside a money box
+    }
+    // A label written just before the box, with no wrapper around the pair.
+    let before = el.previousElementSibling;
+    for (let i = 0; i < 3 && before; i++, before = before.previousElementSibling) {
+        if (before.matches(CONTROLS) || before.querySelector(CONTROLS)) break;
+        if (wordy(before.innerText)) return clean(before.innerText).slice(0, 120);
+    }
+    return clean(el.placeholder || el.name || el.id || el.type);
+}
+function shown(el) {
+    const box = (['checkbox', 'radio'].includes(el.type) ? (el.closest('label, fieldset') || el.parentElement) : el)
+        .getBoundingClientRect();
     return box.width > 0 && box.height > 0 && getComputedStyle(el).visibility !== 'hidden';
+}
+function isEmpty(el, root) {
+    if (el.type === 'checkbox') return !el.checked;
+    if (el.type === 'radio') return ![...root.querySelectorAll('input[type=radio]')].some(r => r.name === el.name && r.checked);
+    const value = (el.value || '').replace(/[\s+$,]/g, '');  // a phone box's lone "+", a "$"
+    return value === '' || /^0*\.?0*$/.test(value);
+}
+"""
+
+_INVENTORY_JS = "root => {" + _LABEL_OF_JS + r"""
+    root.querySelectorAll('[data-autoapply-field]').forEach(el => el.removeAttribute('data-autoapply-field'));
+    const fields = [];
+    for (const el of root.querySelectorAll(CONTROLS)) {
+        if (['submit', 'button', 'reset', 'image', 'file'].includes(el.type) || el.disabled) continue;
+        if (el.closest('header, nav, footer, [role=contentinfo]') || !shown(el)) continue;
+        const label = labelOf(el);
+        el.setAttribute('data-autoapply-field', String(fields.length));
+        fields.push({
+            index: fields.length, label, tag: el.tagName.toLowerCase(), type: (el.type || '').toLowerCase(),
+            required: el.required || el.getAttribute('aria-required') === 'true' || /\*/.test(label),
+            empty: isEmpty(el, root),
+        });
+    }
+    return fields;
 }"""
 
-# Labels (never values) of visible required fields that are still empty.
-_UNFILLED_REQUIRED_JS = """root => {
-    const out = [];
-    for (const el of root.querySelectorAll('input, select, textarea')) {
-        if (el.disabled || ['hidden', 'submit', 'button'].includes(el.type)) continue;
-        if (!(el.required || el.getAttribute('aria-required') === 'true')) continue;
-        const shown = ['checkbox', 'radio'].includes(el.type) ? (el.closest('label, fieldset') || el.parentElement) : el;
-        const box = shown.getBoundingClientRect();
-        if (!box.width || !box.height) continue;
-        let empty;
-        if (el.type === 'checkbox') empty = !el.checked;
-        else if (el.type === 'radio') empty = ![...root.querySelectorAll('input[type=radio]')]
-            .some(r => r.name === el.name && r.checked);
-        else empty = !el.value;
-        if (!empty) continue;
-        const group = el.type === 'radio' && el.closest('fieldset')?.querySelector('legend');
-        const label = (group && group.innerText) || (el.labels && el.labels[0] && el.labels[0].innerText)
-            || el.getAttribute('aria-label') || el.placeholder || el.name || el.type;
-        out.push(label.replace(/\\s+/g, ' ').trim().slice(0, 80));
-    }
-    return [...new Set(out)];
+# Finds the application form: the box labelled First/Last Name (preferring
+# one in a pop-up dialog), and marks the <form> or dialog around it.
+_FIND_FORM_JS = "root => {" + _LABEL_OF_JS + r"""
+    const named = [...root.querySelectorAll(CONTROLS)]
+        .filter(el => shown(el) && !el.closest('header, nav, footer') && /first\s*name|last\s*name|full\s*name/i.test(labelOf(el)));
+    if (!named.length) return null;
+    const dialog = '[role=dialog], dialog, [aria-modal=true]';
+    const anchor = named.find(el => el.closest(dialog)) || named[0];
+    const box = anchor.closest('form') || anchor.closest(dialog);
+    root.querySelectorAll('[data-autoapply-form]').forEach(el => el.removeAttribute('data-autoapply-form'));
+    if (!box) return 'frame';
+    box.setAttribute('data-autoapply-form', '1');
+    return 'form';
 }"""
 
 
@@ -355,24 +452,19 @@ _UNFILLED_REQUIRED_JS = """root => {
 class Attempt:
     """How one application went."""
 
-    status: str  # submitted | unconfirmed | filled (dry run) | incomplete | blocked | failed
+    status: str  # submitted | unconfirmed | rejected | filled (dry run) | incomplete | blocked | failed
     detail: str
-    filled: list = field(default_factory=list)  # profile keys that went into the form
-    missing: list = field(default_factory=list)  # labels of required fields left empty
+    filled: list = field(default_factory=list)  # profile keys that went into the form (and were checked)
+    problems: list = field(default_factory=list)  # the site's labels for required fields left empty or wrong
+    form_fields: list = field(default_factory=list)  # every field label on the form, for spotting changes
+    form_url: str = ""
     screenshot: bytes | None = None  # JPEG -- contains your details, so phone + private/ only
+    site_messages: list = field(default_factory=list)  # error text the site showed (phone only)
 
 
-def form_values(profile: dict, unit: dict | None = None) -> dict:
-    """The profile, plus what can be worked out from it: full_name from your
-    first/last name, and -- if you left move_in_date empty -- the unit's own
-    available date (or today, if that's already passed)."""
-    values = dict(profile)
-    if not values.get("full_name"):
-        values["full_name"] = " ".join(str(values.get(k) or "").strip() for k in ("first_name", "last_name")).strip()
-    if not values.get("move_in_date") and unit and unit.get("availableDate"):
-        available = str(unit["availableDate"])[:10]
-        values["move_in_date"] = max(available, date.today().isoformat())
-    return values
+def form_values(profile: dict) -> dict:
+    """The profile as it goes into the form: everything but the "_" notes."""
+    return {key: value for key, value in profile.items() if not str(key).startswith("_")}
 
 
 def apply_to_unit(browser, unit: dict, profile: dict, submit: bool) -> Attempt:
@@ -381,12 +473,8 @@ def apply_to_unit(browser, unit: dict, profile: dict, submit: bool) -> Attempt:
     context.set_default_timeout(15000)
     try:
         page = context.new_page()
-        try:
-            import screenshot  # same cookie-banner/analytics blocking as the listings screenshot
-            page.route(screenshot.BLOCKED, lambda route: route.abort())
-        except ImportError:
-            pass
-        return fill_application(page, check_units.unit_url(unit), form_values(profile, unit), submit=submit)
+        _skip_unneeded_downloads(page)
+        return fill_application(page, check_units.unit_url(unit), form_values(profile), submit=submit)
     except Exception as e:
         return Attempt("failed", f"{type(e).__name__}: {str(e).splitlines()[0][:200]}",
                        screenshot=_screenshot_of_last_page(context))
@@ -394,61 +482,113 @@ def apply_to_unit(browser, unit: dict, profile: dict, submit: bool) -> Attempt:
         context.close()
 
 
+def _skip_unneeded_downloads(page) -> None:
+    try:
+        import screenshot  # the cookie banner and analytics, as for the listings screenshot
+
+        blocked = screenshot.BLOCKED
+    except ImportError:
+        blocked = None
+
+    def route(request_route):
+        request = request_route.request
+        if request.resource_type in SKIPPED_RESOURCE_TYPES or (blocked and blocked.search(request.url)):
+            request_route.abort()
+        else:
+            request_route.continue_()
+
+    page.context.route("**/*", route)
+
+
 def fill_application(page, url: str, values: dict, submit: bool) -> Attempt:
-    """Open the unit page, press Apply, fill every page of the form, and --
-    only if submit is True and nothing required is left empty -- submit it."""
+    """Open the unit page, press APPLY NOW, fill the form, check every field
+    took its value, and -- only if submit is True and nothing required is
+    empty or wrong -- press SUBMIT and wait for the site to confirm."""
     page.goto(url, wait_until="domcontentloaded", timeout=30000)
     apply_button = _wait_for_button(page, APPLY_BUTTON, FORM_TIMEOUT_MS)
     if apply_button is None:
-        return Attempt("failed", "couldn't find an Apply button on the unit page", screenshot=_screenshot(page))
+        return Attempt("failed", "couldn't find the APPLY NOW button on the unit page", screenshot=_screenshot(page))
+    apply_button.scroll_into_view_if_needed()
     apply_button.click()
 
     found = _find_form(page.context, FORM_TIMEOUT_MS)  # same tab, a new tab, a pop-up, or an iframe
     if found is None:
-        return Attempt("failed", "the application form didn't show up after pressing Apply",
+        return Attempt("failed", "the application form didn't show up after pressing APPLY NOW",
                        screenshot=_screenshot_of_last_page(page.context))
     page, scope = found
+    form_url = page.url
 
-    filled, radios = [], dict(values.get("radio_choices") or {})
-    submit_button = missing = None
+    filled, problems, labels = [], [], []
+    radios = dict(values.get("radio_choices") or {})
+    submit_button = None
     for form_page in range(1, MAX_FORM_PAGES + 1):
-        filled += _fill_visible_fields(scope, values, radios)
-        missing = _unfilled_required(scope)
+        page_filled, page_problems = _fill_visible_fields(scope, values, radios)
+        filled += page_filled
+        fields = _inventory(scope)
+        labels += [f["label"] for f in fields]
+        empty_required = [f["label"] for f in fields if f["required"] and f["empty"]]
+        problems = list(dict.fromkeys(page_problems + empty_required))
         submit_button = _visible_button(scope, SUBMIT_BUTTON)
         next_button = None if submit_button else _visible_button(scope, NEXT_BUTTON)
-        if submit_button or next_button is None or missing:
+        if submit_button or next_button is None or problems:
             break
         next_button.click()
         page.wait_for_timeout(800)  # let the next page of the form render
 
-    shot = _screenshot(page)
+    # Every field StuyTown requires must have been found and filled: if one
+    # wasn't, its label probably changed, and the form isn't safe to send.
+    not_found = [key for key in REQUIRED_PROFILE_KEYS if values.get(key) not in (None, "") and key not in filled]
+    if submit_button is not None and not_found:
+        problems += [f"no field found for {key}" for key in not_found]
+    found_so_far = {"filled": filled, "problems": problems, "form_fields": list(dict.fromkeys(labels)),
+                    "form_url": form_url}
+    # Screenshots are only taken when nothing will be clicked afterwards: a
+    # full-page screenshot leaves the page scrolled so that the next click
+    # lands beside the button instead of on it.
     captcha = _has_captcha(page)
     if submit_button is None:
-        why = "required fields are empty" if missing else "no Submit or Next button found"
-        return Attempt("incomplete", f"stopped on page {form_page} of the form: {why}", filled, missing, shot)
+        why = "required fields are empty" if problems else "no SUBMIT or Next button found"
+        return Attempt("incomplete", f"stopped on page {form_page} of the form: {why}",
+                       screenshot=_screenshot(page), **found_so_far)
     if not submit:
         note = " The form has a CAPTCHA, so a real submit would stop there." if captcha else ""
-        return Attempt("filled", "dry run: form filled, Submit NOT pressed." + note, filled, missing, shot)
-    if missing:
-        return Attempt("incomplete", "required fields are still empty, so it wasn't submitted", filled, missing, shot)
+        state = "everything required is filled" if not problems else "some required fields aren't right"
+        return Attempt("filled", f"dry run: {state}; SUBMIT was NOT pressed.{note}",
+                       screenshot=_screenshot(page), **found_so_far)
+    if problems:
+        return Attempt("incomplete", "required fields are empty or didn't take the value, so it wasn't submitted",
+                       screenshot=_screenshot(page), **found_so_far)
     if captcha:
-        return Attempt("blocked", "the form has a CAPTCHA, which this doesn't solve", filled, missing, shot)
+        return Attempt("blocked", "the form has a CAPTCHA, which this doesn't solve",
+                       screenshot=_screenshot(page), **found_so_far)
 
     confirmation_already_showing = _confirmation_showing(page)
+    messages_before = set(_site_messages(page))
     submit_button.click()
     deadline = time.monotonic() + CONFIRMATION_TIMEOUT_MS / 1000
+    complaints = 0
     while time.monotonic() < deadline:
         page.wait_for_timeout(500)
         if _confirmation_showing(page) and (not confirmation_already_showing or not _still_visible(submit_button)):
-            return Attempt("submitted", "the site confirmed the application", filled, [], _screenshot(page))
-    return Attempt("unconfirmed", "pressed Submit but no confirmation appeared within "
-                   f"{CONFIRMATION_TIMEOUT_MS // 1000}s", filled, _unfilled_required(scope), _screenshot(page))
+            return Attempt("submitted", "the site confirmed the application", screenshot=_screenshot(page),
+                           **found_so_far)
+        # The form is still there and showing new error text: the site
+        # refused it (nothing was sent). Two checks in a row, to let it settle.
+        new_messages = [m for m in _site_messages(page) if m not in messages_before and SITE_ERROR.search(m)]
+        complaints = complaints + 1 if new_messages and _still_visible(submit_button) else 0
+        if complaints >= 2:
+            return Attempt("rejected", "the site refused the form", screenshot=_screenshot(page),
+                           site_messages=new_messages, **found_so_far)
+    return Attempt("unconfirmed", "pressed SUBMIT but no confirmation appeared within "
+                   f"{CONFIRMATION_TIMEOUT_MS // 1000}s", screenshot=_screenshot(page),
+                   site_messages=_site_messages(page), **found_so_far)
 
 
 def _wait_for_button(page, name: re.Pattern, timeout_ms: int):
     """Wait for the page's own button or link. One in the site's header, menu
-    or footer (an "Apply for housing" nav link, say) is only taken if the
-    page never draws one of its own -- the real one often appears late."""
+    or footer (a "How to apply" nav link, say) is only taken if the page
+    never draws one of its own -- the real one appears after the page's
+    JavaScript runs."""
     deadline = time.monotonic() + timeout_ms / 1000
     while True:
         out_of_time = time.monotonic() >= deadline
@@ -463,7 +603,7 @@ def _wait_for_button(page, name: re.Pattern, timeout_ms: int):
 
 def _visible_button(scope, name: re.Pattern, role: str = "button", allow_site_chrome: bool = True):
     """The first visible match, preferring one outside the site's header,
-    menu and footer."""
+    menu and footer. Below-the-fold buttons count as visible."""
     buttons = scope.get_by_role(role, name=name)
     visible = [buttons.nth(i) for i in range(min(buttons.count(), 10)) if buttons.nth(i).is_visible()]
     for button in visible:
@@ -474,78 +614,131 @@ def _visible_button(scope, name: re.Pattern, role: str = "button", allow_site_ch
 
 def _find_form(context, timeout_ms: int):
     """(page, scope) for the application form: the <form> around its name
-    field, or the whole frame if there isn't one. Looks in every tab and
-    frame, because Apply might open a new tab or embed a third-party form."""
+    fields, or the whole frame if there isn't one. Looks in every tab and
+    frame, newest tab first."""
     deadline = time.monotonic() + timeout_ms / 1000
     while True:
-        for page in reversed(context.pages):  # newest tab first
+        for page in reversed(context.pages):
             for frame in page.frames:
                 try:
-                    anchors = frame.get_by_label(FORM_ANCHOR)
-                    visible = [anchors.nth(i) for i in range(min(anchors.count(), 5)) if anchors.nth(i).is_visible()]
-                    # A pop-up dialog beats, say, a contact form further down the page.
-                    visible.sort(key=lambda a: not a.evaluate("el => !!el.closest(" + repr(_DIALOG) + ")"))
-                    if not visible:
-                        continue
-                    boxed = visible[0].evaluate(
-                        "el => { const f = el.closest('form') || el.closest(" + repr(_DIALOG) + ");"
-                        " if (f) f.setAttribute('data-autoapply-form', '1'); return !!f; }")
-                    return page, (frame.locator("[data-autoapply-form]").first if boxed else frame)
+                    where = frame.evaluate(f"() => ({_FIND_FORM_JS})(document)")
                 except Exception:
                     continue  # a frame that went away mid-look
+                if where == "form":
+                    return page, frame.locator("[data-autoapply-form]").first
+                if where == "frame":
+                    return page, frame
         if time.monotonic() >= deadline:
             return None
         time.sleep(0.25)
 
 
-def _fill_visible_fields(scope, values: dict, radios: dict) -> list:
-    """Fill what's on screen now. Returns the profile keys used."""
-    filled = []
-    for key, patterns in FORM_FIELDS:
+def _evaluate(scope, function_js: str):
+    """Run `root => ...` against a <form> locator or a whole frame."""
+    if hasattr(scope, "goto"):  # a Frame
+        return scope.evaluate(f"() => ({function_js})(document)")
+    return scope.evaluate(function_js)
+
+
+def _inventory(scope) -> list:
+    try:
+        return _evaluate(scope, _INVENTORY_JS)
+    except Exception:
+        return []  # the form navigated away (e.g. after SUBMIT)
+
+
+def _fill_visible_fields(scope, values: dict, radios: dict) -> tuple:
+    """Fill what's on screen now and check each value took. Returns (profile
+    keys filled, labels of fields that wouldn't take their value)."""
+    fields = _inventory(scope)
+    used, filled, problems = set(), [], []
+
+    def fill(key, pattern, value):
+        for f in fields:
+            if f["index"] in used or not pattern.search(f["label"].lstrip("* ")):
+                continue
+            used.add(f["index"])
+            element = scope.locator(f'[data-autoapply-field="{f["index"]}"]')
+            if _put(element, f, key, value):
+                filled.append(key)
+            else:
+                problems.append(f["label"])
+            return
+
+    for key, pattern, _ in FORM_FIELDS:
         value = values.get(key)
-        if value in (None, "") or isinstance(value, (dict, list)):
-            continue
-        if any(_fill_one(scope, re.compile(p, re.I), value) for p in patterns):
-            filled.append(key)
+        if value not in (None, "") and not isinstance(value, (dict, list)):
+            fill(key, re.compile(pattern, re.I), value)
     for label, value in (values.get("extra_fields") or {}).items():
-        if _fill_one(scope, re.compile(re.escape(str(label)), re.I), value):
-            filled.append(f"extra_fields: {label}")
+        if value not in (None, ""):
+            fill(f"extra_fields: {label}", re.compile(re.escape(str(label)), re.I), value)
     for question, answer in list(radios.items()):
         if _choose_radio(scope, str(question), str(answer)):
             filled.append(f"radio_choices: {question}")
             del radios[question]  # answered; later pages don't need it
-    return filled
+    return filled, problems
 
 
-def _fill_one(scope, label: re.Pattern, value) -> bool:
-    for candidates in (scope.get_by_label(label), scope.get_by_placeholder(label)):
-        for i in range(min(candidates.count(), 10)):
-            element = candidates.nth(i)
-            try:
-                if element.evaluate(_FILLABLE_JS) and _put(element, value):
-                    element.evaluate("el => { el.dataset.autofilled = '1'; }")
-                    return True
-            except Exception:
-                continue  # this one wouldn't take the value; try the next match
-    return False
+def _put(element, f: dict, key: str, value) -> bool:
+    """Put one value in one field, then read it back. Masked boxes (the
+    phone's "+", the "$ 0.00" income box) can reformat or reject what's
+    typed, so if the first way doesn't stick, it's typed key by key, and
+    alternative spellings are tried. True only once the box shows the value."""
+    try:
+        if f["type"] == "checkbox":
+            tick = value if isinstance(value, bool) else str(value).strip().lower() in ("true", "yes", "y", "1")
+            element.set_checked(tick, force=True, timeout=5000)
+            return element.is_checked() == tick
+        if isinstance(value, bool):
+            return False  # true/false only makes sense for a checkbox
+        if f["tag"] == "select":
+            option = _matching_option(element, str(value))
+            if option is not None:
+                element.select_option(value=option, timeout=5000)
+            return option is not None
+        for text in _spellings(key, value):
+            element.fill(text, timeout=5000)
+            if _shows(key, element.input_value(), value):
+                return True
+            element.click(timeout=5000)
+            element.press("ControlOrMeta+A")
+            element.press("Backspace")
+            element.press_sequentially(text, delay=20)
+            if _shows(key, element.input_value(), value):
+                return True
+        return False
+    except Exception:
+        return False
 
 
-def _put(element, value) -> bool:
-    tag, kind = element.evaluate("el => [el.tagName.toLowerCase(), (el.type || '').toLowerCase()]")
-    if kind == "checkbox":
-        tick = value if isinstance(value, bool) else str(value).strip().lower() in ("true", "yes", "y", "1")
-        element.set_checked(tick, force=True, timeout=5000)
-        return True
-    if isinstance(value, bool):
-        return False  # true/false only makes sense for a checkbox
-    if tag == "select":
-        option = _matching_option(element, str(value))
-        if option is None:
-            return False
-        element.select_option(value=option, timeout=5000)
-        return True
-    element.fill(_format_for(kind, value), timeout=5000)
-    return True
+def _spellings(key: str, value) -> list:
+    """Ways of typing a value, best first."""
+    if key in PHONE_KEYS:
+        digits = phone_digits(value) or re.sub(r"\D", "", str(value))
+        return [f"+{digits}", digits[1:]]  # "+12125550123"; some boxes add the "+1" themselves
+    if key == "annual_income":
+        amount = check_units.number(value) or 0
+        whole = f"{amount:.0f}" if amount == int(amount) else f"{amount:.2f}"
+        return list(dict.fromkeys([whole, f"{amount:.2f}", f"{amount:.2f}".replace(".", "")]))  # last: a cents-first box
+    if key == "household_size":
+        return [str(int(check_units.number(value) or 0))]
+    return [str(value).strip()]
+
+
+def _shows(key: str, shown: str, value) -> bool:
+    """Does the box now show the value (allowing for its own formatting)?"""
+    if key in PHONE_KEYS:
+        wanted, got = phone_digits(value), re.sub(r"\D", "", shown)
+        # With a leading "+" the country code is part of what's shown: "+212 555..." would be Morocco.
+        return got == wanted if shown.strip().startswith("+") else got in (wanted, (wanted or "")[1:])
+    if key in ("annual_income", "household_size"):
+        return check_units.number(shown) == check_units.number(value)
+    return _squash(shown) == _squash(value)
+
+
+def _squash(text) -> str:
+    """'Example  Street' and 'example street' compare equal."""
+    return re.sub(r"[^0-9a-z@.]", "", str(text).casefold())
 
 
 def _matching_option(select, wanted: str) -> str | None:
@@ -560,21 +753,6 @@ def _matching_option(select, wanted: str) -> str | None:
     return None
 
 
-def _format_for(kind: str, value) -> str:
-    """Dates as YYYY-MM-DD for date pickers and MM/DD/YYYY for text boxes;
-    plain digits for number boxes."""
-    text = str(value).strip()
-    iso = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})", text)
-    us = re.fullmatch(r"(\d{1,2})/(\d{1,2})/(\d{4})", text)
-    if kind == "date" and us:
-        return f"{us[3]}-{int(us[1]):02d}-{int(us[2]):02d}"
-    if kind != "date" and iso:
-        return f"{iso[2]}/{iso[3]}/{iso[1]}"
-    if kind == "number":
-        return text.replace("$", "").replace(",", "")
-    return text
-
-
 def _choose_radio(scope, question: str, answer: str) -> bool:
     asked = re.compile(re.escape(question), re.I)
     groups = scope.get_by_role("radiogroup", name=asked)
@@ -587,15 +765,6 @@ def _choose_radio(scope, question: str, answer: str) -> bool:
         return False
     choice.first.check(force=True, timeout=5000)
     return True
-
-
-def _unfilled_required(scope) -> list:
-    try:
-        if hasattr(scope, "goto"):  # a whole frame, not a <form>
-            return scope.evaluate(f"() => ({_UNFILLED_REQUIRED_JS})(document)")
-        return scope.evaluate(_UNFILLED_REQUIRED_JS)
-    except Exception:
-        return []  # the form navigated away (e.g. after Submit)
 
 
 def _has_captcha(page) -> bool:
@@ -617,6 +786,17 @@ def _confirmation_showing(page) -> bool:
         except Exception:
             continue
     return False
+
+
+def _site_messages(page) -> list:
+    """Error text the site is showing (e.g. "This field is required")."""
+    try:
+        return page.evaluate("""() => [...document.querySelectorAll(
+                '[role=alert], [aria-live], [class*=error i], [class*=invalid i], [class*=helper i]')]
+            .filter(el => el.offsetParent && el.innerText.trim())
+            .map(el => el.innerText.replace(/\\s+/g, ' ').trim().slice(0, 100)).slice(0, 5)""")
+    except Exception:
+        return []
 
 
 def _still_visible(element) -> bool:
@@ -650,20 +830,23 @@ _RESULT_TITLES = {
     "unconfirmed": ("Submitted {unit}? No confirmation seen - check now", 1),
     "filled": ("[DRY RUN] Filled the application for {unit}", 0),
     "incomplete": ("Auto-apply couldn't finish {unit} - apply yourself now", 1),
+    "rejected": ("Auto-apply couldn't finish {unit} - apply yourself now", 1),
     "blocked": ("Auto-apply couldn't finish {unit} - apply yourself now", 1),
     "failed": ("Auto-apply couldn't finish {unit} - apply yourself now", 1),
 }
 
 
 def result_alert(unit: dict, attempt: Attempt, link: str | None = None) -> dict:
-    import html
-
     title, priority = _RESULT_TITLES[attempt.status]
     lines = [check_units._linked_line(unit), html.escape(attempt.detail)]
-    if attempt.missing:
-        lines.append("Required, left empty: " + html.escape("; ".join(attempt.missing)))
+    if attempt.problems:
+        lines.append("Empty or not taking the value: " + html.escape("; ".join(attempt.problems)))
+    if attempt.site_messages:
+        lines.append("The site says: " + html.escape("; ".join(attempt.site_messages)))
     if attempt.filled:
         lines.append(f"Filled {len(attempt.filled)} fields from your profile.")
+    if attempt.status in ("submitted", "unconfirmed"):
+        lines.append(NEXT_STEP_REMINDER)
     alert = {
         "title": title.format(unit=check_units.unit_label(unit)),
         "message": check_units._fit(lines),
@@ -708,7 +891,7 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     target = parser.add_mutually_exclusive_group(required=True)
     target.add_argument("--selftest", action="store_true",
-                        help="fill and submit the FAKE form in tests/fixtures/apply_site with your profile")
+                        help="fill and submit the FAKE copy of the form in tests/fixtures/apply_site with your profile")
     target.add_argument("--unit-url", help="dry run against this real unit page (never submits)")
     parser.add_argument("--headed", action="store_true", help="show the browser window")
     args = parser.parse_args(argv)
@@ -733,10 +916,11 @@ def main(argv=None) -> int:
         check_units.TITLE_PREFIX = "[TEST] "
         url = f"http://127.0.0.1:{server.server_port}/unit.html?unitSpk=SELFTEST"
         unit = {"unitSpk": "SELFTEST", "name": "TEST", "building": {"address": "Fake form, not a real unit"},
-                "price": 2850, "availableDate": "2026-11-01T00:00:00Z"}
+                "price": 2850}
     else:
         url = args.unit_url
         unit = {"unitSpk": "manual", "name": "manual-test", "building": {"address": "dry run from the command line"}}
+    started = time.monotonic()
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=not args.headed)
@@ -744,7 +928,7 @@ def main(argv=None) -> int:
                 context = browser.new_context(viewport={"width": 1280, "height": 900})
                 context.set_default_timeout(15000)
                 page = context.new_page()
-                attempt = fill_application(page, url, form_values(profile, unit), submit=args.selftest)
+                attempt = fill_application(page, url, form_values(profile), submit=args.selftest)
                 context.close()
             finally:
                 browser.close()
@@ -752,12 +936,13 @@ def main(argv=None) -> int:
         if server:
             server.shutdown()
 
-    print(f"Result: {attempt.status} -- {attempt.detail}")
+    print(f"Result after {time.monotonic() - started:.1f}s: {attempt.status} -- {attempt.detail}")
+    print(f"Form fields seen: {'; '.join(attempt.form_fields) or 'none'}")
     print(f"Filled from your profile: {', '.join(attempt.filled) or 'nothing'}")
-    if attempt.missing:
-        print(f"Required fields left empty: {'; '.join(attempt.missing)}")
+    if attempt.problems:
+        print(f"Required fields empty or not taking the value: {'; '.join(attempt.problems)}")
     _report(unit, attempt, link=url if args.unit_url else check_units.LISTINGS_URL)
-    return 0 if attempt.status in ("submitted", "filled") else 1
+    return 0 if attempt.status in ("submitted", "filled") and not attempt.problems else 1
 
 
 if __name__ == "__main__":
