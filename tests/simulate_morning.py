@@ -47,6 +47,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 os.chdir(REPO_ROOT)  # so every output path below starts with tests/output/
 
+import auto_apply  # noqa: E402
 import check_units  # noqa: E402
 import watch_loop  # noqa: E402
 
@@ -108,6 +109,7 @@ def main() -> int:
     check_units.TITLE_PREFIX = "[TEST] "
     check_units.EMERGENCY_EXPIRE_SECONDS = 180  # test emergencies stop repeating after 3 minutes
     os.environ.pop("COMMIT_RESULTS", None)  # a test never commits or pushes
+    auto_apply.MODE = "off"  # the fake units' pages don't exist; tests/test_auto_apply.py covers applying
 
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), FakeListingsApi)
     threading.Thread(target=server.serve_forever, daemon=True).start()

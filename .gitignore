@@ -6,3 +6,8 @@ venv/
 
 # Everything tests/simulate_morning.py writes
 tests/output/
+
+# Your real applicant details, and form screenshots (which show them).
+# This repo is public: these must never be committed.
+applicant_profile.json
+private/

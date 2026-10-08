@@ -216,6 +216,25 @@ def unit_details(unit: dict) -> str:
     return ", ".join(parts)
 
 
+def unit_rent(unit: dict) -> float | None:
+    """Monthly rent: the listed price, else the cheapest lease-term rate."""
+    price = number(unit.get("price"))
+    if price is not None:
+        return price
+    rates = [r for r in map(number, (unit.get("unitRates") or {}).values()) if r is not None]
+    return min(rates) if rates else None
+
+
+def number(value) -> float | None:
+    """3040.84, "3,040.84" or "$3,040" -> 3040.84 / 3040.0; None if it isn't one."""
+    if isinstance(value, str):
+        value = value.replace("$", "").replace(",", "").strip()
+    try:
+        return float(value) if value not in (None, "") else None
+    except (TypeError, ValueError):
+        return None
+
+
 def unit_summary(unit: dict, include_data: bool = False) -> dict:
     """The events.json view of a unit. include_data adds the full API object."""
     summary = {
@@ -318,10 +337,12 @@ def diff_units(previous: dict, units: list, now_utc: str) -> tuple:
 
 
 def process_snapshot(units: list, take_screenshot=None, now: datetime | None = None,
-                     label: str = "") -> Changes:
+                     label: str = "", act_on_listings=None) -> Changes:
     """Compare one API response with the saved state and act on what changed:
     alert, save the state, take a screenshot, log events. take_screenshot is
-    a function(path) -> bool, called only when new units appear."""
+    a function(path) -> bool, called only when new units appear.
+    act_on_listings is a function(units), called on every check right after
+    the alert and before the screenshot -- auto_apply.py's hook."""
     now = now or datetime.now(timezone.utc)
     stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
     previous = load_state()
@@ -348,6 +369,15 @@ def process_snapshot(units: list, take_screenshot=None, now: datetime | None = N
 
     if next_state != previous:
         save_state(next_state)
+
+    if act_on_listings:
+        # After the alert (so you hear about the unit first) and before the
+        # screenshot (so applying doesn't wait on it). Never allowed to stop
+        # the watcher: the alert has already gone out.
+        try:
+            act_on_listings(units)
+        except Exception as e:
+            print(f"   WARNING: auto-apply step failed: {e}")
 
     if changes.new:
         screenshot = None
@@ -521,11 +551,12 @@ def _fit(lines: list, footer: str = "") -> str:
 
 
 def notify(title: str, message: str, *, priority: int = 0, url: str | None = None,
-           url_title: str | None = None) -> bool:
+           url_title: str | None = None, attachment: tuple | None = None) -> bool:
     """Send one Pushover notification (HTML-formatted, so unit names are
     tappable links). Returns True once Pushover has accepted it, or False if
     the credentials aren't set -- a dry run that prints the alert instead.
-    Raises if it couldn't be delivered."""
+    Raises if it couldn't be delivered. attachment is an optional image,
+    (filename, bytes, mime type), shown in the notification."""
     title = (TITLE_PREFIX + title)[:250]
     if not (PUSHOVER_TOKEN and PUSHOVER_USER):
         print(f"   [dry run: PUSHOVER_TOKEN/PUSHOVER_USER not set] would send priority {priority} alert:")
@@ -534,6 +565,8 @@ def notify(title: str, message: str, *, priority: int = 0, url: str | None = Non
             print(f"      | {line}")
         if url:
             print(f"      link: {url_title or url} -> {url}")
+        if attachment:
+            print(f"      image: {attachment[0]} ({len(attachment[1]) // 1024} KB)")
         return False
 
     fields = {
@@ -555,7 +588,7 @@ def notify(title: str, message: str, *, priority: int = 0, url: str | None = Non
         # you acknowledge it. Pushover requires retry + expire with it.
         fields["retry"] = EMERGENCY_RETRY_SECONDS
         fields["expire"] = EMERGENCY_EXPIRE_SECONDS
-    _pushover_post("messages.json", fields)
+    _pushover_post("messages.json", fields, attachment=attachment)
     return True
 
 
@@ -581,12 +614,16 @@ def validate_pushover_credentials() -> str | None:
     return None
 
 
-def _pushover_post(endpoint: str, fields: dict, attempts: int = 3) -> dict:
-    body = urllib.parse.urlencode(fields).encode()
+def _pushover_post(endpoint: str, fields: dict, attempts: int = 3, attachment: tuple | None = None) -> dict:
+    headers = {}
+    if attachment:
+        body, headers["Content-Type"] = _multipart(fields, attachment)
+    else:
+        body = urllib.parse.urlencode(fields).encode()
     error = None
     for attempt in range(1, attempts + 1):
         try:
-            req = urllib.request.Request(f"{PUSHOVER_API}/{endpoint}", data=body, method="POST")
+            req = urllib.request.Request(f"{PUSHOVER_API}/{endpoint}", data=body, headers=headers, method="POST")
             with urllib.request.urlopen(req, timeout=10) as resp:
                 return json.load(resp)
         except urllib.error.HTTPError as e:
@@ -599,6 +636,19 @@ def _pushover_post(endpoint: str, fields: dict, attempts: int = 3) -> dict:
         if attempt < attempts:
             time.sleep(2 * attempt)
     raise RuntimeError(f"Couldn't reach Pushover after {attempts} attempts: {error}")
+
+
+def _multipart(fields: dict, attachment: tuple) -> tuple:
+    """multipart/form-data body for a Pushover message with an image."""
+    filename, data, mime = attachment
+    boundary = f"----stuytown-watcher-{os.urandom(8).hex()}"
+    parts = []
+    for name, value in fields.items():
+        parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{value}\r\n'.encode())
+    parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="attachment"; filename="{filename}"\r\n'
+                 f'Content-Type: {mime}\r\n\r\n'.encode() + data + b"\r\n")
+    parts.append(f"--{boundary}--\r\n".encode())
+    return b"".join(parts), f"multipart/form-data; boundary={boundary}"
 
 
 def main() -> None:

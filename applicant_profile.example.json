@@ -1,0 +1,34 @@
+{
+  "_readme": "Made-up example. Copy to applicant_profile.json (gitignored) on your computer, or paste your filled-in copy into the APPLICANT_PROFILE GitHub secret. Never commit your real one: this repo is public. Keys starting with _ are ignored.",
+
+  "first_name": "Jane",
+  "middle_name": "",
+  "last_name": "Doe",
+  "email": "jane.doe@example.com",
+  "phone": "212-555-0123",
+  "date_of_birth": "1990-01-31",
+
+  "street_address": "123 Example Street",
+  "apartment": "4B",
+  "city": "New York",
+  "state": "NY",
+  "zip": "10009",
+
+  "annual_income": 95000,
+  "household_size": 1,
+  "employer": "Example Company",
+  "job_title": "Analyst",
+
+  "_move_in_date": "Leave empty to use each unit's own available date. Dates are YYYY-MM-DD.",
+  "move_in_date": "",
+
+  "_extra_fields": "Any other field, by the text of its label (part of it is enough). true/false ticks or unticks a checkbox.",
+  "extra_fields": {
+    "I certify that the information": true
+  },
+
+  "_radio_choices": "Yes/no-style questions: the question's text (part of it is enough) -> the option to pick.",
+  "radio_choices": {
+    "Do you have pets": "No"
+  }
+}

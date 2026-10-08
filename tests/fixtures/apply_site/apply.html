@@ -1,0 +1,83 @@
+<!doctype html>
+<!-- FAKE two-page application form for auto_apply.py's tests and
+     --selftest. Nothing here is sent anywhere: "submitting" just shows a
+     thank-you message and what was entered (window.submitted, for tests). -->
+<html lang="en">
+<head><meta charset="utf-8"><title>FAKE application form</title>
+<style>
+  body{font-family:sans-serif;max-width:720px;margin:2em auto}
+  label{display:block;margin-top:.8em} input,select{padding:.3em} #error{color:#b00}
+</style></head>
+<body>
+<h1>Rental application (TEST FORM)</h1>
+<form id="app" novalidate>
+  <section id="page1">
+    <h2>Page 1 of 2: about you</h2>
+    <label for="fn">First Name *</label><input id="fn" name="first_name" required>
+    <label for="ln">Last Name *</label><input id="ln" name="last_name" required>
+    <label for="em">Email Address *</label><input id="em" type="email" name="email" required>
+    <label for="em2">Confirm Email *</label><input id="em2" type="email" name="email_confirm" required>
+    <label for="ph">Phone Number *</label><input id="ph" type="tel" name="phone" required>
+    <label for="dob">Date of Birth *</label><input id="dob" type="date" name="date_of_birth" required>
+    <label for="st">Current Street Address *</label><input id="st" name="street" required>
+    <label for="apt">Apt / Suite</label><input id="apt" name="apt">
+    <label for="city">City *</label><input id="city" name="city" required>
+    <label for="state">State *</label>
+    <select id="state" name="state" required>
+      <option value="">Select...</option><option value="NJ">New Jersey</option><option value="NY">New York</option>
+    </select>
+    <label for="zip">ZIP Code *</label><input id="zip" name="zip" required>
+    <p><button type="button" id="next">Next</button></p>
+  </section>
+  <section id="page2" hidden>
+    <h2>Page 2 of 2: income and household</h2>
+    <label for="inc">Annual Household Income *</label><input id="inc" type="number" name="income" required>
+    <label for="hh">Household Size *</label>
+    <select id="hh" name="household_size" required>
+      <option value="">Select...</option><option>1</option><option>2</option><option>3</option><option>4</option>
+    </select>
+    <label for="emp">Employer *</label><input id="emp" name="employer" required>
+    <label for="mi">Desired Move-in Date</label><input id="mi" name="move_in" placeholder="MM/DD/YYYY">
+    <fieldset>
+      <legend>Do you have pets? *</legend>
+      <label><input type="radio" name="pets" value="yes" required> Yes</label>
+      <label><input type="radio" name="pets" value="no"> No</label>
+    </fieldset>
+    <label><input type="checkbox" name="certify" required>
+      I certify that the information provided is true and complete</label>
+    <p><button type="submit">Submit Application</button></p>
+  </section>
+  <p id="error" role="alert"></p>
+</form>
+<div id="done" hidden>
+  <h2>Thank you! Your application has been received.</h2>
+  <p>What the form received:</p><pre id="received"></pre>
+</div>
+<script>
+  const form = document.getElementById('app');
+  const error = document.getElementById('error');
+  function emptyRequired(section) {
+    return [...section.querySelectorAll('[required]')].filter(el =>
+      el.type === 'checkbox' ? !el.checked
+      : el.type === 'radio' ? !form.querySelector(`input[name="${el.name}"]:checked`)
+      : !el.value);
+  }
+  document.getElementById('next').addEventListener('click', () => {
+    const missing = emptyRequired(document.getElementById('page1'));
+    if (missing.length) { error.textContent = 'Please fill in: ' + missing.map(el => el.name).join(', '); return; }
+    error.textContent = '';
+    document.getElementById('page1').hidden = true;
+    document.getElementById('page2').hidden = false;
+  });
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    const missing = emptyRequired(document.getElementById('page2'));
+    if (missing.length) { error.textContent = 'Please fill in: ' + missing.map(el => el.name).join(', '); return; }
+    window.submitted = Object.fromEntries(new FormData(form));
+    form.hidden = true;
+    document.getElementById('done').hidden = false;
+    document.getElementById('received').textContent = JSON.stringify(window.submitted, null, 2);
+  });
+</script>
+</body>
+</html>

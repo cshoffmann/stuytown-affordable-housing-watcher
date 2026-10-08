@@ -32,6 +32,10 @@ on:
         description: 'Test the whole flow instead: replay a fake morning (fake units, real [TEST] alerts + screenshots; no commits)'
         type: boolean
         default: false
+      auto_apply_selftest:
+        description: 'Test auto-apply instead: fill + submit a FAKE form with your APPLICANT_PROFILE secret, screenshot to your phone'
+        type: boolean
+        default: false
 
 # Only one watcher at a time: a run triggered while another is going waits
 # for it instead of polling (and alerting) twice.
@@ -70,7 +74,18 @@ jobs:
           TEST_MINUTES: ${{ inputs.minutes }}
           SEND_TEST_ALERT: ${{ inputs.send_test_alert }}
           FAKE_MORNING: ${{ inputs.fake_morning }}
+          # Auto-apply (auto_apply.py). Off unless the AUTO_APPLY_MODE repository
+          # variable is dry_run or submit. The profile is one JSON secret.
+          APPLICANT_PROFILE: ${{ secrets.APPLICANT_PROFILE }}
+          AUTO_APPLY_MODE: ${{ vars.AUTO_APPLY_MODE }}
+          AUTO_APPLY_MAX_RENT: ${{ vars.AUTO_APPLY_MAX_RENT }}
+          AUTO_APPLY_SELFTEST: ${{ inputs.auto_apply_selftest }}
         run: |
+          if [ "$AUTO_APPLY_SELFTEST" = "true" ]; then
+            # Only ever touches the fake form in tests/fixtures/apply_site.
+            python auto_apply.py --selftest
+            exit
+          fi
           if [ "$FAKE_MORNING" = "true" ]; then
             # tests/simulate_morning.py never commits; its output is uploaded below instead.
             python tests/simulate_morning.py

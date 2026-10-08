@@ -2,8 +2,9 @@
 The live watcher: checks the StuyTown affordable listings every 15 seconds
 from 7:00 to 10:00am ET, then exits. GitHub Actions starts it every morning
 (.github/workflows/watch.yml). All of the "is this new? should I alert?"
-logic lives in check_units.py -- this file is the timing, the screenshot,
-and saving results back to the repo.
+logic lives in check_units.py, and applying to cheap units in auto_apply.py
+-- this file is the timing, the screenshot, and saving results back to the
+repo.
 
     python watch_loop.py                     # the real thing: if started before 7:00 ET it waits, then checks until 10:00 ET
     python watch_loop.py --minutes 5         # test run: check every 15s for 5 minutes starting now, ignoring the window
@@ -24,6 +25,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
+import auto_apply
 import check_units
 
 POLL_INTERVAL_SECONDS = 15
@@ -74,7 +76,8 @@ def poll_once(take_screenshot=live_screenshot, label: str | None = None) -> chec
     Pass take_screenshot=None to skip screenshots."""
     units = check_units.fetch_all_units()
     changes = check_units.process_snapshot(
-        units, take_screenshot=take_screenshot, label=label or f"{now_et():%H:%M:%S} ET"
+        units, take_screenshot=take_screenshot, label=label or f"{now_et():%H:%M:%S} ET",
+        act_on_listings=auto_apply.act_on_listings,
     )
     if changes:
         commit_and_push(f"Listings changed: {changes.summary()}")
@@ -155,6 +158,8 @@ def main(argv=None) -> int:
                         help="send a [TEST] alert at startup, to prove the Pushover keys work")
     args = parser.parse_args(argv)
 
+    # First, so the applicant profile is masked in the log before anything else prints.
+    auto_apply.startup_check()
     print(f"Pushover credentials loaded: {bool(check_units.PUSHOVER_TOKEN and check_units.PUSHOVER_USER)}")
     if os.environ.get("GITHUB_ACTIONS") == "true":
         problem = check_units.validate_pushover_credentials()

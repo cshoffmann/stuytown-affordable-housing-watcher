@@ -131,6 +131,83 @@ token not scoped to this repo.
 **Renewing the token:** generate a new one the same way, then edit the job
 and replace the `Authorization` header value. Force run once to confirm.
 
+## Auto-apply (`auto_apply.py`) — version 1
+
+When a listed unit's monthly rent is **at or under $3,000** (and your income
+meets the unit's minimum), the watcher opens the unit's page, presses
+**Apply Now**, fills in the application from your saved applicant profile,
+submits it, and sends you the result with a screenshot of the form. It runs
+right after the new-unit alert, so you still hear about every unit first.
+
+It's controlled by the `AUTO_APPLY_MODE` repository variable:
+
+| Mode | What it does |
+| --- | --- |
+| `off` (or not set) | Never opens an application — the watcher works exactly as before |
+| `dry_run` | Fills in the whole form and sends you a screenshot, but **never presses the final Submit**. Start here |
+| `submit` | Fills in the form and submits it |
+
+Safety rails: a unit is applied to **once, ever** (an attempt that crashed
+gets one retry; a submit with no confirmation is never repeated), at most 3
+applications per morning, cheapest unit first. It never fills a form with
+required fields left empty, and it stops at a CAPTCHA it would have to solve —
+both cases send you a "couldn't finish — apply yourself now" alert with the
+link and a screenshot.
+
+### How it finds the form
+
+It doesn't depend on the site's exact HTML. It finds buttons by their text
+(**Apply…**, **Next/Continue**, **Submit…**) and fields by their visible
+label, e.g. a field labelled "First Name" gets `first_name`, "ZIP Code"
+gets `zip`. The label patterns are in `FORM_FIELDS` in `auto_apply.py`.
+Fields it doesn't know about go in your profile's `extra_fields` (by label
+text), and yes/no questions go in `radio_choices`. Every result alert lists
+any **required field it couldn't fill**, by the site's own label — that's
+how you tune it: add those to your profile and try again.
+
+### Your details: one JSON secret, never a file in the repo
+
+This repo and its Actions logs are **public**, so a JSON file in the repo
+would publish your details. Separate environment variables for name, address,
+income and so on would mean a dozen secrets to keep in sync. So your profile
+is **one JSON document stored as one GitHub secret**, `APPLICANT_PROFILE`:
+
+- At the start of every run each value is masked (`::add-mask::`), so it
+  shows as `***` anywhere in the log.
+- Form screenshots show your details, so they go only to your phone (as a
+  Pushover image) and to the gitignored `private/` folder. They're never put
+  in `screenshots/`.
+- `data/applications.json` (committed) records only which units were tried
+  and how it went: the unit, the time, the result, the profile *key names*
+  used and the site's labels for any empty required fields. None of your
+  details.
+- On your own computer, the same JSON goes in `applicant_profile.json`, which
+  is gitignored.
+
+### Turning it on
+
+1. Copy `applicant_profile.example.json`, fill in your real details (dates
+   as `YYYY-MM-DD`; leave `move_in_date` empty to use each unit's own
+   available date), and keep the copy **off** the repo.
+2. GitHub → this repo → **Settings → Secrets and variables → Actions**:
+   - **Secrets** tab → *New repository secret* → name `APPLICANT_PROFILE`,
+     value: paste the whole JSON.
+   - **Variables** tab → *New repository variable* → `AUTO_APPLY_MODE` =
+     `dry_run`. Optional: `AUTO_APPLY_MAX_RENT` (default `3000`).
+3. **Test it with your real profile on a fake form:** Actions → **StuyTown
+   watcher** → **Run workflow** → tick *Test auto-apply instead*. It fills
+   and submits the form in `tests/fixtures/apply_site/` (on GitHub's server
+   only; nothing reaches StuyTown) and sends a `[TEST]` screenshot to your
+   phone that shows what it typed.
+4. Leave it on `dry_run` for a morning or two. Each time a qualifying unit
+   is listed you'll get a `[DRY RUN]` screenshot of the real form filled in.
+   Fix anything it got wrong or left empty (see *How it finds the form*).
+5. When the dry runs look right, change `AUTO_APPLY_MODE` to `submit`.
+
+To dry-run against a real unit page from your own computer (it never
+submits): `python auto_apply.py --unit-url "<the unit's link>" --headed`
+shows the browser while it fills the form.
+
 ## Testing
 
 All tests live in `tests/`; fake data in `tests/fixtures/`. Nothing in
@@ -201,6 +278,10 @@ there. (Run it outside 7–10am, or it waits for the morning run to finish.)
   site (alerts only if you've set the Pushover variables; never commits).
 - `screenshot.py` — full-page screenshot of the listings page via a headless
   browser (Playwright)
+- `auto_apply.py` — applies to units at or under your rent limit (see
+  *Auto-apply*); `applicant_profile.example.json` is the profile's shape
+- `data/applications.json` — which units auto-apply tried, and how it went
+  (no personal details)
 - `data/last_seen.json` — the state (what's listed right now)
 - `data/events.json` — history of every new / updated / removed unit
 - `screenshots/` — one screenshot per new-unit event

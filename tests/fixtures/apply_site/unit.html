@@ -1,0 +1,26 @@
+<!doctype html>
+<!-- FAKE unit page for auto_apply.py's tests and --selftest. Like the real
+     site, the Apply button is drawn by JavaScript after the page loads, and
+     the header and footer have their own look-alike links and inputs that
+     must be left alone. -->
+<html lang="en">
+<head><meta charset="utf-8"><title>FAKE unit - Apt TEST</title>
+<style>body{font-family:sans-serif;max-width:720px;margin:2em auto}</style></head>
+<body>
+<header><nav><a href="#">Apply for affordable housing (nav link -- not this one)</a></nav></header>
+<main>
+  <h1>Apt TEST, fake building</h1>
+  <p>1 bed / 1 bath - $2,850/mo. This is a test page, not a real listing.</p>
+  <div id="actions">Loading...</div>
+</main>
+<footer>
+  <form onsubmit="return false"><label for="newsletter">Email</label>
+    <input id="newsletter" type="email" name="newsletter"><button type="button">Sign up</button></form>
+</footer>
+<script>
+  setTimeout(() => {
+    document.getElementById('actions').innerHTML = '<a href="apply.html' + location.search + '">Apply Now</a>';
+  }, 300);
+</script>
+</body>
+</html>
