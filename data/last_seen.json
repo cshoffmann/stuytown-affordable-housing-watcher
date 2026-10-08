@@ -1,5 +1,109 @@
 {
   "units": {
+    "P~NYST31~B~005~U~05-F": {
+      "data": {
+        "amenities": [
+          {
+            "code": "IBSS",
+            "friendlyDescription": "Stainless steel appliances",
+            "searchCode": null
+          },
+          {
+            "code": "FS05",
+            "friendlyDescription": "5th floor",
+            "searchCode": null
+          }
+        ],
+        "availableDate": "2026-11-14T00:00:00Z",
+        "bathrooms": 1,
+        "bedrooms": 1,
+        "building": {
+          "address": "5 STUYVESANT OVAL",
+          "buildingId": "353",
+          "buildingName": "5 STUYVESANT OVAL",
+          "latitude": "40.732014",
+          "longitude": "-73.97898",
+          "transportationDescription": "Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.",
+          "transports": [
+            {
+              "description": "14_4-train",
+              "imageUrl": "/media/3khh00cg/4.png"
+            },
+            {
+              "description": "15_5-train",
+              "imageUrl": "/media/vk3nwm2c/5.png"
+            },
+            {
+              "description": "16_6-train",
+              "imageUrl": "/media/w45lmn1h/6.png"
+            },
+            {
+              "description": "26_R-train",
+              "imageUrl": "/media/wlrdmxwl/r.png"
+            },
+            {
+              "description": "27_W-train",
+              "imageUrl": "/media/g00l3sei/w.png"
+            },
+            {
+              "description": "22_L",
+              "imageUrl": "/media/t02dfmty/l.png"
+            },
+            {
+              "description": "30_M14",
+              "imageUrl": "/media/hvwoaov3/m14.png"
+            },
+            {
+              "description": "37_RiverFerry",
+              "imageUrl": "/media/trsfb4aw/east-river-ferry.jpg"
+            },
+            {
+              "description": "25_Q",
+              "imageUrl": "/media/ipvba2uo/q.png"
+            },
+            {
+              "description": "24_N",
+              "imageUrl": "/media/vx5fhuim/n.png"
+            },
+            {
+              "description": "35_CityBike",
+              "imageUrl": "/media/1ojhg5wj/citbike.png"
+            }
+          ]
+        },
+        "description": null,
+        "finish": "Blank",
+        "floorplan": {
+          "floorplanSvg": "/media/k2inbnne/107.svg",
+          "staticImageUrl": null
+        },
+        "images": [],
+        "incomeRequirement": 74875.2,
+        "isFlex": false,
+        "name": "05-F",
+        "price": 2183.86,
+        "property": {
+          "commonImages": [],
+          "name": "Stuyvesant Town",
+          "propertySpk": "P~103ST"
+        },
+        "sqft": 745,
+        "style": {
+          "id": 580,
+          "name": "107"
+        },
+        "unitFloor": "05",
+        "unitRates": {
+          "12": 2183.86,
+          "24": 2183.86
+        },
+        "unitSpk": "P~NYST31~B~005~U~05-F",
+        "version": 3,
+        "virtualTourUrl": null
+      },
+      "first_seen_utc": "2026-10-08T11:30:03Z",
+      "missing_polls": 0
+    },
     "P~NYST31~B~451~U~09-F": {
       "data": {
         "amenities": [
