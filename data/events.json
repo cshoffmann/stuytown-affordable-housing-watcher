@@ -595,5 +595,23 @@
     ],
     "screenshot": "screenshots/2026-10-08T11-15-00Z_03-D,09-F.png",
     "alert_sent": true
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-10-08T11:16:48Z",
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~455~U~03-D",
+        "apartment": "03-D",
+        "address": "455 East 14th Street",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 2032.62,
+        "income_requirement": 69689.83,
+        "available_date": "2026-10-24T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~455~U~03-D",
+        "first_seen_utc": "2026-10-08T11:15:00Z"
+      }
+    ]
   }
 ]
