@@ -113,6 +113,91 @@
       },
       "first_seen_utc": "2026-10-08T11:15:00Z",
       "missing_polls": 0
+    },
+    "P~NYST31~B~530~U~01-A": {
+      "data": {
+        "amenities": [
+          {
+            "code": "PS40",
+            "friendlyDescription": "PS40 School District",
+            "searchCode": "PS40Code"
+          },
+          {
+            "code": "FS01",
+            "friendlyDescription": "1st floor",
+            "searchCode": null
+          },
+          {
+            "code": "IBSS",
+            "friendlyDescription": "Stainless steel appliances",
+            "searchCode": null
+          }
+        ],
+        "availableDate": "2026-10-17T00:00:00Z",
+        "bathrooms": 1,
+        "bedrooms": 1,
+        "building": {
+          "address": "530 EAST 20TH STREET",
+          "buildingId": "364",
+          "buildingName": "530 EAST 20TH STREET",
+          "latitude": "40.733177",
+          "longitude": "-73.9762",
+          "transportationDescription": "Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.",
+          "transports": [
+            {
+              "description": "22_L",
+              "imageUrl": "/media/t02dfmty/l.png"
+            },
+            {
+              "description": "32_M23",
+              "imageUrl": "/media/rcvl4pqk/m23.png"
+            },
+            {
+              "description": "29_M9",
+              "imageUrl": "/media/w4rlarll/m9.png"
+            },
+            {
+              "description": "37_RiverFerry",
+              "imageUrl": "/media/trsfb4aw/east-river-ferry.jpg"
+            },
+            {
+              "description": "35_CityBike",
+              "imageUrl": "/media/1ojhg5wj/citbike.png"
+            }
+          ]
+        },
+        "description": null,
+        "finish": "Blank",
+        "floorplan": {
+          "floorplanSvg": "/media/4xqcm3ou/102.svg",
+          "staticImageUrl": null
+        },
+        "images": [],
+        "incomeRequirement": 104257.37,
+        "isFlex": false,
+        "name": "01-A",
+        "price": 3040.84,
+        "property": {
+          "commonImages": [],
+          "name": "Stuyvesant Town",
+          "propertySpk": "P~103ST"
+        },
+        "sqft": 771,
+        "style": {
+          "id": 575,
+          "name": "102"
+        },
+        "unitFloor": "01",
+        "unitRates": {
+          "12": 3040.84,
+          "24": 3040.84
+        },
+        "unitSpk": "P~NYST31~B~530~U~01-A",
+        "version": 2,
+        "virtualTourUrl": null
+      },
+      "first_seen_utc": "2026-10-08T12:00:03Z",
+      "missing_polls": 0
     }
   }
 }
