@@ -852,5 +852,35 @@
     ],
     "screenshot": "screenshots/2026-10-08T12-00-03Z_01-A.png",
     "alert_sent": true
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-10-08T12:02:03Z",
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~451~U~09-F",
+        "apartment": "09-F",
+        "address": "451 East 14th Street",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 4380.54,
+        "income_requirement": 150189.94,
+        "available_date": "2026-10-10T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~451~U~09-F",
+        "first_seen_utc": "2026-10-08T11:15:00Z"
+      },
+      {
+        "unit_id": "P~NYST31~B~530~U~01-A",
+        "apartment": "01-A",
+        "address": "530 East 20th Street",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 3040.84,
+        "income_requirement": 104257.37,
+        "available_date": "2026-10-17T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~530~U~01-A",
+        "first_seen_utc": "2026-10-08T12:00:03Z"
+      }
+    ]
   }
 ]
