@@ -28,7 +28,7 @@ Run from the repo folder:
         PUSHOVER_TOKEN=your-app-token PUSHOVER_USER=your-user-key python3 tests/simulate_morning.py
 
 Options:
-    --interval 15     seconds between checks (default 5; 15 = the real pace)
+    --interval 10     seconds between checks (default 5; 10 = the real pace)
     --no-screenshots  skip the screenshots (they need Playwright)
 """
 
@@ -94,7 +94,7 @@ def fake_screenshot_function():
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--interval", type=float, default=5, help="seconds between checks (real pace: 15)")
+    parser.add_argument("--interval", type=float, default=5, help="seconds between checks (real pace: 10)")
     parser.add_argument("--no-screenshots", action="store_true", help="skip the screenshots")
     args = parser.parse_args()
 
@@ -109,7 +109,7 @@ def main() -> int:
     check_units.TITLE_PREFIX = "[TEST] "
     check_units.EMERGENCY_EXPIRE_SECONDS = 180  # test emergencies stop repeating after 3 minutes
     os.environ.pop("COMMIT_RESULTS", None)  # a test never commits or pushes
-    auto_apply.MODE = "off"  # the fake units' pages don't exist; tests/test_auto_apply.py covers applying
+    auto_apply.ENABLED = False  # the fake units' pages don't exist; tests/test_auto_apply.py covers applying
 
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), FakeListingsApi)
     threading.Thread(target=server.serve_forever, daemon=True).start()

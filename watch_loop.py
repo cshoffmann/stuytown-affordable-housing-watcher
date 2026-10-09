@@ -1,5 +1,5 @@
 """
-The live watcher: checks the StuyTown affordable listings every 15 seconds
+The live watcher: checks the StuyTown affordable listings every 10 seconds
 from 7:00 to 10:00am ET, then exits. GitHub Actions starts it every morning
 (.github/workflows/watch.yml). All of the "is this new? should I alert?"
 logic lives in check_units.py, and applying to cheap units in auto_apply.py
@@ -7,7 +7,7 @@ logic lives in check_units.py, and applying to cheap units in auto_apply.py
 repo.
 
     python watch_loop.py                     # the real thing: if started before 7:00 ET it waits, then checks until 10:00 ET
-    python watch_loop.py --minutes 5         # test run: check every 15s for 5 minutes starting now, ignoring the window
+    python watch_loop.py --minutes 5         # test run: check every 10s for 5 minutes starting now, ignoring the window
     python watch_loop.py --send-test-alert   # also send a [TEST] alert at startup, proving the Pushover keys work
 
 Results (data/, screenshots/) are committed and pushed only when
@@ -28,7 +28,7 @@ from zoneinfo import ZoneInfo
 import auto_apply
 import check_units
 
-POLL_INTERVAL_SECONDS = 15
+POLL_INTERVAL_SECONDS = 10  # the cheap units have been gone within 30-90 seconds
 WINDOW_START_HOUR = 7  # 7:00am ET
 WINDOW_END_HOUR = 10  # 10:00am ET
 # A run started more than this long before 7:00 exits instead of sitting
@@ -95,7 +95,7 @@ def watch_until(end: datetime) -> None:
         except Exception as e:
             failures += 1
             print(f"[{now_et():%H:%M:%S} ET] Check failed, trying again next check: {e}")
-        # Keep a steady 15s rhythm measured start-to-start, so a slow check
+        # Keep a steady rhythm measured start-to-start, so a slow check
         # (e.g. one that took a screenshot) doesn't push everything later.
         next_check += POLL_INTERVAL_SECONDS
         delay = next_check - time.monotonic()

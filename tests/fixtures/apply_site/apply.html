@@ -1,7 +1,8 @@
 <!doctype html>
 <!-- FAKE copy of StuyTown's application form (as recorded 2026-10-08), for
      auto_apply.py's tests and --selftest. Nothing is sent anywhere:
-     "submitting" shows a thank-you and what was entered (window.submitted).
+     "submitting" POSTs the answers as JSON to api/applications on the same
+     test server, then shows a thank-you and what was entered (window.submitted).
 
      Deliberately awkward, like real forms often are:
        - labels aren't connected to their boxes (no <label for=...>), and
@@ -99,10 +100,19 @@
       form.insertAdjacentHTML('beforeend', '<div class="error-text">Something went wrong. Please try again later.</div>');
     }
     if (!ok) return;
-    window.submitted = Object.fromEntries(new FormData(form));
-    form.hidden = true;
-    document.getElementById('done').hidden = false;
-    document.getElementById('received').textContent = JSON.stringify(window.submitted, null, 2);
+    // Like a real single-page site: the answers go to an API as JSON.
+    const answers = Object.fromEntries(new FormData(form));
+    fetch('api/applications?unitSpk=' + encodeURIComponent(options.get('unitSpk') || ''), {
+      method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(answers),
+    }).then(response => {
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      window.submitted = answers;
+      form.hidden = true;
+      document.getElementById('done').hidden = false;
+      document.getElementById('received').textContent = JSON.stringify(answers, null, 2);
+    }).catch(() => {
+      form.insertAdjacentHTML('beforeend', '<div class="error-text">Something went wrong. Please try again later.</div>');
+    });
   });
 </script>
 </body>
