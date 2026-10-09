@@ -1126,5 +1126,23 @@
     ],
     "screenshot": "screenshots/2026-10-09T11-30-00Z_06-E.png",
     "alert_sent": true
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-10-09T11:31:30Z",
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~018~U~06-E",
+        "apartment": "06-E",
+        "address": "18 Stuyvesant Oval",
+        "bedrooms": 2,
+        "bathrooms": 1,
+        "price": 2648.34,
+        "income_requirement": 90800.23,
+        "available_date": "2026-10-31T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~018~U~06-E",
+        "first_seen_utc": "2026-10-09T11:30:00Z"
+      }
+    ]
   }
 ]
