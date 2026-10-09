@@ -2,19 +2,21 @@
   "_about": "One simulated morning, replayed one check at a time by tests/simulate_morning.py. 'units' is what the fake API returns at that check (names from fake_units.json); 'expect' is the alert that check should trigger: new, updated, removed or nothing.",
   "steps": [
     {"time": "07:00:00", "what": "Watcher starts - nothing listed yet", "units": [], "expect": "nothing"},
-    {"time": "07:00:15", "what": "Still nothing", "units": [], "expect": "nothing"},
+    {"time": "07:00:10", "what": "Still nothing", "units": [], "expect": "nothing"},
     {"time": "07:55:00", "what": "Apt 5A is posted", "units": ["5A"], "expect": "new"},
-    {"time": "07:55:15", "what": "5A still listed, same data - must NOT alert again", "units": ["5A"], "expect": "nothing"},
-    {"time": "07:55:30", "what": "5A still listed, same data", "units": ["5A"], "expect": "nothing"},
+    {"time": "07:55:10", "what": "5A still listed, same data - must NOT alert again", "units": ["5A"], "expect": "nothing"},
+    {"time": "07:55:20", "what": "5A still listed, same data", "units": ["5A"], "expect": "nothing"},
     {"time": "08:10:00", "what": "5A's rent changes", "units": ["5A_rent_change"], "expect": "updated"},
-    {"time": "08:10:15", "what": "5A at the new rent, same as last check", "units": ["5A_rent_change"], "expect": "nothing"},
+    {"time": "08:10:10", "what": "5A at the new rent, same as last check", "units": ["5A_rent_change"], "expect": "nothing"},
     {"time": "08:30:00", "what": "API hiccup: 5A missing from one response", "units": [], "expect": "nothing"},
-    {"time": "08:30:15", "what": "5A back on the next check - a blip, must NOT re-alert", "units": ["5A_rent_change"], "expect": "nothing"},
+    {"time": "08:30:10", "what": "5A back on the next check - a blip, must NOT re-alert", "units": ["5A_rent_change"], "expect": "nothing"},
     {"time": "09:00:00", "what": "5A taken down (1st check without it)", "units": [], "expect": "nothing"},
-    {"time": "09:00:15", "what": "5A still gone (2nd check)", "units": [], "expect": "nothing"},
-    {"time": "09:00:30", "what": "5A still gone (3rd check)", "units": [], "expect": "nothing"},
-    {"time": "09:00:45", "what": "5A still gone (4th check) - now confirmed removed", "units": [], "expect": "removed"},
+    {"time": "09:00:10", "what": "5A still gone (2nd check)", "units": [], "expect": "nothing"},
+    {"time": "09:00:20", "what": "5A still gone (3rd check)", "units": [], "expect": "nothing"},
+    {"time": "09:00:30", "what": "5A still gone (4th check)", "units": [], "expect": "nothing"},
+    {"time": "09:00:40", "what": "5A still gone (5th check)", "units": [], "expect": "nothing"},
+    {"time": "09:00:50", "what": "5A still gone (6th check) - now confirmed removed", "units": [], "expect": "removed"},
     {"time": "09:20:00", "what": "5A re-listed AND a new unit, 12C, posted", "units": ["5A", "12C"], "expect": "new"},
-    {"time": "09:20:15", "what": "Both still listed, same data", "units": ["5A", "12C"], "expect": "nothing"}
+    {"time": "09:20:10", "what": "Both still listed, same data", "units": ["5A", "12C"], "expect": "nothing"}
   ]
 }

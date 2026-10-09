@@ -9,14 +9,11 @@ Run from the repo folder:
     python -m unittest discover -s tests -v
 """
 
-import functools
-import http.server
 import io
 import json
 import os
 import sys
 import tempfile
-import threading
 import time
 import unittest
 from contextlib import redirect_stdout
@@ -26,6 +23,7 @@ from unittest import mock
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
+import apply_recorder  # noqa: E402
 import auto_apply  # noqa: E402
 import check_units  # noqa: E402
 
@@ -74,21 +72,17 @@ class EligibilityTests(unittest.TestCase):
         self.assertNotIn("95", reason)
 
     def test_a_unit_is_never_applied_to_twice(self):
-        def record(*attempts):
-            return {"attempts": [{"mode": mode, "status": status} for mode, status in attempts]}
+        def record(*statuses):
+            return {"attempts": [{"status": status} for status in statuses]}
 
-        with mock.patch.object(auto_apply, "MODE", "submit"):
-            self.assertIsNone(auto_apply.already_handled(None))
-            self.assertIsNone(auto_apply.already_handled(record(("dry_run", "filled"))))  # a dry run doesn't count
-            self.assertIsNone(auto_apply.already_handled(record(("submit", "failed"))))  # one retry after a crash
-            self.assertIn("gave up", auto_apply.already_handled(record(("submit", "failed"), ("submit", "failed"))))
-            self.assertIn("already applied", auto_apply.already_handled(record(("submit", "submitted"))))
-            # It may have gone through, so it's never sent a second time.
-            self.assertIn("already applied", auto_apply.already_handled(record(("submit", "unconfirmed"))))
-            self.assertIn("rejected", auto_apply.already_handled(record(("submit", "rejected"))))
-            self.assertIn("incomplete", auto_apply.already_handled(record(("submit", "incomplete"))))
-        with mock.patch.object(auto_apply, "MODE", "dry_run"):
-            self.assertIn("already tried", auto_apply.already_handled(record(("dry_run", "filled"))))
+        self.assertIsNone(auto_apply.already_handled(None))
+        self.assertIsNone(auto_apply.already_handled(record("failed")))  # one retry after a crash
+        self.assertIn("gave up", auto_apply.already_handled(record("failed", "failed")))
+        self.assertIn("already applied", auto_apply.already_handled(record("submitted")))
+        # It may have gone through, so it's never sent a second time.
+        self.assertIn("already applied", auto_apply.already_handled(record("unconfirmed")))
+        self.assertIn("rejected", auto_apply.already_handled(record("rejected")))
+        self.assertIn("incomplete", auto_apply.already_handled(record("incomplete")))
 
 
 class ProfileTests(unittest.TestCase):
@@ -202,13 +196,14 @@ class ActOnListingsTests(unittest.TestCase):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
         self.dir = Path(tmp.name)
-        self.tried, self.sent = [], []
+        self.tried, self.recorded, self.sent = [], [], []
         self.status = "submitted"
         for target, name, value in [
             (auto_apply, "APPLICATIONS_FILE", str(self.dir / "applications.json")),
             (auto_apply, "PRIVATE_DIR", str(self.dir / "private")),
             (auto_apply, "MAX_RENT", 3000),
             (auto_apply, "_skips_logged", set()),
+            (auto_apply, "_recorded_this_run", set()),
             (auto_apply, "_submitted_this_run", 0),
             (auto_apply, "apply_to_unit", self.fake_apply),
             (auto_apply, "_profile_for_run", lambda: EXAMPLE_PROFILE),
@@ -222,35 +217,50 @@ class ActOnListingsTests(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
 
-    def fake_apply(self, browser, listed_unit, profile, submit):
-        self.tried.append((check_units.apartment(listed_unit), submit))
+    def fake_apply(self, browser, listed_unit, profile, record_only=False):
+        if record_only:
+            self.recorded.append(check_units.apartment(listed_unit))
+            return auto_apply.Attempt("recorded", "test")
+        self.tried.append(check_units.apartment(listed_unit))
         return auto_apply.Attempt(self.status, "test", filled=["first_name"], form_url="https://example.test/apply",
-                                  form_fields=["First Name *"], screenshot=b"\xff\xd8 fake jpeg")
+                                  form_fields=["First Name *"], filled_screenshot=b"\xff\xd8 filled",
+                                  result_screenshot=b"\xff\xd8 after", seconds=2.0)
 
     def record_alert(self, **alert):
         self.sent.append(alert)
         return True
 
-    def run_hook(self, units, mode="submit"):
-        with mock.patch.object(auto_apply, "MODE", mode), mock.patch("builtins.print"):
+    def run_hook(self, units, enabled=True):
+        with mock.patch.object(auto_apply, "ENABLED", enabled), mock.patch("builtins.print"):
             auto_apply.act_on_listings(units)
 
-    def test_off_does_nothing(self):
-        self.run_hook([unit()], mode="off")
-        self.assertEqual((self.tried, self.sent), ([], []))
+    def test_off_does_nothing_at_all(self):
+        self.run_hook([unit("1A", 2500), unit("9F", 4380)], enabled=False)
+        self.assertEqual((self.tried, self.recorded, self.sent), ([], [], []))
 
     def test_applies_to_qualifying_units_cheapest_first_and_reports_each(self):
         self.run_hook([unit("9F", 4380), unit("2B", 2900), unit("1A", 2500)])
-        self.assertEqual(self.tried, [("1A", True), ("2B", True)])
-        self.assertEqual([a["title"] for a in self.sent], ["Applied: Apt 1A, 287 Avenue C",
-                                                           "Applied: Apt 2B, 287 Avenue C"])
-        self.assertEqual(self.sent[0]["attachment"][2], "image/jpeg")  # the screenshot goes to your phone
+        self.assertEqual(self.tried, ["1A", "2B"])
+        titles = [a["title"] for a in self.sent]
+        self.assertEqual(titles, ["Applied: Apt 1A, 287 Avenue C", "After SUBMIT: Apt 1A, 287 Avenue C",
+                                  "Applied: Apt 2B, 287 Avenue C", "After SUBMIT: Apt 2B, 287 Avenue C"])
+        # The filled-in form goes with the main alert, the page after SUBMIT in a quiet second one.
+        self.assertEqual(self.sent[0]["attachment"], ("filled-form.jpg", b"\xff\xd8 filled", "image/jpeg"))
+        self.assertEqual((self.sent[1]["attachment"][1], self.sent[1]["priority"]), (b"\xff\xd8 after", -1))
         self.assertIn("within 24 hours", self.sent[0]["message"])  # the detailed application comes next
 
     def test_the_same_unit_on_later_checks_is_not_applied_to_again(self):
         for _ in range(5):
             self.run_hook([unit("1A", 2500)])
-        self.assertEqual(self.tried, [("1A", True)])
+        self.assertEqual(self.tried, ["1A"])
+
+    def test_forms_of_units_over_the_limit_are_recorded_two_per_morning_without_applying(self):
+        for _ in range(3):
+            self.run_hook([unit("9F", 4380), unit("8E", 4100), unit("7D", 3900), unit("1A", 2500)])
+        self.assertEqual(self.tried, ["1A"])
+        self.assertEqual(self.recorded, ["9F", "8E"])  # each once, and no more than two
+        self.assertEqual([a["title"] for a in self.sent if "Applied" in a["title"]], ["Applied: Apt 1A, 287 Avenue C"])
+        self.assertEqual(list(json.loads(Path(auto_apply.APPLICATIONS_FILE).read_text())), ["P~TEST~U~1A"])
 
     def test_a_crashed_attempt_gets_one_more_try(self):
         self.status = "failed"
@@ -265,12 +275,6 @@ class ActOnListingsTests(unittest.TestCase):
             self.run_hook([unit("1A", 2500)])
         self.assertEqual(len(self.tried), 1)
         self.assertIn("apply yourself now", self.sent[0]["title"])
-
-    def test_dry_run_never_submits(self):
-        self.status = "filled"
-        self.run_hook([unit("1A", 2500)], mode="dry_run")
-        self.assertEqual(self.tried, [("1A", False)])
-        self.assertTrue(self.sent[0]["title"].startswith("[DRY RUN]"))
 
     def test_stops_after_the_per_run_limit(self):
         self.run_hook([unit(f"{n}A", 2000 + n) for n in range(1, 6)])
@@ -351,9 +355,7 @@ class FormFillingTests(unittest.TestCase):
     def setUpClass(cls):
         from playwright.sync_api import sync_playwright
 
-        handler = functools.partial(_QuietHandler, directory=str(APPLY_SITE))
-        cls.server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
-        threading.Thread(target=cls.server.serve_forever, daemon=True).start()
+        cls.server = auto_apply._serve_selftest_site()
         cls.playwright = sync_playwright().start()
         cls.browser = cls.playwright.chromium.launch()
 
@@ -364,14 +366,15 @@ class FormFillingTests(unittest.TestCase):
         cls.server.shutdown()
         cls.server.server_close()
 
-    def apply(self, profile=EXAMPLE_PROFILE, submit=True, site_options=""):
+    def apply(self, profile=EXAMPLE_PROFILE, submit=True, site_options="", record_only=False):
         context = self.browser.new_context(viewport={"width": 1280, "height": 900})
         self.addCleanup(context.close)
         context.set_default_timeout(5000)
         page = context.new_page()
         url = f"http://127.0.0.1:{self.server.server_port}/unit.html?unitSpk=TEST{site_options}"
         started = time.monotonic()
-        attempt = auto_apply.fill_application(page, url, auto_apply.form_values(profile), submit=submit)
+        values = None if record_only else auto_apply.form_values(profile)
+        attempt = auto_apply.run_form(page, url, values, submit=submit, apartment="TEST")
         self.seconds = time.monotonic() - started
         return attempt, context.pages[-1].evaluate("() => window.submitted || null")
 
@@ -380,6 +383,8 @@ class FormFillingTests(unittest.TestCase):
         self.assertEqual(attempt.status, "submitted", attempt.detail)
         self.assertEqual(submitted, self.EXPECTED)
         self.assertEqual(attempt.problems, [])
+        self.assertTrue(attempt.filled_screenshot)  # taken before SUBMIT -- and SUBMIT still worked
+        self.assertTrue(attempt.result_screenshot)
         self.assertTrue(attempt.form_url.endswith("/apply.html?unitSpk=TEST"))
         self.assertLess(self.seconds, 15)
 
@@ -396,11 +401,35 @@ class FormFillingTests(unittest.TestCase):
         self.assertEqual(attempt.status, "submitted", attempt.detail)
         self.assertEqual(submitted["income"], "95,000.00")
 
-    def test_dry_run_fills_everything_but_never_submits(self):
+    def test_form_check_fills_everything_but_never_submits(self):
         attempt, submitted = self.apply(submit=False)
         self.assertEqual(attempt.status, "filled", attempt.detail)
         self.assertEqual(attempt.problems, [])
         self.assertIsNone(submitted)
+
+    def test_recording_only_opens_the_form_and_fills_nothing(self):
+        attempt, submitted = self.apply(record_only=True)
+        self.assertEqual(attempt.status, "recorded", attempt.detail)
+        self.assertEqual(len(attempt.form_fields), 13)
+        self.assertEqual(attempt.filled, [])
+        self.assertIsNone(submitted)
+
+    def test_a_submit_click_that_misses_is_noticed_and_retried(self):
+        # The original bug: a plain full-page screenshot right before SUBMIT
+        # makes the click land beside the button.
+        context = self.browser.new_context(viewport={"width": 1280, "height": 900})
+        self.addCleanup(context.close)
+        page = context.new_page()
+        page.goto(f"http://127.0.0.1:{self.server.server_port}/apply.html?unitSpk=TEST")
+        scope = page.locator("form").first
+        auto_apply._fill_visible_fields(scope, auto_apply.form_values(EXAMPLE_PROFILE), {})
+        button = auto_apply._visible_button(scope, auto_apply.SUBMIT_BUTTON)
+        page.screenshot(full_page=True)
+        recorder = apply_recorder.RunRecorder(None, apply_recorder.Redactor(None))
+        self.assertTrue(auto_apply._press(button, page, recorder))
+        page.wait_for_timeout(500)
+        self.assertEqual(page.evaluate("() => !!window.submitted"), True)
+        self.assertEqual([s["step"] for s in recorder.steps], ["the SUBMIT click missed the button"])
 
     def test_an_empty_required_field_stops_it_and_is_named(self):
         attempt, submitted = self.apply({**EXAMPLE_PROFILE, "zip": ""})
@@ -431,15 +460,40 @@ class FormFillingTests(unittest.TestCase):
         self.assertEqual(submitted["workPhone"], "+1 646 555 0199")
 
 
+class RedactorTests(unittest.TestCase):
+    """What's committed to the public repo must not contain your details, in
+    any of the forms a page or a request might show them."""
+
+    def test_every_form_of_every_value_is_replaced_with_its_key(self):
+        redact = apply_recorder.Redactor(EXAMPLE_PROFILE)
+        text = ("JANE doe <jane.doe@example.com> +1 (212) 555-0123 / 2125550123 / +12125550123, "
+                "123 Example Street, New York 10009, income $95,000.00 = 95000 = 9500000 cents")
+        self.assertEqual(redact(text), (
+            "<first_name> <last_name> <<email>> <cell_phone> / <cell_phone> / <cell_phone>, "
+            "<building> <street_name>, <city> <zip>, income $<annual_income> = <annual_income> = <annual_income> cents"))
+
+    def test_lookalikes_are_left_alone(self):
+        redact = apply_recorder.Redactor(EXAMPLE_PROFILE)
+        for text in ("Janet", "1230", "100095", "195000", "95000.5"):
+            self.assertEqual(redact(text), text)
+
+    def test_url_encoded_bodies_and_nested_json(self):
+        redact = apply_recorder.Redactor(EXAMPLE_PROFILE)
+        recorder = apply_recorder.RunRecorder(None, redact)
+        body = recorder._redact_body("email=jane.doe%40example.com&street=Example+Street",
+                                     "application/x-www-form-urlencoded")
+        self.assertEqual(body, "email=<email>&street=<street_name>")
+        self.assertEqual(redact.deep({"applicant": {"name": "Jane", "phones": ["212.555.0123"]}}),
+                         {"applicant": {"name": "<first_name>", "phones": ["<cell_phone>"]}})
+
+
 @unittest.skipUnless(_browser_available(), "Playwright + Chromium not installed")
 class EndToEndTests(unittest.TestCase):
-    """What the watcher does when a cheap unit is listed: the hook, a fresh
-    browser, the fake site standing in for StuyTown, the log and the alert."""
+    """What the watcher does when units are listed: the hook, a fresh browser,
+    the fake site standing in for StuyTown, the recordings, the log, the alerts."""
 
-    def test_a_cheap_new_listing_gets_applied_to_once(self):
-        handler = functools.partial(_QuietHandler, directory=str(APPLY_SITE))
-        server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
-        threading.Thread(target=server.serve_forever, daemon=True).start()
+    def test_a_cheap_listing_is_applied_to_once_and_an_expensive_ones_form_is_recorded(self):
+        server = auto_apply._serve_selftest_site()
         self.addCleanup(server.server_close)
         self.addCleanup(server.shutdown)
         tmp = tempfile.TemporaryDirectory()
@@ -447,25 +501,46 @@ class EndToEndTests(unittest.TestCase):
         alerts = []
         with mock.patch.object(check_units, "UNIT_PAGE_URL", f"http://127.0.0.1:{server.server_port}/unit.html"), \
                 mock.patch.object(check_units, "notify", lambda **a: alerts.append(a) or True), \
+                mock.patch.object(apply_recorder, "RUNS_DIR", f"{tmp.name}/apply_runs"), \
                 mock.patch.object(auto_apply, "APPLICATIONS_FILE", f"{tmp.name}/applications.json"), \
                 mock.patch.object(auto_apply, "PRIVATE_DIR", f"{tmp.name}/private"), \
-                mock.patch.object(auto_apply, "MODE", "submit"), mock.patch.object(auto_apply, "MAX_RENT", 3000), \
+                mock.patch.object(auto_apply, "ENABLED", True), mock.patch.object(auto_apply, "MAX_RENT", 3000), \
                 mock.patch.object(auto_apply, "_profile_for_run", lambda: EXAMPLE_PROFILE), \
                 mock.patch.object(auto_apply, "_skips_logged", set()), \
+                mock.patch.object(auto_apply, "_recorded_this_run", set()), \
                 mock.patch.object(auto_apply, "_submitted_this_run", 0), mock.patch("builtins.print"):
-            for _ in range(2):  # the same listing on the next check
+            for _ in range(2):  # the same listings on the next check
                 auto_apply.act_on_listings([unit("1A", 2850), unit("9F", 4380.54)])
-        self.assertEqual([a["title"] for a in alerts], ["Applied: Apt 1A, 287 Avenue C"])
-        self.assertEqual(alerts[0]["attachment"][1][:2], b"\xff\xd8")  # a JPEG screenshot
+
+        self.assertEqual([a["title"] for a in alerts], ["Applied: Apt 1A, 287 Avenue C",
+                                                        "After SUBMIT: Apt 1A, 287 Avenue C"])
+        self.assertEqual(alerts[0]["attachment"][1][:2], b"\xff\xd8")  # the filled-in form, as a JPEG
         log = json.loads(Path(f"{tmp.name}/applications.json").read_text(encoding="utf-8"))
         self.assertEqual(list(log), ["P~TEST~U~1A"])
         self.assertEqual(log["P~TEST~U~1A"]["attempts"][0]["status"], "submitted")
-        self.assertEqual(len(list(Path(f"{tmp.name}/private").iterdir())), 1)
+        self.assertEqual(len(list(Path(f"{tmp.name}/private").iterdir())), 2)  # filled form + after SUBMIT
 
-
-class _QuietHandler(http.server.SimpleHTTPRequestHandler):
-    def log_message(self, *args):
-        pass
+        runs = sorted(Path(f"{tmp.name}/apply_runs").iterdir())
+        self.assertEqual([r.name.split("_", 1)[1] for r in runs], ["1A_apply", "9F_record"])
+        applied, recorded = runs
+        self.assertEqual(sorted(f.name for f in applied.iterdir()), [
+            "1_unit_page.html", "2_form_empty.html", "3_form_filled.html", "4_after_submit.html",
+            "network.json", "report.json"])
+        self.assertEqual(sorted(f.name for f in recorded.iterdir()), [
+            "1_unit_page.html", "1_unit_page.jpg", "2_form_empty.html", "2_form_empty.jpg",
+            "network.json", "report.json"])
+        report = json.loads((applied / "report.json").read_text(encoding="utf-8"))
+        self.assertEqual(report["outcome"]["status"], "submitted")
+        self.assertIn("pressed SUBMIT", [s["step"] for s in report["steps"]])
+        submit_request = [n for n in json.loads((applied / "network.json").read_text()) if n["method"] == "POST"]
+        self.assertEqual(json.loads(submit_request[0]["request_body"])["firstName"], "<first_name>")
+        self.assertIn("TEST-0001", submit_request[0]["response_body"])  # the site's answer
+        # Nothing personal in anything that gets committed.
+        for file in applied.iterdir():
+            text = file.read_text(encoding="utf-8").casefold()
+            for value in ("jane", "jane.doe@example.com", "2125550123", "212 555 0123", "95,000", "95000",
+                          "example street", "10009"):
+                self.assertNotIn(value, text, f"{value!r} in {file.name}")
 
 
 if __name__ == "__main__":

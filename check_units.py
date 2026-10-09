@@ -3,7 +3,7 @@ StuyTown / Peter Cooper Village Affordable Housing Watcher -- core logic
 ------------------------------------------------------------------------
 Fetches the real affordable-housing.stuytown.com listings API, compares it
 with what was there on the previous check, and sends Pushover alerts when
-something changed. watch_loop.py runs this every 15 seconds from 7-10am ET
+something changed. watch_loop.py runs this every 10 seconds from 7-10am ET
 (see .github/workflows/watch.yml); tests/ runs the exact same code on fake
 data.
 
@@ -15,7 +15,7 @@ the exact data the API last returned for it. On each check:
          the unit's page so you can apply, plus an events.json entry with
          the unit's full metadata and a screenshot of the listings page.
   SAME unit, SAME data
-      -> nothing. This is what stops a listing from alerting every 15s.
+      -> nothing. This is what stops a listing from alerting every 10s.
   SAME unit, DIFFERENT data (rent, available date, income requirement...)
       -> one normal-priority "updated" alert + an events.json entry.
   Unit GONE
@@ -70,13 +70,13 @@ EMERGENCY_RETRY_SECONDS = 60
 EMERGENCY_EXPIRE_SECONDS = 3600
 
 # A unit has to be missing from this many checks in a row (~1 minute at one
-# check every 15s) before it counts as removed.
-REMOVAL_CONFIRM_POLLS = 4
+# check every 10s) before it counts as removed.
+REMOVAL_CONFIRM_POLLS = 6
 # Fields that can change without anything you'd care about changing.
 IGNORED_FIELDS = {"version"}
 # At most this many "updated" alerts per unit per run (one run = one
 # morning). Safety net in case some field turns out to change on every
-# response, which would otherwise mean an alert -- and a commit -- every 15s.
+# response, which would otherwise mean an alert -- and a commit -- every 10s.
 MAX_UPDATE_ALERTS_PER_UNIT = 3
 _update_alerts_sent = Counter()
 
@@ -360,7 +360,7 @@ def process_snapshot(units: list, take_screenshot=None, now: datetime | None = N
     alert_sent = False
     if changes.new:
         # The alert that matters, sent before anything else. If it fails this
-        # raises BEFORE the state is saved, so the next check (15s later) sees
+        # raises BEFORE the state is saved, so the next check (10s later) sees
         # the same units as new and tries again -- a Pushover hiccup can delay
         # this alert, but never swallow it.
         alert_sent = notify(**new_units_alert(changes.new))
