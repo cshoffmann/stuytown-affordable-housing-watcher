@@ -1002,5 +1002,23 @@
     ],
     "screenshot": "screenshots/2026-10-09T11-15-00Z_10-E.png",
     "alert_sent": true
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-10-09T11:16:30Z",
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~405~U~10-E",
+        "apartment": "10-E",
+        "address": "405 East 14th Street",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 2077.88,
+        "income_requirement": 71241.6,
+        "available_date": "2026-12-05T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~405~U~10-E",
+        "first_seen_utc": "2026-10-09T11:15:00Z"
+      }
+    ]
   }
 ]
