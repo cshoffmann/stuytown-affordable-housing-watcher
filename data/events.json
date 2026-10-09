@@ -1020,5 +1020,111 @@
         "first_seen_utc": "2026-10-09T11:15:00Z"
       }
     ]
+  },
+  {
+    "event": "new",
+    "detected_at_utc": "2026-10-09T11:30:00Z",
+    "unit_count": 1,
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~018~U~06-E",
+        "apartment": "06-E",
+        "address": "18 Stuyvesant Oval",
+        "bedrooms": 2,
+        "bathrooms": 1,
+        "price": 2648.34,
+        "income_requirement": 90800.23,
+        "available_date": "2026-10-31T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~018~U~06-E",
+        "data": {
+          "unitSpk": "P~NYST31~B~018~U~06-E",
+          "unitFloor": "06",
+          "name": "06-E",
+          "property": {
+            "name": "Stuyvesant Town",
+            "propertySpk": "P~103ST",
+            "commonImages": []
+          },
+          "building": {
+            "address": "18 STUYVESANT OVAL",
+            "latitude": "40.7321",
+            "longitude": "-73.97689",
+            "buildingId": "304",
+            "buildingName": "18 STUYVESANT OVAL",
+            "transportationDescription": "Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.",
+            "transports": [
+              {
+                "imageUrl": "/media/t02dfmty/l.png",
+                "description": "22_L"
+              },
+              {
+                "imageUrl": "/media/rcvl4pqk/m23.png",
+                "description": "32_M23"
+              },
+              {
+                "imageUrl": "/media/w4rlarll/m9.png",
+                "description": "29_M9"
+              },
+              {
+                "imageUrl": "/media/trsfb4aw/east-river-ferry.jpg",
+                "description": "37_RiverFerry"
+              },
+              {
+                "imageUrl": "/media/1ojhg5wj/citbike.png",
+                "description": "35_CityBike"
+              }
+            ]
+          },
+          "finish": "Blank",
+          "style": {
+            "id": 598,
+            "name": "125"
+          },
+          "incomeRequirement": 90800.23,
+          "bedrooms": 2,
+          "bathrooms": 1,
+          "sqft": 948,
+          "availableDate": "2026-10-31T00:00:00Z",
+          "price": 2648.34,
+          "unitRates": {
+            "12": 2648.34,
+            "24": 2648.34
+          },
+          "isFlex": false,
+          "floorplan": {
+            "floorplanSvg": "/media/3s5be2uq/125.svg",
+            "staticImageUrl": null
+          },
+          "description": null,
+          "virtualTourUrl": null,
+          "version": 1,
+          "amenities": [
+            {
+              "searchCode": "PS40Code",
+              "code": "PS40",
+              "friendlyDescription": "PS40 School District"
+            },
+            {
+              "searchCode": null,
+              "code": "IBSS",
+              "friendlyDescription": "Stainless steel appliances"
+            },
+            {
+              "searchCode": null,
+              "code": "VBOV",
+              "friendlyDescription": "Oval Views"
+            },
+            {
+              "searchCode": null,
+              "code": "FS06",
+              "friendlyDescription": "6th floor"
+            }
+          ],
+          "images": []
+        }
+      }
+    ],
+    "screenshot": "screenshots/2026-10-09T11-30-00Z_06-E.png",
+    "alert_sent": true
   }
 ]
