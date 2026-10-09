@@ -1,0 +1,109 @@
+<!doctype html>
+<!-- FAKE copy of StuyTown's application form (as recorded 2026-10-08), for
+     auto_apply.py's tests and --selftest. Nothing is sent anywhere:
+     "submitting" shows a thank-you and what was entered (window.submitted).
+
+     Deliberately awkward, like real forms often are:
+       - labels aren't connected to their boxes (no <label for=...>), and
+         "required" is only the * in the label, not an HTML attribute
+       - the phone boxes start with "+" and reformat as you type, so a number
+         typed without its country code would come out wrong
+       - the income box is a "$ 0.00" money box that reformats; with
+         ?income=cents in the URL it fills from the cents up (typing 95000
+         shows 950.00), like some money boxes do
+     With ?reject=1 in the URL the site refuses every submit, with an error. -->
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>FAKE application form</title>
+<style>
+  body{font-family:sans-serif;max-width:640px;margin:2em auto;padding:0 1em}
+  .field{margin-top:1em} .field .label{font-size:.8em;font-weight:bold}
+  .field input{width:100%;padding:.8em;box-sizing:border-box;border:1px solid #6a9fd8}
+  .money{display:flex;align-items:center;border:1px solid #6a9fd8} .money input{border:0}
+  .error-text{color:#b00;font-size:.8em}
+  button[type=submit]{width:100%;padding:1em;margin-top:1.5em;background:#3b82d6;color:#fff;border:0;font-weight:bold}
+</style></head>
+<body>
+<a href="#" onclick="history.back()">&larr; BACK TO APARTMENT</a>
+<h2>Hi, you're applying to Fake Building, Apt TEST</h2>
+<p>The minimum income required to lease this unit is $60000.00.</p>
+<p>This apartment is leased through the Affordable Housing Program. Note that you will not be
+  allowed to submit more than one application per apartment.</p>
+<form id="application" novalidate>
+  <div class="field"><div class="label">First Name *</div><div><input name="firstName"></div></div>
+  <div class="field"><div class="label">Last Name *</div><div><input name="lastName"></div></div>
+  <div class="field"><div class="label">Email *</div><div><input name="email" type="email"></div></div>
+  <div class="field"><div class="label">Cell Phone *</div><div><input name="cellPhone" class="phone" type="tel" value="+"></div></div>
+  <div class="field"><div class="label">Work Phone</div><div><input name="workPhone" class="phone" type="tel" value="+"></div></div>
+  <div class="field"><div class="label">Building *</div><div><input name="building"></div></div>
+  <div class="field"><div class="label">Street name *</div><div><input name="streetName"></div></div>
+  <div class="field"><div class="label">Apartment No.</div><div><input name="apartmentNo"></div></div>
+  <div class="field"><div class="label">City *</div><div><input name="city"></div></div>
+  <div class="field"><div class="label">State</div><div><input name="state"></div></div>
+  <div class="field"><div class="label">Zip *</div><div><input name="zip"></div></div>
+  <div class="field"><div class="label">Household Size * <span title="Everyone who will live in the apartment">(i)</span></div>
+    <div><input name="householdSize" inputmode="numeric"></div></div>
+  <div class="field"><div class="label">Household Gross Annual Income, $ *</div>
+    <div class="money"><span>$</span><input name="income" inputmode="decimal" placeholder="0.00"></div></div>
+  <p><b>Upon submitting this form you will receive an email that will include a link to a more detailed
+    application. Please complete the form within 24 hours to remain eligible for this application process.</b></p>
+  <button type="submit">SUBMIT</button>
+</form>
+<div id="done" hidden>
+  <h2>Thank you! Your application has been submitted.</h2>
+  <p>Check your email for a link to the detailed application.</p>
+  <p>What the form received:</p><pre id="received"></pre>
+</div>
+<script>
+  const form = document.getElementById('application');
+  const options = new URLSearchParams(location.search);
+  const centsFirst = options.get('income') === 'cents';
+
+  // Phone boxes: always "+" then digits, grouped like "+1 212 555 0123".
+  for (const box of form.querySelectorAll('.phone')) {
+    box.addEventListener('input', () => {
+      const d = box.value.replace(/\D/g, '').slice(0, 11);
+      box.value = d.startsWith('1') && d.length > 1
+        ? ('+1 ' + [d.slice(1, 4), d.slice(4, 7), d.slice(7)].filter(Boolean).join(' ')) : '+' + d;
+    });
+  }
+  // Money box.
+  const income = form.elements.income;
+  income.addEventListener('input', () => {
+    if (centsFirst) {
+      const d = income.value.replace(/\D/g, '').replace(/^0+/, '');
+      income.value = d ? (Number(d) / 100).toLocaleString('en-US', {minimumFractionDigits: 2}) : '';
+    } else {
+      income.value = income.value.replace(/[^\d.,]/g, '');
+    }
+  });
+  income.addEventListener('blur', () => {
+    const n = Number(income.value.replace(/,/g, ''));
+    if (!centsFirst && income.value) income.value = n.toLocaleString('en-US', {minimumFractionDigits: 2});
+  });
+
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    form.querySelectorAll('.error-text').forEach(e => e.remove());
+    let ok = true;
+    for (const field of form.querySelectorAll('.field')) {
+      const box = field.querySelector('input');
+      const empty = !box.value.replace(/[\s+$,.0]/g, '');
+      if (field.querySelector('.label').textContent.includes('*') && empty) {
+        ok = false;
+        field.insertAdjacentHTML('beforeend', '<div class="error-text">This field is required</div>');
+      }
+    }
+    if (ok && options.get('reject')) {
+      ok = false;
+      form.insertAdjacentHTML('beforeend', '<div class="error-text">Something went wrong. Please try again later.</div>');
+    }
+    if (!ok) return;
+    window.submitted = Object.fromEntries(new FormData(form));
+    form.hidden = true;
+    document.getElementById('done').hidden = false;
+    document.getElementById('received').textContent = JSON.stringify(window.submitted, null, 2);
+  });
+</script>
+</body>
+</html>

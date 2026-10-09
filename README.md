@@ -131,6 +131,147 @@ token not scoped to this repo.
 **Renewing the token:** generate a new one the same way, then edit the job
 and replace the `Authorization` header value. Force run once to confirm.
 
+## Auto-apply (`auto_apply.py`) — version 2
+
+When a listed unit's monthly rent is **at or under your limit** (and your
+income meets the unit's minimum), the watcher applies for you:
+
+1. **Right after the new-unit alert** (so you always hear about the unit
+   first), it opens the unit's page in a headless browser and waits for its
+   **APPLY NOW** button. That button is drawn by the page's JavaScript at the
+   very bottom. Look-alike links in the site's menu and footer are ignored.
+2. It presses APPLY NOW and waits for the application form ("Hi, you're
+   applying to …").
+3. It fills every field from your applicant profile (see the table below),
+   then **reads each box back** to check it took the value.
+4. If everything StuyTown requires is filled in correctly, it presses
+   **SUBMIT** and waits for the site to confirm.
+5. It sends you the result with a screenshot, and logs the outcome (not your
+   details) in `data/applications.json`.
+
+On a copy of the form it takes about 3 seconds from opening the unit page to
+the confirmation. That matters: units close after 3 applications, and one was
+gone in 2 minutes on Oct 8. Cheapest unit first if several qualify.
+
+**After it submits:** StuyTown emails you a link to the *detailed*
+application, which has to be completed **within 24 hours** to stay eligible.
+That part is still yours, and the "Applied" alert reminds you.
+
+### The form it fills (as recorded 2026-10-08)
+
+It's one page. Each field is found by its label text (`FORM_FIELDS` in
+`auto_apply.py`), so the site's code can change without breaking anything as
+long as the labels stay the same:
+
+| Form label | Profile key | Notes |
+| --- | --- | --- |
+| First Name * | `first_name` | |
+| Last Name * | `last_name` | |
+| Email * | `email` | StuyTown's follow-up link goes here |
+| Cell Phone * | `cell_phone` | Any US format. The box starts with "+", so the +1 is added for you |
+| Work Phone | `work_phone` | Optional |
+| Building * | `building` | The **building number** of your current address, e.g. `123` |
+| Street name * | `street_name` | e.g. `Example Street` |
+| Apartment No. | `apartment_no` | Optional |
+| City * | `city` | |
+| State | `state` | Optional, e.g. `NY` |
+| Zip * | `zip` | 5 digits |
+| Household Size * | `household_size` | Everyone who'll live there, including you |
+| Household Gross Annual Income, $ * | `annual_income` | Before-tax yearly total, as a plain number, e.g. `95000` |
+
+If the site ever adds a field, put it in the profile's `extra_fields`, keyed
+by its label, e.g. `"extra_fields": {"Date of Birth": "01/31/1990"}`. No code
+change is needed.
+
+### What makes it reliable
+
+- **Labels, not page code.** It reads each box's label the way a person
+  would: from the `<label>`, or from the text sitting just above the box. That
+  works whether or not the site's HTML links the label to the box. A "*" in
+  the label counts as required.
+- **Every value is read back.** Masked boxes reformat what's typed. If a value
+  doesn't stick, it's typed again key by key, and other spellings are tried
+  (`95000`, `95000.00`, and so on). If it still doesn't show correctly, the
+  form isn't sent. One example this catches: a "+" phone box given a 10-digit
+  number would read "+212 555…", which is a Moroccan number.
+- **Never sends a half-filled form.** It won't press SUBMIT if:
+  - a required box is empty or wrong, or
+  - any field StuyTown requires wasn't found at all, which would mean a label
+    changed.
+- **Knows how it ended:**
+
+  | Result | What happened | Tried again? |
+  | --- | --- | --- |
+  | submitted | Confirmation text appeared | Never |
+  | unconfirmed | SUBMIT pressed, no confirmation within 30s | Never: it may have gone through, and the site allows one application per apartment |
+  | rejected | The site showed errors and kept the form | No |
+  | incomplete | Something required couldn't be filled; nothing sent | No |
+  | blocked | A CAPTCHA you'd have to click; nothing sent | No |
+  | failed | It crashed or timed out (e.g. no APPLY NOW button) | Once more, on a later check |
+
+  Everything except *submitted* comes with an alert that says **"apply
+  yourself now"**, with the unit link and a screenshot.
+- **Limits:** one application per unit, ever, and at most 3 per morning.
+  Nothing in auto-apply can stop or delay the watcher's alerts.
+
+### Settings: repository variables, not code
+
+Nothing is hard-coded. Two **repository variables** (Settings → Secrets and
+variables → Actions → **Variables** tab) control auto-apply. Changes apply
+from the next run.
+
+| Variable | Value | Meaning |
+| --- | --- | --- |
+| `AUTO_APPLY_MODE` | `off` / `dry_run` / `submit` | Not set = `off`. `dry_run` fills the real form and sends you a screenshot but never presses SUBMIT |
+| `AUTO_APPLY_MAX_RENT` | e.g. `3000` | Your rent limit in $/month, inclusive (a $3,000.00 unit qualifies; $3,000.01 doesn't). **Required** once the mode isn't `off`: there's no built-in default, and if it's missing, auto-apply stays off and tells you why |
+
+Variables aren't shown to visitors of the repo, but they aren't encrypted
+either. That's fine for a rent limit, but not for your details.
+
+### Your details: one encrypted secret
+
+Your details go in **one repository secret**, `APPLICANT_PROFILE`, holding
+the whole profile as JSON (`applicant_profile.example.json` shows every key).
+This is the reliable way to keep them hidden:
+
+- GitHub encrypts secrets and never shows them again, not even to you. Keep
+  your own copy, e.g. in a password manager, for when you need to change
+  something: you re-paste the whole JSON.
+- The repo and its Actions logs are public, so:
+  - every profile value is masked (shown as `***`) at the start of each run;
+  - screenshots of the filled form go only to your phone and the gitignored
+    `private/` folder;
+  - `data/applications.json` records the unit, the outcome, the field
+    *labels* and the profile *key names*, never a value.
+- At the start of each run the profile is checked: every required key
+  present, email, phone, ZIP, household size and income well-formed. A
+  problem turns auto-apply off for that morning, and you get an alert naming
+  the key (never the value), instead of finding out when a unit appears.
+- On your own computer, the same JSON goes in `applicant_profile.json`, which
+  is gitignored.
+
+### Turning it on
+
+1. Copy `applicant_profile.example.json` and fill in your real details.
+   Keep the copy **out of the repo** (password manager, notes app).
+2. GitHub → this repo → **Settings → Secrets and variables → Actions**:
+   - **Secrets** tab → *New repository secret*: name `APPLICANT_PROFILE`,
+     value: paste the whole JSON.
+   - **Variables** tab → *New repository variable*: `AUTO_APPLY_MAX_RENT` =
+     `3000`, and `AUTO_APPLY_MODE` = `dry_run`.
+3. **Test your real profile on the fake form:** Actions → **StuyTown
+   watcher** → **Run workflow** → tick *Test auto-apply instead*. It fills
+   and submits the copy of the form in `tests/fixtures/apply_site/` on
+   GitHub's server (nothing reaches StuyTown), and sends a `[TEST]`
+   screenshot to your phone showing exactly what it typed.
+4. Leave it on `dry_run` for a morning or two. Each qualifying unit gets you a
+   `[DRY RUN]` screenshot of the **real** form filled in, with anything it
+   couldn't fill listed.
+5. When those look right, change `AUTO_APPLY_MODE` to `submit`.
+
+To watch it fill a real unit's form on your own computer (it never submits):
+`python auto_apply.py --unit-url "<the unit's link>" --headed`.
+
 ## Testing
 
 All tests live in `tests/`; fake data in `tests/fixtures/`. Nothing in
@@ -201,6 +342,12 @@ there. (Run it outside 7–10am, or it waits for the morning run to finish.)
   site (alerts only if you've set the Pushover variables; never commits).
 - `screenshot.py` — full-page screenshot of the listings page via a headless
   browser (Playwright)
+- `auto_apply.py` — applies to units at or under your rent limit (see
+  *Auto-apply*); `applicant_profile.example.json` shows every profile key
+- `tests/fixtures/apply_site/` — a fake copy of a unit page and the
+  application form, for the tests and the self-test
+- `data/applications.json` — which units auto-apply tried, and how it went
+  (no personal details)
 - `data/last_seen.json` — the state (what's listed right now)
 - `data/events.json` — history of every new / updated / removed unit
 - `screenshots/` — one screenshot per new-unit event

@@ -1,0 +1,42 @@
+<!doctype html>
+<!-- FAKE copy of a StuyTown affordable unit page (as recorded 2026-10-08),
+     for auto_apply.py's tests and --selftest. Like the real one, it's drawn
+     by JavaScript after the page loads, the APPLY NOW button sits at the very
+     bottom, and the header menu and footer have look-alike links that must
+     be left alone. -->
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>FAKE - Apartment TEST</title>
+<style>
+  body{font-family:sans-serif;margin:0;background:#eee}
+  header{background:#333;color:#fff;padding:1em} header nav{display:none}
+  main{max-width:720px;margin:auto;padding:1em}
+  .apply{display:block;width:100%;padding:1em;background:#3b82d6;color:#fff;border:0;letter-spacing:.1em}
+  footer{background:#000;color:#fff;padding:2em 1em}
+  footer a{color:#fff;display:block;margin:.5em 0}
+  .spacer{height:900px}
+</style></head>
+<body>
+<header>stuytown | PETER COOPER VILLAGE
+  <nav><a href="#">How to Apply</a><a href="#">Eligibility</a></nav></header>
+<main id="app">Loading...</main>
+<footer>212.253.3680 - stuytownlottery@example.com
+  <a href="#">Sign Up for Future Lottery Opportunities</a><a href="#">Terms of Use</a></footer>
+<script>
+  setTimeout(() => {
+    document.getElementById('app').innerHTML = `
+      <h1>&lsaquo; Apartment TEST</h1>
+      <p>FLOORPLAN | GALLERY</p>
+      <p>1 BED | 1 BATH | 745 SQFT.</p>
+      <p>$2850.00 / 12 month &nbsp; $2850.00 / 24 month</p>
+      <p>FAKE BUILDING, NOT A REAL UNIT<br>Available November 1</p>
+      <h3>FINISH</h3><p>Platinum</p>
+      <div class="spacer">The photo gallery and floorplan pictured is an example.</div>
+      <button class="apply" type="button">APPLY NOW</button>`;
+    document.querySelector('.apply').addEventListener('click', () => {
+      location.href = 'apply.html' + location.search;
+    });
+  }, 400);
+</script>
+</body>
+</html>

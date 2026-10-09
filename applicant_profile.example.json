@@ -1,0 +1,25 @@
+{
+  "_readme": "Made-up example with every key auto-apply uses. Put your real details in the APPLICANT_PROFILE GitHub secret (paste the whole thing), or in applicant_profile.json (gitignored) on your own computer. Never commit your real one: this repo is public. Keys starting with _ are notes and are ignored.",
+
+  "first_name": "Jane",
+  "last_name": "Doe",
+  "email": "jane.doe@example.com",
+  "_phones": "US numbers, any format. The form's phone boxes start with +, so the +1 is added for you.",
+  "cell_phone": "212-555-0123",
+  "work_phone": "",
+
+  "_address": "Your CURRENT address. building = the building number only (123); street_name = the rest (Example Street).",
+  "building": "123",
+  "street_name": "Example Street",
+  "apartment_no": "4B",
+  "city": "New York",
+  "state": "NY",
+  "zip": "10009",
+
+  "_household": "household_size = everyone who will live in the apartment, including you. annual_income = the household's GROSS (before-tax) yearly income, as a plain number.",
+  "household_size": 1,
+  "annual_income": 95000,
+
+  "_extra_fields": "Only if the site adds a field this doesn't know: its label (part of it is enough) -> what to put in it. true/false ticks or unticks a checkbox.",
+  "extra_fields": {}
+}
