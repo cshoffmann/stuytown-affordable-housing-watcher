@@ -1279,5 +1279,23 @@
     ],
     "screenshot": "screenshots/2026-10-09T12-00-00Z_10-G.png",
     "alert_sent": true
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-10-09T12:01:15Z",
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~510~U~10-G",
+        "apartment": "10-G",
+        "address": "510 East 20th Street",
+        "bedrooms": 2,
+        "bathrooms": 1,
+        "price": 2644.28,
+        "income_requirement": 90661.03,
+        "available_date": "2026-10-16T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~510~U~10-G",
+        "first_seen_utc": "2026-10-09T12:00:00Z"
+      }
+    ]
   }
 ]
