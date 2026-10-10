@@ -153,11 +153,15 @@ class ListingsClient:
         parts = urllib.parse.urlsplit(self.base_url)
         self._scheme, self._host, self._path = parts.scheme, parts.netloc, parts.path
         self._conn = None
+        # What the last fetch_all() saw, one entry per request, for the run's
+        # stats (run_stats.py): timing, status, size and the caching headers.
+        self.responses = []
 
     def fetch_all(self) -> list:
         """Every page of unit listings. There's normally just one page, but
         this loops in case more units ever get posted than fit on one."""
         units = []
+        self.responses = []
         for page in range(MAX_PAGES):
             data = self._get(f"{self._path}?page={page}&itemsOnPage={ITEMS_PER_PAGE}")
             page_units = data.get("unitModels") if isinstance(data, dict) else None
@@ -173,7 +177,9 @@ class ListingsClient:
 
     def _get(self, path: str):
         for attempt in (1, 2):
+            reused = self._conn is not None
             conn = self._connection()
+            started = time.monotonic()
             try:
                 conn.request("GET", path, headers=REQUEST_HEADERS)
                 response = conn.getresponse()
@@ -183,6 +189,14 @@ class ListingsClient:
                 if attempt == 2:
                     raise
                 continue  # a kept-open connection the server had closed: reconnect once
+            self.responses.append({
+                "ms": round((time.monotonic() - started) * 1000, 1),
+                "status": response.status,
+                "bytes": len(body),
+                "reused_connection": reused,
+                "headers": {k.lower(): v for k, v in response.getheaders()},
+                "body": body,
+            })
             if response.getheader("Connection", "").lower() == "close":
                 self.close()
             if response.status != 200:
@@ -388,14 +402,17 @@ def diff_units(previous: dict, units: list, now_utc: str) -> tuple:
         record = previous.get(uid)
         if record is None:
             changes.new.append(unit)
-            next_state[uid] = {"first_seen_utc": now_utc, "missing_polls": 0, "data": unit}
+            next_state[uid] = {"first_seen_utc": now_utc, "last_seen_utc": now_utc, "missing_polls": 0, "data": unit}
             continue
         fields = changed_fields(record["data"], unit)
         if fields:
             changes.updated.append({"before": record["data"], "after": unit, "fields": fields})
         # Seen again, so any "missing" streak from an API hiccup is forgiven.
         seen = {k: v for k, v in record.items() if k != "missing_since_utc"}
-        next_state[uid] = {**seen, "missing_polls": 0, "data": unit}
+        # last_seen_utc: the last check it was listed in -- with first_seen_utc,
+        # how long it really stayed up (to within one check, not the minute
+        # it takes to confirm a removal).
+        next_state[uid] = {**seen, "last_seen_utc": now_utc, "missing_polls": 0, "data": unit}
 
     for uid, record in previous.items():
         if uid in current:
@@ -490,7 +507,10 @@ def process_snapshot(units: list, now: datetime | None = None, label: str = "", 
             "event": "removed",
             "detected_at_utc": stamp,
             "units": [
-                {**unit_summary(r["data"]), "first_seen_utc": r.get("first_seen_utc")}
+                {**unit_summary(r["data"]), "first_seen_utc": r.get("first_seen_utc"),
+                 "last_seen_utc": r.get("last_seen_utc"),
+                 "listed_for_seconds": _seconds_between(r.get("first_seen_utc"), r.get("last_seen_utc"))
+                 if r.get("last_seen_utc") else None}
                 for r in changes.removed
             ],
         })

@@ -401,6 +401,9 @@ class Applier:
         self._order = itertools.count()
         self._lock = threading.Lock()
         self._in_flight = set()  # unit IDs queued or being applied to
+        self._queued_at = {}  # unit ID -> (monotonic, UTC) when dispatch() queued it
+        self._ready_seconds = []  # per browser launch: start -> site loaded
+        self.site_watch = apply_recorder.SiteWatch()  # what the idle listings page does on its own
         self._recorded = set()
         self._skips_logged = set()
         self._counted = 0  # applications queued, running, or sent this run (MAX_APPLICATIONS_PER_RUN)
@@ -442,6 +445,16 @@ class Applier:
         for thread in self._threads:
             thread.join(timeout=10)
 
+    def observations(self) -> dict:
+        """For the morning's run stats (run_stats.py): no personal details."""
+        return {
+            "workers": self.workers,
+            "browser_ready_seconds": list(self._ready_seconds),
+            "form_url": {k: self.form_url.get(k) for k in ("template", "spelling", "verified", "learned_utc")}
+            if self.form_url else None,
+            "idle_listings_page": self.site_watch.summary(),
+        }
+
     # -------------------------------------------------------------- dispatch
 
     def dispatch(self, units: list) -> list:
@@ -461,6 +474,7 @@ class Applier:
                     reason = f"already applied to {MAX_APPLICATIONS_PER_RUN} units this run"
                 if not reason:
                     self._in_flight.add(uid)
+                    self._queued_at[uid] = (time.monotonic(), _utc_ms())
                     self._counted += 1
                     queued.append(unit)
                     continue
@@ -484,13 +498,18 @@ class Applier:
         for launch in range(3):  # a crashed browser is restarted, twice at most
             try:
                 with sync_playwright() as p:
+                    launched = time.monotonic()
                     browser = p.chromium.launch()
                     context = new_context(browser)
-                    warm = _warm_up(context)
+                    watch = self.site_watch if index == 0 else None
+                    warm = _warm_up(context, watch)
+                    self._ready_seconds.append(round(time.monotonic() - launched, 2))
                     if not announced:
                         announced = True
                         self._started.release()
-                    if self._serve(browser, context, warm):
+                    if self._serve(browser, context, warm, watch):
+                        if watch:
+                            watch.harvest(warm)
                         browser.close()
                         return
                     print(f"   WARNING: applier browser {index} stopped responding; restarting it")
@@ -501,7 +520,7 @@ class Applier:
         if not announced:
             self._started.release()
 
-    def _serve(self, browser, context, warm) -> bool:
+    def _serve(self, browser, context, warm, watch=None) -> bool:
         """Take jobs until stopped (True), or until the browser dies (False:
         the job goes back in the queue and the browser is restarted)."""
         last_warm = time.monotonic()
@@ -510,7 +529,7 @@ class Applier:
                 job = self._jobs.get(timeout=0.5)
             except queue.Empty:
                 if time.monotonic() - last_warm > WARM_REFRESH_SECONDS:
-                    _reload_quietly(warm)
+                    _reload_quietly(warm, watch)
                     last_warm = time.monotonic()
                 continue
             _, _, order, kind, unit = job
@@ -543,8 +562,12 @@ class Applier:
         return True
 
     def _apply(self, context, unit: dict) -> None:
+        queued = self._queued_at.get(check_units.unit_id(unit))
+        started = _utc_ms()
+        waited = round(time.monotonic() - queued[0], 3) if queued else None
         attempt, recording = apply_to_unit(context, unit, self.profile, runs_dir=self.runs_dir,
                                            direct_url=direct_form_url(self.form_url, unit))
+        attempt.timeline = {"started_utc": started, "queue_wait_seconds": waited, **attempt.timeline}
         print(f"   Auto-apply result for {check_units.unit_label(unit)} after {attempt.seconds:.1f}s: "
               f"{attempt.status} -- {attempt.detail}")
         self._learn(unit, attempt, context=None)
@@ -583,6 +606,9 @@ class Applier:
         if recording is not None:
             attempt.recording = recording.folder
         with self._lock:
+            queued = self._queued_at.pop(uid, None)
+            attempt.timeline = {**({"queued_utc": queued[1]} if queued else {}), **attempt.timeline,
+                                "finished_utc": _utc_ms()}
             _record(self.applications, unit, attempt)
             snapshot = copy.deepcopy(self.applications)
             if attempt.status not in ("submitted", "unconfirmed"):
@@ -615,6 +641,7 @@ def _record(applications: dict, unit: dict, attempt: "Attempt") -> None:
         "fields_filled": attempt.filled,  # profile key names only, e.g. "first_name"
         "problems": attempt.problems,  # the site's own labels for fields it couldn't fill
         "recording": str(attempt.recording) if attempt.recording else None,  # data/apply_runs/...
+        "timeline": attempt.timeline,  # when each stage happened (UTC), for the run stats
     })
 
 
@@ -752,6 +779,9 @@ class Attempt:
     site_messages: list = field(default_factory=list)  # error text the site showed
     seconds: float = 0.0
     recording: Path | None = None  # data/apply_runs/... folder
+    # UTC times, to the millisecond: queued, started, form found, SUBMIT
+    # pressed, the site's answer, finished -- and how the form was reached.
+    timeline: dict = field(default_factory=dict)
 
 
 def form_values(profile: dict) -> dict:
@@ -784,7 +814,7 @@ def apply_to_unit(context, unit: dict, profile: dict, record_only: bool = False,
         attempt = Attempt("failed", f"{type(e).__name__}: {str(e).splitlines()[0][:200]}",
                           result_screenshot=_screenshot(page))
     attempt.seconds = time.monotonic() - started
-    recording = recorder.collect(_outcome(attempt))  # while the page is still open
+    recording = recorder.collect(_outcome(attempt), page=page)  # while the page is still open
     for opened in set(context.pages) - pages_before:  # this trip's page, and any pop-up it opened
         try:
             opened.close()
@@ -796,7 +826,8 @@ def apply_to_unit(context, unit: dict, profile: dict, record_only: bool = False,
 def _outcome(attempt: Attempt) -> dict:
     return {"status": attempt.status, "detail": attempt.detail, "seconds": round(attempt.seconds, 2),
             "form_url": attempt.form_url, "fields_filled": attempt.filled, "problems": attempt.problems,
-            "site_messages": attempt.site_messages, "form_fields": attempt.form_fields}
+            "site_messages": attempt.site_messages, "form_fields": attempt.form_fields,
+            "timeline": attempt.timeline}
 
 
 # The cookie banner (Ketch) and analytics: blocked so the banner can't cover
@@ -820,20 +851,29 @@ def new_context(browser):
     return context
 
 
-def _warm_up(context):
+def _warm_up(context, watch=None):
     """Open the listings page once, so DNS, the TLS connections and the
-    site's scripts are ready before the first application. Kept open."""
+    site's scripts are ready before the first application. Kept open. With a
+    SiteWatch, what the page then does on its own is noted for the stats."""
     page = context.new_page()
     try:
+        if watch:
+            watch.attach(page)
         page.goto(check_units.LISTINGS_URL, wait_until="domcontentloaded", timeout=30000)
+        if watch:
+            watch.loaded(page)
     except Exception as e:
         print(f"   WARNING: couldn't preload the StuyTown site ({type(e).__name__}); applying will still work")
     return page
 
 
-def _reload_quietly(page) -> None:
+def _reload_quietly(page, watch=None) -> None:
     try:
+        if watch:
+            watch.harvest(page)
         page.reload(wait_until="domcontentloaded", timeout=30000)
+        if watch:
+            watch.loaded(page)
     except Exception:
         pass
 
@@ -868,6 +908,7 @@ def run_form(page, url: str, values: dict | None, submit: bool, recorder=None, a
     details are kept for the recording, but read once and cheaply."""
     recorder = recorder or apply_recorder.RunRecorder(None, apply_recorder.Redactor(None))
     found = None
+    timeline = {"form_via": "unit page"}
     if direct_url:
         recorder.step("opening the form directly", url=direct_url)
         try:
@@ -880,6 +921,8 @@ def run_form(page, url: str, values: dict | None, submit: bool, recorder=None, a
             found = None
         if found is None:
             recorder.step("falling back to the unit page")
+        else:
+            timeline["form_via"] = "direct address"
     if found is None:
         recorder.step("opening the unit page", url=url)
         page.goto(url, wait_until="domcontentloaded", timeout=30000)
@@ -887,6 +930,7 @@ def run_form(page, url: str, values: dict | None, submit: bool, recorder=None, a
         if apply_button is None:
             recorder.snapshot("1_unit_page", page)
             recorder.step("no APPLY NOW button", page_url=page.url, buttons=_buttons(page))
+            recorder.note("page_facts", _page_facts(page))
             return Attempt("failed", "couldn't find the APPLY NOW button on the unit page",
                            result_screenshot=_screenshot(page))
         recorder.step("APPLY NOW button visible", text=_text_of(apply_button), page_url=page.url)
@@ -899,10 +943,12 @@ def run_form(page, url: str, values: dict | None, submit: bool, recorder=None, a
             last = page.context.pages[-1]
             recorder.snapshot("2_after_apply_now", last)
             recorder.step("the form never appeared", page_url=last.url, buttons=_buttons(last))
+            recorder.note("page_facts", _page_facts(last))
             return Attempt("failed", "the application form didn't show up after pressing APPLY NOW",
                            result_screenshot=_screenshot(last))
     page, scope = found
     form_url = page.url
+    timeline["form_found_utc"] = _utc_ms()
     recorder.step("form found", page_url=form_url, frames=[f.url for f in page.frames],
                   inside_form_element=not hasattr(scope, "goto"))
     if values is None:
@@ -910,6 +956,11 @@ def run_form(page, url: str, values: dict | None, submit: bool, recorder=None, a
         recorder.note("apartment_named_on_form", bool(apartment) and apartment in _page_text(page))
         recorder.note("form_fields", fields)
         recorder.note("form_buttons", _buttons(scope))
+        # Nothing is being sent, so there's time to look closer: how the form
+        # is sent (action, method, hidden fields, CAPTCHA widgets) and how the
+        # page is built and loads.
+        recorder.note("form_facts", _form_facts(scope))
+        recorder.note("page_facts", _page_facts(page))
         recorder.snapshot("2_form_empty", page)
         recorder.image("2_form_empty", _screenshot(page))
         return Attempt("recorded", "form recorded; nothing filled or sent",
@@ -919,7 +970,7 @@ def run_form(page, url: str, values: dict | None, submit: bool, recorder=None, a
     radios = dict(values.get("radio_choices") or {})
     submit_button = None
     for form_page in range(1, MAX_FORM_PAGES + 1):
-        page_filled, page_problems = _fill_visible_fields(scope, values, radios)
+        page_filled, page_problems, fill_details = _fill_visible_fields(scope, values, radios)
         filled += page_filled
         fields = _inventory(scope)
         labels += [f["label"] for f in fields]
@@ -928,6 +979,7 @@ def run_form(page, url: str, values: dict | None, submit: bool, recorder=None, a
         submit_button = _visible_button(scope, SUBMIT_BUTTON)
         next_button = None if submit_button else _visible_button(scope, NEXT_BUTTON)
         recorder.step(f"filled page {form_page} of the form", filled=page_filled, problems=problems,
+                      fill_details=fill_details,
                       fields_after=[{"label": f["label"], "required": f["required"], "empty": f["empty"]}
                                     for f in fields],
                       submit_button=_text_of(submit_button), next_button=_text_of(next_button))
@@ -943,7 +995,7 @@ def run_form(page, url: str, values: dict | None, submit: bool, recorder=None, a
     if submit_button is not None and not_found:
         problems += [f"no field found for {key}" for key in not_found]
     found_so_far = {"filled": filled, "problems": problems, "form_fields": list(dict.fromkeys(labels)),
-                    "form_url": form_url}
+                    "form_url": form_url, "timeline": timeline}
     recorder.snapshot("3_form_filled", page)
     filled_shot = _screenshot(page)
     recorder.step("screenshot of the filled form taken")
@@ -966,23 +1018,35 @@ def run_form(page, url: str, values: dict | None, submit: bool, recorder=None, a
 
     confirmation_already_showing = _confirmation_showing(page)
     messages_before = set(_site_messages(page))
+    text_before = _page_text(page)  # to find what the site says once SUBMIT is pressed
     recorder.step("pressing SUBMIT")
+    timeline["submit_pressed_utc"] = _utc_ms()
     if not _press(submit_button, page, recorder):
         return Attempt("failed", "the SUBMIT click didn't reach the button, so nothing was sent",
                        filled_screenshot=filled_shot, result_screenshot=_screenshot(page), **found_so_far)
     recorder.step("pressed SUBMIT")
 
     def finish(status, detail, **extra):
+        timeline["answer_utc"] = _utc_ms()
         recorder.step(f"outcome: {status}", page_url=page.url, site_messages=extra.get("site_messages", []))
+        # The words the page gained after SUBMIT: the site's real confirmation
+        # (or complaint), to tune CONFIRMATION and SITE_ERROR from.
+        recorder.note("text_after_submit_new", _new_lines(text_before, _page_text(page)))
         recorder.snapshot("4_after_submit", page)
         recorder.note("form_buttons", _buttons(page))
+        recorder.note("page_facts", _page_facts(page))
         return Attempt(status, detail, filled_screenshot=filled_shot, result_screenshot=_screenshot(page),
                        **extra, **found_so_far)
 
     deadline = time.monotonic() + CONFIRMATION_TIMEOUT_MS / 1000
     complaints = 0
+    changed = False
     while time.monotonic() < deadline:
         page.wait_for_timeout(500)
+        if not changed and (page.url != form_url or _page_text(page) != text_before):
+            changed = True  # how long the site takes to react at all
+            timeline["first_change_utc"] = _utc_ms()
+            recorder.step("the page changed after SUBMIT", page_url=page.url)
         if _confirmation_showing(page) and (not confirmation_already_showing or not _still_visible(submit_button)):
             return finish("submitted", "the site confirmed the application")
         # The form is still there and showing new error text: the site
@@ -1037,6 +1101,95 @@ def _page_text(page) -> str:
         return page.evaluate("() => document.body.innerText")
     except Exception:
         return ""
+
+
+def _new_lines(before: str, after: str, limit: int = 60) -> list:
+    """Visible lines on the page now that weren't there before (redacted when
+    the recording is written)."""
+    old = {line.strip() for line in before.splitlines()}
+    new = [line.strip()[:200] for line in after.splitlines() if line.strip() and line.strip() not in old]
+    return list(dict.fromkeys(new))[:limit]
+
+
+def _utc_ms() -> str:
+    """Now, in UTC to the millisecond, for the timeline."""
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+
+
+# How the page is built and how it loaded: its framework, its timings,
+# what it fetched (by type, and the slowest), and whether it keeps a
+# service worker or anything in the browser's storage (names only).
+_PAGE_FACTS_JS = r"""() => {
+    const w = window, nav = performance.getEntriesByType('navigation')[0] || {};
+    const ms = v => (typeof v === 'number' ? Math.round(v) : null);
+    const byType = {};
+    const resources = performance.getEntriesByType('resource');
+    for (const r of resources) {
+        const t = byType[r.initiatorType] = byType[r.initiatorType] || {count: 0, kb: 0, slowest_ms: 0};
+        t.count++; t.kb += (r.transferSize || 0) / 1024; t.slowest_ms = Math.max(t.slowest_ms, Math.round(r.duration));
+    }
+    Object.values(byType).forEach(t => { t.kb = Math.round(t.kb); });
+    const keys = store => { try { return Object.keys(store).slice(0, 40); } catch (e) { return null; } };
+    return {
+        frameworks: {
+            next: !!w.__NEXT_DATA__, nuxt: !!w.__NUXT__,
+            react: !!document.querySelector('[data-reactroot]') || !!w.React,
+            angular: !!document.querySelector('[ng-version]') || !!w.ng,
+            vue: !!w.Vue || !!document.querySelector('[data-v-app]'),
+            jquery: !!w.jQuery, gatsby: !!w.___gatsby, svelte: !!document.querySelector('[class*=svelte-]'),
+        },
+        generator: (document.querySelector('meta[name=generator]') || {}).content || null,
+        timing_ms: {response_start: ms(nav.responseStart), dom_content_loaded: ms(nav.domContentLoadedEventEnd),
+                    load: ms(nav.loadEventEnd), page_kb: nav.transferSize ? Math.round(nav.transferSize / 1024) : null,
+                    since_navigation: ms(performance.now())},
+        resources_by_type: byType,
+        slowest_resources: resources.slice().sort((a, b) => b.duration - a.duration).slice(0, 8)
+            .map(r => ({url: r.name.split('?')[0].slice(0, 200), type: r.initiatorType, ms: Math.round(r.duration),
+                        started_ms: Math.round(r.startTime)})),
+        service_worker: !!(navigator.serviceWorker && navigator.serviceWorker.controller),
+        local_storage_keys: keys(w.localStorage), session_storage_keys: keys(w.sessionStorage),
+        cookies_visible_to_scripts: (document.cookie || '').split(';').map(c => c.split('=')[0].trim()).filter(Boolean),
+    };
+}"""
+
+# How the form is sent: the <form>'s own attributes, its hidden fields
+# (names and value lengths -- a long one is usually a token), and any
+# CAPTCHA widget with its (public) site key.
+_FORM_FACTS_JS = r"""root => {
+    const form = root.closest ? (root.closest('form') || root.querySelector('form')) : root.querySelector('form');
+    const attrs = el => el ? {action: el.getAttribute('action'), method: el.getAttribute('method'),
+                              enctype: el.getAttribute('enctype'), id: el.id || null, name: el.getAttribute('name'),
+                              novalidate: el.hasAttribute('novalidate')} : null;
+    const doc = root.ownerDocument || root;
+    return {
+        form: attrs(form),
+        forms_on_page: doc.querySelectorAll('form').length,
+        hidden_fields: [...(form || doc).querySelectorAll('input[type=hidden]')].slice(0, 30)
+            .map(el => ({name: el.name || el.id || null, value_length: (el.value || '').length})),
+        captcha_widgets: [...doc.querySelectorAll('.g-recaptcha, [data-sitekey], .h-captcha, .cf-turnstile, '
+                                                  + 'iframe[src*=captcha], iframe[src*=challenges]')]
+            .slice(0, 5).map(el => ({tag: el.tagName.toLowerCase(),
+                                     class: (el.className || '').toString().slice(0, 80) || null,
+                                     sitekey: el.getAttribute('data-sitekey'), size: el.getAttribute('data-size'),
+                                     src: el.src ? el.src.split('?')[0] : null})),
+        scripts_with_captcha: [...doc.querySelectorAll('script[src]')].map(s => s.src.split('?')[0])
+            .filter(src => /captcha|turnstile|challenge/i.test(src)).slice(0, 5),
+    };
+}"""
+
+
+def _page_facts(page) -> dict:
+    try:
+        return page.evaluate(_PAGE_FACTS_JS)
+    except Exception as e:
+        return {"error": f"{type(e).__name__}: {str(e)[:200]}"}
+
+
+def _form_facts(scope) -> dict:
+    try:
+        return _evaluate(scope, _FORM_FACTS_JS)
+    except Exception as e:
+        return {"error": f"{type(e).__name__}: {str(e)[:200]}"}
 
 
 # Finds the page's own APPLY button (not one in the site's header, menu or
@@ -1124,9 +1277,12 @@ def _inventory(scope) -> list:
 
 def _fill_visible_fields(scope, values: dict, radios: dict) -> tuple:
     """Fill what's on screen now and check each value took. Returns (profile
-    keys filled, labels of fields that wouldn't take their value)."""
+    keys filled, labels of fields that wouldn't take their value, details):
+    details say, per field, how the value went in (a plain fill, a retype key
+    by key, which spelling) and, for boxes that reformat what's typed, the
+    shape it ended up in ("+# ### ### ####") -- never the value itself."""
     fields = _inventory(scope)
-    used, filled, problems = set(), [], []
+    used, filled, problems, details = set(), [], [], []
 
     def fill(key, pattern, value):
         for f in fields:
@@ -1134,10 +1290,12 @@ def _fill_visible_fields(scope, values: dict, radios: dict) -> tuple:
                 continue
             used.add(f["index"])
             element = scope.locator(f'[data-autoapply-field="{f["index"]}"]')
-            if _put(element, f, key, value):
-                filled.append(key)
-            else:
-                problems.append(f["label"])
+            ok, how, shown = _put(element, f, key, value)
+            (filled if ok else problems).append(key if ok else f["label"])
+            detail = {"label": f["label"], "key": key, "took": ok, "how": how}
+            if key in SHAPE_KEYS and shown is not None:
+                detail["shape"] = value_shape(shown)
+            details.append(detail)
             return
 
     for key, pattern, _ in FORM_FIELDS:
@@ -1151,39 +1309,54 @@ def _fill_visible_fields(scope, values: dict, radios: dict) -> tuple:
         if _choose_radio(scope, str(question), str(answer)):
             filled.append(f"radio_choices: {question}")
             del radios[question]  # answered; later pages don't need it
-    return filled, problems
+    return filled, problems, details
 
 
-def _put(element, f: dict, key: str, value) -> bool:
+# Boxes whose formatting is worth recording (as a shape, never the value).
+SHAPE_KEYS = (*PHONE_KEYS, "annual_income", "household_size", "zip", "state", "building", "apartment_no")
+
+
+def value_shape(text: str) -> str:
+    """'+1 (212) 555-0123' -> '+# (###) ###-####', 'NY' -> 'AA': how a box
+    formats what's typed, without what was typed."""
+    return re.sub(r"[a-z]", "a", re.sub(r"[A-Z]", "A", re.sub(r"\d", "#", str(text))))[:40]
+
+
+def _put(element, f: dict, key: str, value) -> tuple:
     """Put one value in one field, then read it back. Masked boxes (the
     phone's "+", the "$ 0.00" income box) can reformat or reject what's
     typed, so if the first way doesn't stick, it's typed key by key, and
-    alternative spellings are tried. True only once the box shows the value."""
+    alternative spellings are tried. Returns (took, how, what the box shows):
+    took is True only once the box shows the value."""
+    shown = None
     try:
         if f["type"] == "checkbox":
             tick = value if isinstance(value, bool) else str(value).strip().lower() in ("true", "yes", "y", "1")
             element.set_checked(tick, force=True, timeout=5000)
-            return element.is_checked() == tick
+            return element.is_checked() == tick, "checkbox", None
         if isinstance(value, bool):
-            return False  # true/false only makes sense for a checkbox
+            return False, "true/false only fits a checkbox", None
         if f["tag"] == "select":
             option = _matching_option(element, str(value))
             if option is not None:
                 element.select_option(value=option, timeout=5000)
-            return option is not None
-        for text in _spellings(key, value):
+            return option is not None, "select" if option is not None else "no matching option", None
+        for n, text in enumerate(_spellings(key, value), 1):
+            spelling = f", spelling {n}" if n > 1 else ""
             element.fill(text, timeout=5000)
-            if _shows(key, element.input_value(), value):
-                return True
+            shown = element.input_value()
+            if _shows(key, shown, value):
+                return True, "fill" + spelling, shown
             element.click(timeout=5000)
             element.press("ControlOrMeta+A")
             element.press("Backspace")
             element.press_sequentially(text, delay=20)
-            if _shows(key, element.input_value(), value):
-                return True
-        return False
-    except Exception:
-        return False
+            shown = element.input_value()
+            if _shows(key, shown, value):
+                return True, "typed key by key" + spelling, shown
+        return False, "never showed the value", shown
+    except Exception as e:
+        return False, f"error: {type(e).__name__}", shown
 
 
 def _spellings(key: str, value) -> list:

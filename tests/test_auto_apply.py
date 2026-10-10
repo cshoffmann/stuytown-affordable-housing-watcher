@@ -312,6 +312,13 @@ class ApplierDispatchTests(unittest.TestCase):
         for value in PERSONAL:
             self.assertNotIn(value, log_text)
 
+    def test_the_public_log_has_when_each_stage_happened(self):
+        self.check([unit("1A", 2500)])
+        attempt = auto_apply.load_applications()["P~TEST~U~1A"]["attempts"][-1]
+        self.assertLessEqual(attempt["timeline"]["queued_utc"], attempt["timeline"]["started_utc"])
+        self.assertLessEqual(attempt["timeline"]["started_utc"], attempt["timeline"]["finished_utc"])
+        self.assertIsNotNone(attempt["timeline"]["queue_wait_seconds"])
+
     def test_a_crashing_background_job_never_reaches_the_applier(self):
         with mock.patch.object(background, "notify_with_retries", side_effect=RuntimeError("Pushover down")):
             self.check([unit("1A", 2500)])
@@ -442,6 +449,24 @@ class FormFillingTests(unittest.TestCase):
         attempt, submitted = self.apply(site_options="&income=cents")
         self.assertEqual(attempt.status, "submitted", attempt.detail)
         self.assertEqual(submitted["income"], "95,000.00")
+
+    def test_how_each_box_took_its_value_is_recorded_without_the_value(self):
+        recorder = apply_recorder.RunRecorder(None, apply_recorder.Redactor(EXAMPLE_PROFILE))
+        context = self.browser.new_context(viewport={"width": 1280, "height": 900})
+        self.addCleanup(context.close)
+        url = f"http://127.0.0.1:{self.server.server_port}/unit.html?unitSpk=TEST"
+        auto_apply.run_form(context.new_page(), url, auto_apply.form_values(EXAMPLE_PROFILE), submit=False,
+                            recorder=recorder, apartment="TEST")
+        details = next(s for s in recorder.steps if s["step"].startswith("filled page"))["fill_details"]
+        by_key = {d["key"]: d for d in details}
+        self.assertEqual(by_key["cell_phone"]["shape"], "+# ### ### ####")
+        self.assertEqual(by_key["annual_income"]["shape"], "#####")  # as typed; the box adds ",.00" on leaving it
+        self.assertTrue(all(d["took"] for d in details))
+        self.assertNotIn("Jane", json.dumps(details))
+
+    def test_value_shapes_keep_the_format_not_the_value(self):
+        self.assertEqual(auto_apply.value_shape("+1 (212) 555-0123"), "+# (###) ###-####")
+        self.assertEqual(auto_apply.value_shape("NY 10009"), "AA #####")
 
     def test_form_check_fills_everything_but_never_submits(self):
         attempt, submitted = self.apply(submit=False)
@@ -591,6 +616,15 @@ class EndToEndTests(unittest.TestCase):
         log = json.loads(Path(f"{tmp.name}/applications.json").read_text(encoding="utf-8"))
         self.assertEqual(sorted(log), ["P~TEST~U~1A", "P~TEST~U~2B", "P~TEST~U~3C"])
         self.assertTrue(all(r["attempts"][-1]["status"] == "submitted" for r in log.values()))
+        timeline = log["P~TEST~U~3C"]["attempts"][-1]["timeline"]
+        self.assertEqual(timeline["form_via"], "direct address")
+        stages = ["queued_utc", "started_utc", "form_found_utc", "submit_pressed_utc", "answer_utc", "finished_utc"]
+        self.assertEqual([timeline[s] for s in stages], sorted(timeline[s] for s in stages))  # in order
+        self.assertGreaterEqual(timeline["queue_wait_seconds"], 0)
+        observed = applier.observations()
+        self.assertEqual(len(observed["browser_ready_seconds"]), 2)
+        self.assertTrue(observed["form_url"]["verified"])
+        self.assertGreaterEqual(observed["idle_listings_page"]["loads"], 1)
         learned = json.loads(Path(f"{tmp.name}/apply_form_url.json").read_text(encoding="utf-8"))
         self.assertTrue(learned["template"].endswith("/apply.html?unitSpk={unitSpk}"))
 
@@ -603,6 +637,18 @@ class EndToEndTests(unittest.TestCase):
         submit_request = [n for n in json.loads((runs["1A_apply"] / "network.json").read_text())
                           if n["method"] == "POST"]
         self.assertEqual(json.loads(submit_request[0]["request_body"])["firstName"], "<first_name>")
+        report = json.loads((runs["1A_apply"] / "report.json").read_text())
+        sent = report["analysis"]["submit_request"]
+        self.assertEqual((sent["method"], sent["status"]), ("POST", 200))
+        self.assertIn("/api/applications?unitSpk=", sent["url"])
+        self.assertIn("firstName", sent["body_keys"])
+        self.assertIn("content-type", sent["header_names"])
+        self.assertEqual(report["analysis"]["anti_bot"], {})
+        self.assertTrue(report["notes"]["text_after_submit_new"])  # the site's own confirmation wording
+        self.assertIn("page_facts", report["notes"])
+        recorded = json.loads((runs["9F_record"] / "report.json").read_text())
+        self.assertEqual(recorded["notes"]["form_facts"]["forms_on_page"], 1)
+        self.assertIn("resources_by_type", recorded["notes"]["page_facts"])
         # Nothing personal in anything that gets committed.
         for folder in runs.values():
             for file in folder.iterdir():

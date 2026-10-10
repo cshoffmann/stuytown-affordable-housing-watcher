@@ -142,6 +142,27 @@ recordings capture exactly that. A wrong direct request can't be taken
 back, since the site allows one application per apartment, so it waits for
 real data.
 
+## Getting ready for Phase 2: what the live mornings will tell us
+
+Phase 1 was built against a fake copy of the site. What the real site does
+can only be measured on it, so every live morning now records what Phase 2
+needs to decide its next step. None of it is on the way to SUBMIT: anything
+that takes time is read either while nothing is being sent (recordings of
+over-limit forms), after the site has answered, or by the background logger.
+
+| Phase 2 question | Where to look |
+| --- | --- |
+| How long from a unit appearing to SUBMIT, and where does the time go? | `data/run_stats/<date>.json` → `units` → `auto_apply.submit_seconds_after_first_seen`; the stages are in `data/applications.json` → `timeline` (queued, started, form found, SUBMIT pressed, first change, answer) |
+| Did we beat the other applicants? | `run_stats` → `units` → `listed_for_seconds`, and `still_listed_seconds_after_submit` for the units auto-apply went for |
+| Could SUBMIT be sent directly, without a browser (≈ 1 s faster)? | The recording's `report.json` → `analysis.submit_request`: method, address, content type, header names, the body's field names, any token-like fields or headers. `form_facts` (from the over-limit recordings) shows the form's hidden fields and whether a CAPTCHA widget is on it |
+| Does the site confirm it the way `CONFIRMATION` expects? | `report.json` → `notes.text_after_submit_new`: the lines the page gained after SUBMIT. On an "unconfirmed" result, this is what to tune the pattern from |
+| Did a field fight back (masks, reformatting)? | The `filled page 1 of the form` step → `fill_details`: per field, how its value went in and the shape it ended in (`+# ### ### ####`) |
+| Is there anti-bot protection that a faster or direct approach would trip? | `report.json` → `analysis.anti_bot` (reCAPTCHA, hCaptcha, Turnstile, Cloudflare, PerimeterX, DataDome, Akamai, Kasada, Imperva, Queue-it, F5) and `analysis.cdn`; `cookies` lists their cookies by name |
+| Could the checks be faster, or cheaper than fetching every listing? | `run_stats` → `listings_api`: response times, the caching headers (`Age` shows a CDN cache, which would mean faster checks don't see new units sooner), whether `ETag` follows the contents (then a cheap "changed?" request could work), rate-limit headers, and whether the kept-open connection holds |
+| Did the site ever push back? | `run_stats` → `listings_api.statuses` and `failures`, and `pace` for every slow-down |
+| Does the site poll for new units itself, or hold a live connection? | `run_stats` → `applier.idle_listings_page`: the requests the idle listings page made on its own, per minute, and its WebSockets. A cheaper or faster endpoint would show up here |
+| Is the warm browser worth it, and how fast does the form page load? | `run_stats` → `applier.browser_ready_seconds`; `report.json` → `notes.page_facts` (load times, the slowest requests, the framework) |
+
 ## Threads, and why not asyncio
 
 Playwright's objects belong to the thread that created them, and the

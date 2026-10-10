@@ -35,6 +35,7 @@ from zoneinfo import ZoneInfo
 import auto_apply
 import background
 import check_units
+import run_stats
 
 POLL_INTERVAL_SECONDS = 2  # every check is one small request; cheap units have been gone in 15-45s
 SLOWEST_POLL_SECONDS = 30  # back-off ceiling when the site asks us to slow down (its own Retry-After wins, up to 120)
@@ -124,6 +125,7 @@ class Watcher:
         self.notifier = notifier or background.Worker("notifier")
         self.logger = logger or background.Worker("logger", yield_to=applier.busy if applier else None)
         self.pace = pace or Pace()
+        self.stats = run_stats.RunStats()
         self.checks = self.failures = 0
         self._unsent = []  # change summaries since the last commit
         self._last_status = self._last_commit = time.monotonic()
@@ -131,14 +133,16 @@ class Watcher:
 
     def check(self, units: list, now: datetime | None = None, label: str | None = None) -> check_units.Changes:
         """One check's worth of work for a fetched list of units."""
+        now = now or datetime.now(timezone.utc)
+        qualifies = auto_apply.qualifies if auto_apply.MAX_RENT is not None else None
         changes = check_units.process_snapshot(
             units, now=now, label=label or f"{now_et():%H:%M:%S} ET",
             apply=self.applier.dispatch if self.applier else None,
-            qualifies=auto_apply.qualifies if auto_apply.MAX_RENT is not None else None,
-            notifier=self.notifier, logger=self.logger,
+            qualifies=qualifies, notifier=self.notifier, logger=self.logger,
         )
         if changes:
             self._unsent.append(f"{now_et():%H:%M} {changes.summary()}")
+            self.stats.observe_changes(changes, now, qualifies)
         return changes
 
     def run_until(self, end: datetime) -> None:
@@ -150,14 +154,20 @@ class Watcher:
             try:
                 units = client.fetch_all()
             except check_units.ListingsUnavailable as e:
+                self.stats.observe_responses(client.responses)
                 self._failed(e, retry_after=e.retry_after, pushed_back=e.status in (403, 429))
             except Exception as e:
+                self.stats.observe_responses(client.responses)
                 self._failed(e)
             else:
+                self.stats.observe_responses(client.responses)
                 if self._last_error:
                     print(f"[{now_et():%H:%M:%S} ET] Listings reachable again")
                     self._last_error = None
+                before = self.pace.interval
                 self.pace.ok()
+                if self.pace.interval != before:
+                    self.stats.observe_pace(self.pace.interval, "good checks again")
                 try:
                     self.check(units)
                 except Exception as e:
@@ -176,8 +186,12 @@ class Watcher:
 
     def _failed(self, error: Exception, retry_after: float | None = None, pushed_back: bool = False) -> None:
         self.failures += 1
+        self.stats.observe_failure(error)
         before = self.pace.interval
         self.pace.trouble(retry_after, pushed_back)
+        if self.pace.interval != before:
+            self.stats.observe_pace(self.pace.interval, ("site asked to slow down: " if pushed_back else "error: ")
+                                    + str(error))
         message = str(error)[:200]
         if message != self._last_error or self.pace.interval != before:
             print(f"[{now_et():%H:%M:%S} ET] Check failed ({message}); "
@@ -203,10 +217,13 @@ class Watcher:
         self.logger.submit(commit_and_push, message)
 
     def finish(self, timeout: float = 120) -> None:
-        """Let a running application finish, send what's queued, commit."""
+        """Let a running application finish, send what's queued, write the
+        morning's stats, commit."""
         if self.applier:
             self.applier.stop(timeout=60)
         self.notifier.drain(timeout)
+        if self.checks:
+            self.logger.submit(self.stats.write, self.applier, check_units.load_state())
         self.commit_soon(final=True)
         self.logger.drain(timeout)
 

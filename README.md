@@ -268,9 +268,26 @@ is written: "Jane" becomes `<first_name>`, and "+1 212 555 0123" becomes
 
 | File | What's in it |
 | --- | --- |
-| `report.json` | Each step with its timing and page address. Every form field with its label and how the site built it (`name`, `id`, `autocomplete`, `inputmode`, `maxlength`, `class` …, never its value). The buttons. What was filled and what wasn't. Whether the form named the right apartment. Console errors. The outcome |
-| `network.json` | Every request the browser made, including **the request SUBMIT sends and the site's answer**, with bodies for pages and API calls. Cookies are dropped |
+| `report.json` | Each step with its timing and page address. Every form field with its label and how the site built it (`name`, `id`, `autocomplete`, `inputmode`, `maxlength`, `class` …, never its value). How each box took its value (a plain fill, typed key by key, which spelling) and, for phone/income/zip-type boxes, the *shape* it ended up in (`+# ### ### ####`). The buttons. What was filled and what wasn't. Whether the form named the right apartment. Console errors. **The text the page gained after SUBMIT** (the site's real confirmation or complaint). Page navigations, live (WebSocket) connections, and cookies by name and settings (never values). How the page is built and loaded (framework, load times, slowest requests). On recordings: how the form is sent (`action`, `method`, hidden fields by name and length, CAPTCHA widgets). The outcome, with a timeline |
+| `report.json` → `analysis` | Worked out when it's written: **the request SUBMIT sent**, summarized (method, address, header names, the body's field names, which ones look like tokens, the answer and how fast it came), every request in the seconds after SUBMIT, where the scripts come from, the CDN, and any sign of an anti-bot, CAPTCHA or waiting-room service |
+| `network.json` | Every request the browser made, including **the request SUBMIT sends and the site's answer**, with bodies for pages and API calls. Cookie headers are dropped |
 | `1_unit_page.html` … `4_after_submit.html` | The page's HTML at each stage |
+
+Each application in `data/applications.json` also gets a **timeline**: when
+the checker queued it, when a browser took it, when the form was found and
+how (`direct address` or `unit page`), when SUBMIT was pressed, when the
+page first changed, when the answer came, all in UTC to the millisecond.
+
+**One stats file per morning**, `data/run_stats/<date>.json`, covers what a
+single recording can't: how the listings API answers being checked every 2
+seconds (response times, statuses, whether the kept-open connection holds,
+caching headers such as `Age` or `ETag`, any rate-limit headers, how far its
+clock is from ours), every slow-down and why, every unit with how long it
+really stayed listed and how many seconds after it first appeared SUBMIT was
+pressed, and what the idle listings page did on its own (does the site poll
+for new units itself?). It's about the site and the listings: nothing of
+yours is in it. `docs/architecture.md` has a table of which file answers
+which question.
 
 Screenshots of the filled-in form can't be redacted, so they only go to your
 phone (and the runner's gitignored `private/` folder, which disappears after
@@ -426,7 +443,10 @@ there. (Run it outside 7–10am, or it waits for the morning run to finish.)
   profile key.
 - `background.py`: the notifier and logger workers, and alert retries.
 - `apply_recorder.py`: records each trip through the form, with your details
-  redacted.
+  redacted, and works out the `analysis` (the SUBMIT request, anti-bot
+  signs). Also `SiteWatch`, which notes what the idle listings page does.
+- `run_stats.py`: the morning's stats file (listings API, pace, units,
+  applier).
 - `docs/architecture.md`: how it's built, and how that compares with the
   old design.
 - `data/last_seen.json`: the state (what's listed right now).
@@ -435,6 +455,7 @@ there. (Run it outside 7–10am, or it waits for the morning run to finish.)
   (no personal details).
 - `data/apply_form_url.json`: the learned address of the application form.
 - `data/apply_runs/`: the form recordings.
+- `data/run_stats/`: one stats file per morning (no personal details).
 - `tests/`: automated tests, the phone simulation, the test alert, and the
   fake data they use (`tests/fixtures/`, including `apply_site/`, a fake copy
   of a unit page and the application form).

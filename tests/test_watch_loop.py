@@ -24,6 +24,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 import background  # noqa: E402
 import check_units  # noqa: E402
+import run_stats  # noqa: E402
 import watch_loop  # noqa: E402
 
 FAKE_UNITS = json.loads((REPO_ROOT / "tests" / "fixtures" / "fake_units.json").read_text(encoding="utf-8"))
@@ -51,8 +52,13 @@ class Api(http.server.BaseHTTPRequestHandler):
 
 
 class FakeApplier:
+    applications = {}
+
     def __init__(self):
         self.handed = []
+
+    def observations(self):
+        return {"workers": 0}
 
     def dispatch(self, units):
         self.handed.append(len(units))
@@ -79,6 +85,7 @@ class CheckerTests(unittest.TestCase):
             (check_units, "STATE_FILE", f"{tmp.name}/last_seen.json"),
             (check_units, "EVENTS_FILE", f"{tmp.name}/events.json"),
             (check_units, "notify", lambda **alert: True),
+            (run_stats, "RUN_STATS_DIR", f"{tmp.name}/run_stats"),
         ]:
             patcher = mock.patch.object(target, name, value)
             patcher.start()
@@ -108,6 +115,18 @@ class CheckerTests(unittest.TestCase):
         self.assertTrue(any("next checks every 0.4s" in line for line in lines))
         self.assertTrue(any("reachable again" in line for line in lines))
         self.assertGreater(len(applier.handed), 3)
+
+    def test_the_mornings_stats_are_written_at_the_end(self):
+        watcher, _, _ = self.run_checker(0.4)
+        with mock.patch.object(watch_loop, "commit_and_push", lambda message: None), mock.patch("builtins.print"):
+            watcher.finish()
+        (written,) = Path(run_stats.RUN_STATS_DIR).iterdir()
+        stats = json.loads(written.read_text(encoding="utf-8"))
+        self.assertEqual(stats["listings_api"]["requests"], watcher.checks)
+        self.assertEqual(stats["listings_api"]["connections"], {"kept-open connection": watcher.checks - 1,
+                                                                "new connection": 1})
+        self.assertTrue(stats["units"][FAKE_UNITS["5A"]["unitSpk"]]["still_listed_at_end"])
+        self.assertEqual(stats["applier"], {"workers": 0})
 
     def test_results_are_committed_in_batches(self):
         inline = background.Worker("inline", inline=True)

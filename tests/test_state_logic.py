@@ -220,6 +220,9 @@ class ProcessSnapshotTests(unittest.TestCase):
         self.assertEqual([a["priority"] for a in self.sent], [2])  # just the new-unit alert
         self.assertEqual([e["event"] for e in self.events()], ["new", "updated", "removed"])
         self.assertEqual(self.events()[1]["units"][0]["changed"]["price"], {"before": 1873, "after": 1925})
+        removed = self.events()[2]["units"][0]
+        # Listed on the first two checks, 2 s apart: up for 2 s, not the minute it took to confirm.
+        self.assertEqual(removed["listed_for_seconds"], 2)
 
 
 class AlertContentTests(unittest.TestCase):
@@ -310,6 +313,17 @@ class FetchTests(unittest.TestCase):
         for _ in range(5):
             self.assertEqual(client.fetch_all(), [UNIT_5A])
         self.assertEqual(len(FakeApiHandler.connections), 1)
+
+    def test_each_response_is_kept_for_the_run_stats(self):
+        self.serve([{"count": 1, "unitModels": [UNIT_5A], "totalCount": 1}], headers={"Cache-Control": "no-cache"})
+        client = check_units.ListingsClient()
+        self.addCleanup(client.close)
+        client.fetch_all()
+        client.fetch_all()
+        (response,) = client.responses  # just this check's
+        self.assertEqual((response["status"], response["reused_connection"]), (200, True))
+        self.assertEqual(response["headers"]["cache-control"], "no-cache")
+        self.assertGreater(response["bytes"], 0)
 
     def test_a_rate_limit_is_reported_with_the_sites_retry_after(self):
         self.serve([], status=429, headers={"Retry-After": "45"})
