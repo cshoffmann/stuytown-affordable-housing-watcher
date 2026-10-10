@@ -12,8 +12,10 @@ Run from the repo folder:
 import io
 import json
 import os
+import queue
 import sys
 import tempfile
+import threading
 import time
 import unittest
 from contextlib import redirect_stdout
@@ -25,7 +27,9 @@ sys.path.insert(0, str(REPO_ROOT))
 
 import apply_recorder  # noqa: E402
 import auto_apply  # noqa: E402
+import background  # noqa: E402
 import check_units  # noqa: E402
+import watch_loop  # noqa: E402
 
 FAKE_UNITS = json.loads((REPO_ROOT / "tests" / "fixtures" / "fake_units.json").read_text(encoding="utf-8"))
 EXAMPLE_PROFILE = json.loads((REPO_ROOT / "applicant_profile.example.json").read_text(encoding="utf-8"))
@@ -189,8 +193,9 @@ class ReadBackTests(unittest.TestCase):
         self.assertEqual(auto_apply._spellings("household_size", "2"), ["2"])
 
 
-class ActOnListingsTests(unittest.TestCase):
-    """The watcher's hook, with the browser part replaced by a recorder."""
+class ApplierDispatchTests(unittest.TestCase):
+    """The applier's queue and bookkeeping, with the browser part replaced by
+    a recorder and the background workers inline."""
 
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
@@ -200,88 +205,105 @@ class ActOnListingsTests(unittest.TestCase):
         self.status = "submitted"
         for target, name, value in [
             (auto_apply, "APPLICATIONS_FILE", str(self.dir / "applications.json")),
+            (auto_apply, "FORM_URL_FILE", str(self.dir / "apply_form_url.json")),
             (auto_apply, "PRIVATE_DIR", str(self.dir / "private")),
             (auto_apply, "MAX_RENT", 3000),
-            (auto_apply, "_skips_logged", set()),
-            (auto_apply, "_recorded_this_run", set()),
-            (auto_apply, "_submitted_this_run", 0),
             (auto_apply, "apply_to_unit", self.fake_apply),
-            (auto_apply, "_profile_for_run", lambda: EXAMPLE_PROFILE),
             (check_units, "notify", self.record_alert),
         ]:
             patcher = mock.patch.object(target, name, value)
             patcher.start()
             self.addCleanup(patcher.stop)
-        # The browser itself isn't needed: apply_to_unit is faked.
-        patcher = mock.patch.dict(sys.modules, {"playwright.sync_api": mock.MagicMock()})
+        patcher = mock.patch("builtins.print")
         patcher.start()
         self.addCleanup(patcher.stop)
+        self.applier = auto_apply.Applier(EXAMPLE_PROFILE)  # inline notifier and logger; not started
 
-    def fake_apply(self, browser, listed_unit, profile, record_only=False):
+    def fake_apply(self, context, listed_unit, profile, record_only=False, runs_dir=None, direct_url=None):
         if record_only:
             self.recorded.append(check_units.apartment(listed_unit))
-            return auto_apply.Attempt("recorded", "test")
+            return auto_apply.Attempt("recorded", "test"), None
         self.tried.append(check_units.apartment(listed_unit))
         return auto_apply.Attempt(self.status, "test", filled=["first_name"], form_url="https://example.test/apply",
                                   form_fields=["First Name *"], filled_screenshot=b"\xff\xd8 filled",
-                                  result_screenshot=b"\xff\xd8 after", seconds=2.0)
+                                  result_screenshot=b"\xff\xd8 after", seconds=2.0), None
 
     def record_alert(self, **alert):
         self.sent.append(alert)
         return True
 
-    def run_hook(self, units, enabled=True):
-        with mock.patch.object(auto_apply, "ENABLED", enabled), mock.patch("builtins.print"):
-            auto_apply.act_on_listings(units)
+    def work(self):
+        """Run every queued job, as the browser workers would."""
+        while True:
+            try:
+                _, _, _, kind, listed = self.applier._jobs.get_nowait()
+            except queue.Empty:
+                return
+            (self.applier._record_form if kind == "record" else self.applier._apply)(None, listed)
 
-    def test_off_does_nothing_at_all(self):
-        self.run_hook([unit("1A", 2500), unit("9F", 4380)], enabled=False)
-        self.assertEqual((self.tried, self.recorded, self.sent), ([], [], []))
+    def check(self, units):
+        queued = self.applier.dispatch(units)
+        self.work()
+        return queued
 
-    def test_applies_to_qualifying_units_cheapest_first_and_reports_each(self):
-        self.run_hook([unit("9F", 4380), unit("2B", 2900), unit("1A", 2500)])
+    def test_qualifying_units_are_queued_cheapest_first_and_each_gets_one_result_message(self):
+        self.check([unit("9F", 4380), unit("2B", 2900), unit("1A", 2500)])
         self.assertEqual(self.tried, ["1A", "2B"])
-        titles = [a["title"] for a in self.sent]
-        self.assertEqual(titles, ["Applied: Apt 1A, 287 Avenue C", "After SUBMIT: Apt 1A, 287 Avenue C",
-                                  "Applied: Apt 2B, 287 Avenue C", "After SUBMIT: Apt 2B, 287 Avenue C"])
-        # The filled-in form goes with the main alert, the page after SUBMIT in a quiet second one.
+        self.assertEqual([(a["title"], a["priority"]) for a in self.sent],
+                         [("Applied: Apt 1A, 287 Avenue C", 0), ("Applied: Apt 2B, 287 Avenue C", 0)])
         self.assertEqual(self.sent[0]["attachment"], ("filled-form.jpg", b"\xff\xd8 filled", "image/jpeg"))
-        self.assertEqual((self.sent[1]["attachment"][1], self.sent[1]["priority"]), (b"\xff\xd8 after", -1))
         self.assertIn("within 24 hours", self.sent[0]["message"])  # the detailed application comes next
 
-    def test_the_same_unit_on_later_checks_is_not_applied_to_again(self):
-        for _ in range(5):
-            self.run_hook([unit("1A", 2500)])
+    def test_a_failure_is_its_own_message_with_the_page_it_ended_on(self):
+        self.status = "rejected"
+        self.check([unit("1A", 2500)])
+        [alert] = self.sent
+        self.assertEqual((alert["title"], alert["priority"]),
+                         ("Auto-apply failed: Apt 1A, 287 Avenue C - apply yourself now", 0))
+        self.assertEqual(alert["attachment"][1], b"\xff\xd8 after")
+
+    def test_a_unit_is_never_queued_twice_while_its_application_runs(self):
+        for _ in range(5):  # checks every 2 s while the application is still going
+            self.applier.dispatch([unit("1A", 2500)])
+        self.assertTrue(self.applier.busy())
+        self.work()
+        self.assertEqual(self.tried, ["1A"])
+        self.assertFalse(self.applier.busy())
+        self.check([unit("1A", 2500)])  # and not again once it's done
         self.assertEqual(self.tried, ["1A"])
 
     def test_forms_of_units_over_the_limit_are_recorded_two_per_morning_without_applying(self):
         for _ in range(3):
-            self.run_hook([unit("9F", 4380), unit("8E", 4100), unit("7D", 3900), unit("1A", 2500)])
+            self.check([unit("9F", 4380), unit("8E", 4100), unit("7D", 3900), unit("1A", 2500)])
         self.assertEqual(self.tried, ["1A"])
         self.assertEqual(self.recorded, ["9F", "8E"])  # each once, and no more than two
-        self.assertEqual([a["title"] for a in self.sent if "Applied" in a["title"]], ["Applied: Apt 1A, 287 Avenue C"])
         self.assertEqual(list(json.loads(Path(auto_apply.APPLICATIONS_FILE).read_text())), ["P~TEST~U~1A"])
+
+    def test_applications_are_taken_before_recordings(self):
+        self.applier.dispatch([unit("9F", 4380)])  # a recording is queued first...
+        self.applier.dispatch([unit("1A", 2500)])  # ...then an application arrives
+        first = self.applier._jobs.get_nowait()
+        self.assertEqual((first[3], check_units.apartment(first[4])), ("apply", "1A"))
 
     def test_a_crashed_attempt_gets_one_more_try(self):
         self.status = "failed"
         for _ in range(4):
-            self.run_hook([unit("1A", 2500)])
+            self.check([unit("1A", 2500)])
         self.assertEqual(len(self.tried), auto_apply.MAX_FAILED_ATTEMPTS_PER_UNIT)
         self.assertIn("apply yourself now", self.sent[0]["title"])
 
-    def test_a_refused_form_tells_you_to_apply_yourself_and_isnt_retried(self):
+    def test_a_refused_form_isnt_retried(self):
         self.status = "rejected"
         for _ in range(3):
-            self.run_hook([unit("1A", 2500)])
+            self.check([unit("1A", 2500)])
         self.assertEqual(len(self.tried), 1)
-        self.assertIn("apply yourself now", self.sent[0]["title"])
 
-    def test_stops_after_the_per_run_limit(self):
-        self.run_hook([unit(f"{n}A", 2000 + n) for n in range(1, 6)])
+    def test_no_more_than_the_per_run_limit_even_when_they_arrive_at_once(self):
+        self.check([unit(f"{n}A", 2000 + n) for n in range(1, 6)])
         self.assertEqual(len(self.tried), auto_apply.MAX_APPLICATIONS_PER_RUN)
 
     def test_the_public_log_has_the_unit_and_outcome_but_none_of_your_details(self):
-        self.run_hook([unit("1A", 2500)])
+        self.check([unit("1A", 2500)])
         log_text = Path(auto_apply.APPLICATIONS_FILE).read_text(encoding="utf-8")
         record = json.loads(log_text)["P~TEST~U~1A"]
         self.assertEqual((record["apartment"], record["rent"]), ("1A", 2500))
@@ -290,30 +312,50 @@ class ActOnListingsTests(unittest.TestCase):
         for value in PERSONAL:
             self.assertNotIn(value, log_text)
 
-    def test_runs_right_after_the_new_unit_alert_and_before_the_screenshot(self):
-        order = []
-        with tempfile.TemporaryDirectory() as tmp, \
-                mock.patch.object(check_units, "STATE_FILE", f"{tmp}/state.json"), \
-                mock.patch.object(check_units, "EVENTS_FILE", f"{tmp}/events.json"), \
-                mock.patch.object(check_units, "notify", lambda **a: order.append("alert") or True), \
-                mock.patch("builtins.print"):
-            check_units.process_snapshot(
-                [unit("1A", 2500)],
-                take_screenshot=lambda path: order.append("screenshot") or False,
-                act_on_listings=lambda units: order.append("auto-apply"),
-            )
-        self.assertEqual(order, ["alert", "auto-apply", "screenshot"])
+    def test_a_crashing_background_job_never_reaches_the_applier(self):
+        with mock.patch.object(background, "notify_with_retries", side_effect=RuntimeError("Pushover down")):
+            self.check([unit("1A", 2500)])
+        self.assertEqual(self.tried, ["1A"])
+        self.assertFalse(self.applier.busy())
+        self.assertIn("P~TEST~U~1A", json.loads(Path(auto_apply.APPLICATIONS_FILE).read_text()))
 
-    def test_a_crash_in_auto_apply_never_stops_the_watcher(self):
-        def broken(units):
-            raise RuntimeError("boom")
+    def test_qualifies_follows_the_rent_limit_and_counts_everything_without_one(self):
+        with mock.patch.object(auto_apply, "_profile_if_any", lambda: EXAMPLE_PROFILE):
+            self.assertTrue(auto_apply.qualifies(unit(price=3000)))
+            self.assertFalse(auto_apply.qualifies(unit(price=3000.01)))
+            with mock.patch.object(auto_apply, "MAX_RENT", None):
+                self.assertTrue(auto_apply.qualifies(unit(price=9000)))
 
-        with tempfile.TemporaryDirectory() as tmp, \
-                mock.patch.object(check_units, "STATE_FILE", f"{tmp}/state.json"), \
-                mock.patch.object(check_units, "EVENTS_FILE", f"{tmp}/events.json"), \
-                mock.patch("builtins.print"):
-            changes = check_units.process_snapshot([unit("1A", 2500)], act_on_listings=broken)
-        self.assertEqual(len(changes.new), 1)
+    def test_auto_apply_off_means_no_applier_at_all(self):
+        inline = background.Worker("inline", inline=True)
+        with mock.patch.object(auto_apply, "ENABLED", False):
+            self.assertIsNone(watch_loop.start_applier(inline, inline))
+
+
+class BrowserRestartTests(unittest.TestCase):
+    def test_a_dead_browser_hands_its_job_back_and_gets_restarted(self):
+        applier = auto_apply.Applier(EXAMPLE_PROFILE)
+        browser, context = mock.MagicMock(), mock.MagicMock()
+        browser.is_connected.return_value = False
+        applier._jobs.put((0, 2500.0, 1, "apply", unit("1A", 2500)))
+        self.assertFalse(applier._serve(browser, context, warm=None))
+        self.assertEqual(applier._jobs.qsize(), 1)  # still there for the restarted browser
+
+
+class FormAddressTests(unittest.TestCase):
+    def test_the_form_address_is_learned_only_when_it_carries_the_unit_id(self):
+        listed = unit("1A", 2500)  # unitSpk P~TEST~U~1A
+        learned = auto_apply.form_url_template(listed, "https://x.test/apply?unitSpk=P~TEST~U~1A&step=1")
+        self.assertEqual(learned, {"template": "https://x.test/apply?unitSpk={unitSpk}&step=1", "spelling": "raw"})
+        quoted = auto_apply.form_url_template(listed, "https://x.test/apply/P%7ETEST%7EU%7E1A")
+        self.assertEqual(quoted["spelling"], "quoted")
+        self.assertIsNone(auto_apply.form_url_template(listed, "https://x.test/apply"))
+
+    def test_only_a_checked_address_is_used(self):
+        learned = {"template": "https://x.test/apply?unitSpk={unitSpk}", "spelling": "raw"}
+        self.assertIsNone(auto_apply.direct_form_url(learned, unit("2B")))
+        self.assertEqual(auto_apply.direct_form_url({**learned, "verified": True}, unit("2B")),
+                         "https://x.test/apply?unitSpk=P~TEST~U~2B")
 
 
 class PushoverAttachmentTests(unittest.TestCase):
@@ -479,9 +521,9 @@ class RedactorTests(unittest.TestCase):
 
     def test_url_encoded_bodies_and_nested_json(self):
         redact = apply_recorder.Redactor(EXAMPLE_PROFILE)
-        recorder = apply_recorder.RunRecorder(None, redact)
-        body = recorder._redact_body("email=jane.doe%40example.com&street=Example+Street",
-                                     "application/x-www-form-urlencoded")
+        recording = apply_recorder.Recording(None, redact, {}, [], {}, {})
+        body = recording._redact_body("email=jane.doe%40example.com&street=Example+Street",
+                                      "application/x-www-form-urlencoded")
         self.assertEqual(body, "email=<email>&street=<street_name>")
         self.assertEqual(redact.deep({"applicant": {"name": "Jane", "phones": ["212.555.0123"]}}),
                          {"applicant": {"name": "<first_name>", "phones": ["<cell_phone>"]}})
@@ -489,58 +531,87 @@ class RedactorTests(unittest.TestCase):
 
 @unittest.skipUnless(_browser_available(), "Playwright + Chromium not installed")
 class EndToEndTests(unittest.TestCase):
-    """What the watcher does when units are listed: the hook, a fresh browser,
-    the fake site standing in for StuyTown, the recordings, the log, the alerts."""
+    """The real applier -- two warm browser workers, the queue, background
+    alerts and logging -- against the fake site standing in for StuyTown."""
 
-    def test_a_cheap_listing_is_applied_to_once_and_an_expensive_ones_form_is_recorded(self):
+    def test_two_cheap_units_at_once_are_applied_to_in_parallel_then_the_learned_address_is_used(self):
         server = auto_apply._serve_selftest_site()
         self.addCleanup(server.server_close)
         self.addCleanup(server.shutdown)
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
-        alerts = []
-        with mock.patch.object(check_units, "UNIT_PAGE_URL", f"http://127.0.0.1:{server.server_port}/unit.html"), \
+        site = f"http://127.0.0.1:{server.server_port}"
+        alerts, windows = [], []
+        real_run_form = auto_apply.run_form
+
+        def timed_run_form(*args, **kwargs):
+            started = time.monotonic()
+            try:
+                return real_run_form(*args, **kwargs)
+            finally:
+                windows.append((threading.current_thread().name, started, time.monotonic()))
+
+        with mock.patch.object(check_units, "UNIT_PAGE_URL", f"{site}/unit.html"), \
+                mock.patch.object(check_units, "LISTINGS_URL", f"{site}/unit.html"), \
                 mock.patch.object(check_units, "notify", lambda **a: alerts.append(a) or True), \
                 mock.patch.object(apply_recorder, "RUNS_DIR", f"{tmp.name}/apply_runs"), \
                 mock.patch.object(auto_apply, "APPLICATIONS_FILE", f"{tmp.name}/applications.json"), \
+                mock.patch.object(auto_apply, "FORM_URL_FILE", f"{tmp.name}/apply_form_url.json"), \
                 mock.patch.object(auto_apply, "PRIVATE_DIR", f"{tmp.name}/private"), \
-                mock.patch.object(auto_apply, "ENABLED", True), mock.patch.object(auto_apply, "MAX_RENT", 3000), \
-                mock.patch.object(auto_apply, "_profile_for_run", lambda: EXAMPLE_PROFILE), \
-                mock.patch.object(auto_apply, "_skips_logged", set()), \
-                mock.patch.object(auto_apply, "_recorded_this_run", set()), \
-                mock.patch.object(auto_apply, "_submitted_this_run", 0), mock.patch("builtins.print"):
-            for _ in range(2):  # the same listings on the next check
-                auto_apply.act_on_listings([unit("1A", 2850), unit("9F", 4380.54)])
+                mock.patch.object(auto_apply, "MAX_RENT", 3000), \
+                mock.patch.object(auto_apply, "run_form", timed_run_form), mock.patch("builtins.print"):
+            notifier, logger = background.Worker("notifier"), background.Worker("logger")
+            applier = auto_apply.Applier(EXAMPLE_PROFILE, notifier, logger, workers=2)
+            logger.yield_to = applier.busy
+            applier.start()
+            try:
+                # Two cheap units and an expensive one appear in the same check.
+                applier.dispatch([unit("1A", 2850), unit("2B", 2900), unit("9F", 4380.54)])
+                self.assertTrue(applier.wait_idle(60))
+                deadline = time.monotonic() + 30  # the recording of 9F runs once both are done
+                while not applier.form_url.get("verified") and time.monotonic() < deadline:
+                    time.sleep(0.1)
+                self.assertTrue(applier.form_url.get("verified"), applier.form_url)
+                # The next cheap unit goes straight to the form.
+                applier.dispatch([unit("3C", 2500)])
+                self.assertTrue(applier.wait_idle(60))
+            finally:
+                applier.stop(30)
+            notifier.drain(30)
+            logger.drain(30)
 
-        self.assertEqual([a["title"] for a in alerts], ["Applied: Apt 1A, 287 Avenue C",
-                                                        "After SUBMIT: Apt 1A, 287 Avenue C"])
-        self.assertEqual(alerts[0]["attachment"][1][:2], b"\xff\xd8")  # the filled-in form, as a JPEG
+        applications = [w for w in windows if w[0].startswith("applier")][:2]
+        self.assertEqual({w[0] for w in applications}, {"applier-0", "applier-1"})  # one browser each
+        (_, start_a, end_a), (_, start_b, end_b) = applications
+        self.assertLess(max(start_a, start_b), min(end_a, end_b))  # at the same time
+
+        self.assertEqual(sorted(a["title"] for a in alerts), [
+            "Applied: Apt 1A, 287 Avenue C", "Applied: Apt 2B, 287 Avenue C", "Applied: Apt 3C, 287 Avenue C"])
+        self.assertTrue(all(a["priority"] == 0 and a["attachment"][1][:2] == b"\xff\xd8" for a in alerts))
         log = json.loads(Path(f"{tmp.name}/applications.json").read_text(encoding="utf-8"))
-        self.assertEqual(list(log), ["P~TEST~U~1A"])
-        self.assertEqual(log["P~TEST~U~1A"]["attempts"][0]["status"], "submitted")
-        self.assertEqual(len(list(Path(f"{tmp.name}/private").iterdir())), 2)  # filled form + after SUBMIT
+        self.assertEqual(sorted(log), ["P~TEST~U~1A", "P~TEST~U~2B", "P~TEST~U~3C"])
+        self.assertTrue(all(r["attempts"][-1]["status"] == "submitted" for r in log.values()))
+        learned = json.loads(Path(f"{tmp.name}/apply_form_url.json").read_text(encoding="utf-8"))
+        self.assertTrue(learned["template"].endswith("/apply.html?unitSpk={unitSpk}"))
 
-        runs = sorted(Path(f"{tmp.name}/apply_runs").iterdir())
-        self.assertEqual([r.name.split("_", 1)[1] for r in runs], ["1A_apply", "9F_record"])
-        applied, recorded = runs
-        self.assertEqual(sorted(f.name for f in applied.iterdir()), [
-            "1_unit_page.html", "2_form_empty.html", "3_form_filled.html", "4_after_submit.html",
-            "network.json", "report.json"])
-        self.assertEqual(sorted(f.name for f in recorded.iterdir()), [
-            "1_unit_page.html", "1_unit_page.jpg", "2_form_empty.html", "2_form_empty.jpg",
-            "network.json", "report.json"])
-        report = json.loads((applied / "report.json").read_text(encoding="utf-8"))
-        self.assertEqual(report["outcome"]["status"], "submitted")
-        self.assertIn("pressed SUBMIT", [s["step"] for s in report["steps"]])
-        submit_request = [n for n in json.loads((applied / "network.json").read_text()) if n["method"] == "POST"]
+        runs = {r.name.split("_", 1)[1]: r for r in Path(f"{tmp.name}/apply_runs").iterdir()}
+        self.assertEqual(sorted(runs), ["1A_apply", "2B_apply", "3C_apply", "9F_record"])
+        direct = [s["step"] for s in json.loads((runs["3C_apply"] / "report.json").read_text())["steps"]]
+        self.assertIn("opening the form directly", direct)
+        self.assertNotIn("opening the unit page", direct)
+        self.assertIn("2_form_empty.jpg", [f.name for f in runs["9F_record"].iterdir()])
+        submit_request = [n for n in json.loads((runs["1A_apply"] / "network.json").read_text())
+                          if n["method"] == "POST"]
         self.assertEqual(json.loads(submit_request[0]["request_body"])["firstName"], "<first_name>")
-        self.assertIn("TEST-0001", submit_request[0]["response_body"])  # the site's answer
         # Nothing personal in anything that gets committed.
-        for file in applied.iterdir():
-            text = file.read_text(encoding="utf-8").casefold()
-            for value in ("jane", "jane.doe@example.com", "2125550123", "212 555 0123", "95,000", "95000",
-                          "example street", "10009"):
-                self.assertNotIn(value, text, f"{value!r} in {file.name}")
+        for folder in runs.values():
+            for file in folder.iterdir():
+                if file.suffix == ".jpg":
+                    continue
+                text = file.read_text(encoding="utf-8").casefold()
+                for value in ("jane", "jane.doe@example.com", "2125550123", "212 555 0123", "95,000", "95000",
+                              "example street", "10009"):
+                    self.assertNotIn(value, text, f"{value!r} in {folder.name}/{file.name}")
 
 
 if __name__ == "__main__":

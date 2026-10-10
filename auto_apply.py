@@ -1,15 +1,30 @@
 """
 Auto-apply: when a listed unit's monthly rent is at or under your limit, open
-the unit's page, press APPLY NOW, fill in StuyTown's application form from
-your saved applicant profile, screenshot the filled-in form, press SUBMIT --
-then send you the result with the screenshots.
+the unit's application form, fill it in from your saved applicant profile,
+screenshot it, press SUBMIT -- then report the result.
 
-The watcher (watch_loop.py) calls act_on_listings() on every check, right
-after the new-unit alert has gone out. Two repository variables control it:
+The Applier runs next to the watcher's checker (watch_loop.py), which hands
+it every check's listings FIRST, before any alert or log is even queued:
+
+  - APPLY_WORKERS browser workers start at 6:59 with Chromium open and the
+    StuyTown site already loaded, so an application never waits for a
+    browser to start. Two qualifying units are applied to at the same time.
+  - dispatch() only queues work and returns immediately; the checker keeps
+    checking every 2 seconds while applications run.
+  - The result alert, the applications log and the form recording are handed
+    to background workers (background.py). They never delay an application,
+    and their failures never reach it.
+  - Once APPLY NOW has led to the form, the form's address is learned. After
+    a recording has confirmed that opening it directly shows the right
+    apartment, applications go straight to the form, skipping the unit
+    page. If that ever fails, the unit page is used as before.
+
+Two repository variables control it:
 
     AUTO_APPLY_MODE      on | off (default). Off = auto-apply does nothing at all.
     AUTO_APPLY_MAX_RENT  your rent limit in $/month, e.g. 3000 -- required when
-                         on; there is no built-in default
+                         on; there is no built-in default. Also decides which
+                         new units get the Emergency alert.
 
 Your details come from APPLICANT_PROFILE -- the whole JSON document, stored as
 ONE GitHub secret -- or, on your own computer, the gitignored
@@ -27,10 +42,9 @@ which has to be completed within 24 hours.
 Every trip through the form is recorded by apply_recorder.py into
 data/apply_runs/ -- steps and timings, the form's fields, the page HTML, the
 network traffic including what SUBMIT sends and what comes back -- with your
-details redacted, so a failure can be studied and fixed. While on, it also
-records (without filling anything) the form of up to
-MAX_FORM_RECORDINGS_PER_RUN units over your limit each morning, so there's
-real data even on days nothing qualifies.
+details redacted. While on, it also records (without filling anything) the
+form of up to MAX_FORM_RECORDINGS_PER_RUN units over your limit each
+morning, whenever no application is running.
 
 The repo (and its Actions logs) are public, so nothing personal is ever
 printed, committed or logged: in GitHub Actions every profile value is masked
@@ -38,26 +52,31 @@ in the log, screenshots of the filled-in form go only to your phone (as a
 Pushover image) and the gitignored private/ folder, and data/applications.json
 and data/apply_runs/ never contain your details.
 
-    python auto_apply.py --selftest              # fill + submit a FAKE copy of the form (tests/fixtures/apply_site)
+    python auto_apply.py --selftest              # the real applier, against a FAKE copy of the form
     python auto_apply.py --check-form URL        # fill a real unit's form on your computer -- never submits
     python auto_apply.py --check-form URL --headed   # same, with the browser window visible
 """
 
 import argparse
+import copy
 import functools
 import html
 import http.server
+import itertools
 import json
 import os
+import queue
 import re
 import sys
 import threading
 import time
+import urllib.parse
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
 import apply_recorder
+import background
 import check_units
 
 _MODE_SETTING = os.environ.get("AUTO_APPLY_MODE", "").strip().lower()
@@ -69,6 +88,7 @@ PROFILE_ENV = "APPLICANT_PROFILE"
 PROFILE_FILE = "applicant_profile.json"
 APPLICATIONS_FILE = "data/applications.json"
 PRIVATE_DIR = "private/applications"  # gitignored: screenshots of the filled form show your details
+FORM_URL_FILE = "data/apply_form_url.json"  # the learned address of the application form
 
 # What the form needs, in its order. Label patterns match the start of the
 # field's label, ignoring case. Fields the site adds later can be filled
@@ -98,6 +118,9 @@ PHONE_KEYS = ("cell_phone", "work_phone")
 MAX_APPLICATIONS_PER_RUN = 3
 MAX_FAILED_ATTEMPTS_PER_UNIT = 2
 MAX_FORM_RECORDINGS_PER_RUN = 2  # over-limit units whose (unfilled) form gets recorded
+APPLY_WORKERS = 2  # browsers kept open, so two qualifying units are applied to at once
+WARM_REFRESH_SECONDS = 240  # an idle worker reloads the site this often, to keep its connections open
+DIRECT_FORM_TIMEOUT_MS = 6000  # going straight to the form: how long before falling back to the unit page
 MAX_FORM_PAGES = 6  # Next/Continue presses, in case the form ever grows pages
 FORM_TIMEOUT_MS = 20000  # waiting for APPLY NOW, and for the form after it
 CONFIRMATION_TIMEOUT_MS = 30000
@@ -220,11 +243,11 @@ def _profile_for_run() -> dict | None:
         return profile
     except ProfileError as e:
         print(f"Auto-apply is OFF for this run: {e}")
-        check_units._notify_best_effort({
+        background.notify_with_retries(check_units.notify, {
             "title": "StuyTown auto-apply is off",
             "message": f"{html.escape(str(e))}. New-unit alerts still work.",
             "priority": 0,
-        })
+        }, attempts=2)
         return None
 
 
@@ -289,66 +312,288 @@ def save_applications(applications: dict) -> None:
     os.replace(tmp, APPLICATIONS_FILE)
 
 
-_skips_logged = set()  # unit IDs whose skip reason was already printed this run
-_recorded_this_run = set()  # unit IDs whose form was recorded (without applying) this run
-_submitted_this_run = 0
+@functools.cache
+def _profile_if_any() -> dict | None:
+    try:
+        return load_profile()
+    except ProfileError:
+        return None
 
 
-def act_on_listings(units: list) -> None:
-    """The watcher's hook, called on every check with everything listed.
-    Applies to each unit that qualifies and hasn't been handled yet,
-    cheapest first -- then, with time to spare, records the form of a unit
-    or two over your limit (nothing filled, nothing sent) for diagnosis."""
-    global _submitted_this_run
-    if not ENABLED or not units:
-        return
-    profile = _profile_for_run()
-    if profile is None:
-        return
-    applications = load_applications()
-    to_apply, to_record = [], []
-    for unit in units:
+def qualifies(unit: dict) -> bool:
+    """Would auto-apply's rules take this unit (rent at or under the limit,
+    income at or above its minimum)? Picks the Emergency alert over the
+    normal one -- also when auto-apply is off, so you can apply yourself. With
+    no AUTO_APPLY_MAX_RENT set, every new unit counts."""
+    if MAX_RENT is None:
+        return True
+    return skip_reason(unit, _profile_if_any() or {}) is None
+
+
+def load_form_url() -> dict:
+    if not os.path.exists(FORM_URL_FILE):
+        return {}
+    try:
+        with open(FORM_URL_FILE, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def save_form_url(learned: dict) -> None:
+    os.makedirs(os.path.dirname(FORM_URL_FILE) or ".", exist_ok=True)
+    tmp = FORM_URL_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(learned, f, indent=2, sort_keys=True)
+        f.write("\n")
+    os.replace(tmp, FORM_URL_FILE)
+
+
+# How a unit ID can appear in an address: as is, or URL-encoded with "~"
+# written %7E (Python's quote() leaves "~" alone, so that's done by hand).
+_SPK_SPELLINGS = {
+    "raw": lambda spk: spk,
+    "quoted": lambda spk: urllib.parse.quote(spk, safe="").replace("~", "%7E"),
+    "quoted-lowercase": lambda spk: urllib.parse.quote(spk, safe="").replace("~", "%7e"),
+}
+
+
+def form_url_template(unit: dict, form_url: str) -> dict | None:
+    """{"template": ".../apply?unitSpk={unitSpk}", "spelling": "raw"} if the
+    form's address contains the unit's ID, else None."""
+    spk = str(unit.get("unitSpk") or "")
+    if len(spk) < 3:
+        return None
+    for spelling, spell in _SPK_SPELLINGS.items():
+        written = spell(spk)
+        if written in form_url:
+            return {"template": form_url.replace(written, "{unitSpk}"), "spelling": spelling}
+    return None
+
+
+def direct_form_url(learned: dict, unit: dict) -> str | None:
+    if not learned.get("verified") or not learned.get("template") or not unit.get("unitSpk"):
+        return None
+    spell = _SPK_SPELLINGS.get(learned.get("spelling"), _SPK_SPELLINGS["raw"])
+    return learned["template"].replace("{unitSpk}", spell(str(unit["unitSpk"])))
+
+
+class Applier:
+    """Applies to qualifying units the moment the checker hands them over.
+
+    dispatch() runs on the checker's thread and only queues work. APPLY_WORKERS
+    threads each keep one Chromium open (Playwright objects belong to the
+    thread that made them) and take jobs from one priority queue:
+    applications first, cheapest first, then form recordings -- which only
+    run while no application is. Results go to the background notifier and
+    logger; nothing they do can delay or break an application."""
+
+    def __init__(self, profile: dict, notifier=None, logger=None, workers: int = APPLY_WORKERS,
+                 runs_dir: str | None = None):
+        self.profile = profile
+        self.notifier = notifier or background.Worker("notifier-inline", inline=True)
+        self.logger = logger or background.Worker("logger-inline", inline=True)
+        self.workers = workers
+        self.runs_dir = runs_dir
+        self.applications = load_applications()
+        self.form_url = load_form_url()
+        self._jobs = queue.PriorityQueue()
+        self._order = itertools.count()
+        self._lock = threading.Lock()
+        self._in_flight = set()  # unit IDs queued or being applied to
+        self._recorded = set()
+        self._skips_logged = set()
+        self._counted = 0  # applications queued, running, or sent this run (MAX_APPLICATIONS_PER_RUN)
+        self._recording = False
+        self._stopping = threading.Event()
+        self._started = threading.Semaphore(0)
+        self._threads = []
+
+    # ------------------------------------------------------------ lifecycle
+
+    def start(self, wait_seconds: float = 90) -> None:
+        """Start the workers and wait (up to wait_seconds) until each has its
+        browser open and the site loaded."""
+        for index in range(self.workers):
+            thread = threading.Thread(target=self._worker, args=(index,), name=f"applier-{index}", daemon=True)
+            thread.start()
+            self._threads.append(thread)
+        deadline = time.monotonic() + wait_seconds
+        for _ in range(self.workers):
+            if not self._started.acquire(timeout=max(0.0, deadline - time.monotonic())):
+                print("   WARNING: an applier browser is slow to start; carrying on")
+                break
+
+    def busy(self) -> bool:
+        """True while an application is queued or running -- the background
+        logger waits for this to clear."""
+        return bool(self._in_flight)
+
+    def wait_idle(self, timeout: float) -> bool:
+        deadline = time.monotonic() + timeout
+        while self._in_flight and time.monotonic() < deadline:
+            time.sleep(0.1)
+        return not self._in_flight
+
+    def stop(self, timeout: float = 60) -> None:
+        """Let running applications finish (up to timeout), then close."""
+        self.wait_idle(timeout)
+        self._stopping.set()
+        for thread in self._threads:
+            thread.join(timeout=10)
+
+    # -------------------------------------------------------------- dispatch
+
+    def dispatch(self, units: list) -> list:
+        """Called by the checker with every check's listings. Queues an
+        application for each unit that qualifies and isn't already handled
+        or in progress (cheapest first), and a recording for an over-limit
+        unit or two. Returns the units queued for applying. Never blocks."""
+        queued = []
+        with self._lock:
+            for unit in units:
+                uid = check_units.unit_id(unit)
+                if uid in self._in_flight:
+                    continue
+                not_eligible = skip_reason(unit, self.profile)
+                reason = not_eligible or already_handled(self.applications.get(uid))
+                if not reason and self._counted >= MAX_APPLICATIONS_PER_RUN:
+                    reason = f"already applied to {MAX_APPLICATIONS_PER_RUN} units this run"
+                if not reason:
+                    self._in_flight.add(uid)
+                    self._counted += 1
+                    queued.append(unit)
+                    continue
+                if uid not in self._skips_logged:
+                    self._skips_logged.add(uid)
+                    print(f"   Auto-apply: skipping {check_units.unit_label(unit)} -- {reason}")
+                if not_eligible and uid not in self._recorded and len(self._recorded) < MAX_FORM_RECORDINGS_PER_RUN:
+                    self._recorded.add(uid)
+                    self._jobs.put((1, 0.0, next(self._order), "record", unit))
+            for unit in sorted(queued, key=lambda u: check_units.unit_rent(u) or 0):
+                print(f"   Auto-apply: applying to {check_units.unit_label(unit)} now")
+                self._jobs.put((0, check_units.unit_rent(unit) or 0.0, next(self._order), "apply", unit))
+        return queued
+
+    # --------------------------------------------------------------- workers
+
+    def _worker(self, index: int) -> None:
+        from playwright.sync_api import sync_playwright
+
+        announced = False
+        for launch in range(3):  # a crashed browser is restarted, twice at most
+            try:
+                with sync_playwright() as p:
+                    browser = p.chromium.launch()
+                    context = new_context(browser)
+                    warm = _warm_up(context)
+                    if not announced:
+                        announced = True
+                        self._started.release()
+                    if self._serve(browser, context, warm):
+                        browser.close()
+                        return
+                    print(f"   WARNING: applier browser {index} stopped responding; restarting it")
+                    continue
+            except Exception as e:
+                print(f"   WARNING: applier browser {index} crashed ({type(e).__name__}: {e}); "
+                      + ("restarting it" if launch < 2 else "giving up on it"))
+        if not announced:
+            self._started.release()
+
+    def _serve(self, browser, context, warm) -> bool:
+        """Take jobs until stopped (True), or until the browser dies (False:
+        the job goes back in the queue and the browser is restarted)."""
+        last_warm = time.monotonic()
+        while not self._stopping.is_set():
+            try:
+                job = self._jobs.get(timeout=0.5)
+            except queue.Empty:
+                if time.monotonic() - last_warm > WARM_REFRESH_SECONDS:
+                    _reload_quietly(warm)
+                    last_warm = time.monotonic()
+                continue
+            _, _, order, kind, unit = job
+            if not browser.is_connected():
+                self._jobs.put(job)
+                self._jobs.task_done()
+                return False
+            try:
+                if kind == "record":
+                    with self._lock:
+                        allowed = not self._in_flight and not self._recording
+                        self._recording = self._recording or allowed
+                    if not allowed:  # an application comes first; try again shortly
+                        time.sleep(0.5)
+                        self._jobs.put((1, 0.0, order, kind, unit))
+                        continue
+                    try:
+                        self._record_form(context, unit)
+                    finally:
+                        self._recording = False
+                else:
+                    self._apply(context, unit)
+                last_warm = time.monotonic()
+            except Exception as e:
+                print(f"   WARNING: auto-apply job for {check_units.unit_label(unit)} crashed: {e}")
+                if kind == "apply":
+                    self._finished(unit, Attempt("failed", f"{type(e).__name__}: {e}"[:200]), None)
+            finally:
+                self._jobs.task_done()
+        return True
+
+    def _apply(self, context, unit: dict) -> None:
+        attempt, recording = apply_to_unit(context, unit, self.profile, runs_dir=self.runs_dir,
+                                           direct_url=direct_form_url(self.form_url, unit))
+        print(f"   Auto-apply result for {check_units.unit_label(unit)} after {attempt.seconds:.1f}s: "
+              f"{attempt.status} -- {attempt.detail}")
+        self._learn(unit, attempt, context=None)
+        self._finished(unit, attempt, recording)
+
+    def _record_form(self, context, unit: dict) -> None:
+        attempt, recording = apply_to_unit(context, unit, self.profile, record_only=True, runs_dir=self.runs_dir)
+        print(f"   Auto-apply: recorded the (unfilled) form of {check_units.unit_label(unit)} "
+              f"in {attempt.seconds:.1f}s -- {attempt.status}: {attempt.detail}")
+        self._learn(unit, attempt, context=context)
+        if recording:
+            self.logger.submit(recording.write)
+
+    def _learn(self, unit: dict, attempt: "Attempt", context=None) -> None:
+        """Remember the form's address when it contains the unit's ID. With a
+        context (a recording, so there's time), check right away that opening
+        that address directly shows this apartment's form -- only a checked
+        address is used to skip the unit page."""
+        if not attempt.form_url or attempt.status == "failed":
+            return
+        learned = form_url_template(unit, attempt.form_url)
+        if learned is None or (self.form_url.get("verified") and self.form_url.get("template") == learned["template"]):
+            return
+        learned.update(verified=False, learned_from=check_units.unit_id(unit),
+                       learned_utc=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
+        if context is not None:
+            learned["verified"] = _form_opens_directly(context, direct_form_url({**learned, "verified": True}, unit),
+                                                       check_units.apartment(unit))
+            print(f"   Auto-apply: the form's address {'works' if learned['verified'] else 'does NOT work'} "
+                  "on its own" + (" -- applications will skip the unit page" if learned["verified"] else ""))
+        self.form_url = learned
+        self.logger.submit(save_form_url, dict(learned))
+
+    def _finished(self, unit: dict, attempt: "Attempt", recording) -> None:
         uid = check_units.unit_id(unit)
-        not_eligible = skip_reason(unit, profile)
-        reason = not_eligible or already_handled(applications.get(uid))
-        if not reason:
-            to_apply.append(unit)
-            continue
-        if uid not in _skips_logged:
-            _skips_logged.add(uid)
-            print(f"   Auto-apply: skipping {check_units.unit_label(unit)} -- {reason}")
-        if not_eligible and uid not in _recorded_this_run \
-                and len(_recorded_this_run) + len(to_record) < MAX_FORM_RECORDINGS_PER_RUN:
-            to_record.append(unit)
-    if not to_apply and not to_record:
-        return
-
-    from playwright.sync_api import sync_playwright  # only once there's something to do
-
-    to_apply.sort(key=check_units.unit_rent)
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        try:
-            for unit in to_apply:
-                if _submitted_this_run >= MAX_APPLICATIONS_PER_RUN:
-                    print(f"   Auto-apply: already submitted {MAX_APPLICATIONS_PER_RUN} applications this run "
-                          f"-- not applying to {check_units.unit_label(unit)}")
-                    break
-                print(f"   Auto-apply: applying to {check_units.unit_label(unit)} -- {check_units.unit_url(unit)}")
-                attempt = apply_to_unit(browser, unit, profile)
-                print(f"   Auto-apply result after {attempt.seconds:.1f}s: {attempt.status} -- {attempt.detail}")
-                if attempt.status in ("submitted", "unconfirmed"):
-                    _submitted_this_run += 1
-                _record(applications, unit, attempt)
-                save_applications(applications)
-                _report(unit, attempt)
-            for unit in to_record:
-                _recorded_this_run.add(check_units.unit_id(unit))
-                attempt = apply_to_unit(browser, unit, profile, record_only=True)
-                print(f"   Auto-apply: recorded the (unfilled) form of {check_units.unit_label(unit)} "
-                      f"in {attempt.seconds:.1f}s -- {attempt.status}: {attempt.detail}")
-        finally:
-            browser.close()
+        if recording is not None:
+            attempt.recording = recording.folder
+        with self._lock:
+            _record(self.applications, unit, attempt)
+            snapshot = copy.deepcopy(self.applications)
+            if attempt.status not in ("submitted", "unconfirmed"):
+                self._counted -= 1  # nothing sent: doesn't count toward the limit
+            self._in_flight.discard(uid)
+        # Everything from here on is background work.
+        self.notifier.submit(background.notify_with_retries, check_units.notify, result_alert(unit, attempt))
+        self.logger.submit(save_applications, snapshot)
+        if recording is not None:
+            self.logger.submit(recording.write)
+        self.logger.submit(save_private_screenshots, unit, attempt)
 
 
 def _record(applications: dict, unit: dict, attempt: "Attempt") -> None:
@@ -514,36 +759,38 @@ def form_values(profile: dict) -> dict:
     return {key: value for key, value in profile.items() if not str(key).startswith("_")}
 
 
-def apply_to_unit(browser, unit: dict, profile: dict, record_only: bool = False,
-                  runs_dir: str | None = None) -> Attempt:
-    """One trip through the unit's form in a fresh browser session, recorded
-    into data/apply_runs/. record_only: open the form and record it, but fill
-    in nothing. Never raises."""
+def apply_to_unit(context, unit: dict, profile: dict, record_only: bool = False,
+                  runs_dir: str | None = None, direct_url: str | None = None) -> tuple:
+    """One trip through the unit's form, on a new page of an already-open
+    browser. record_only: open the form and record it, fill in nothing.
+    direct_url: the learned form address, tried before the unit page.
+    Returns (Attempt, Recording) -- the recording is collected but not yet
+    written: that's the background logger's job. Never raises."""
     recorder = apply_recorder.RunRecorder(
         apply_recorder.run_folder(check_units.apartment(unit), "record" if record_only else "apply", runs_dir),
         apply_recorder.Redactor(profile))
     recorder.note("unit", check_units.unit_summary(unit))  # public listing data
     recorder.note("kind", "recording only: nothing filled or sent" if record_only else "application")
     started = time.monotonic()
-    context = browser.new_context(viewport={"width": 1280, "height": 900})
+    pages_before = set(context.pages)
+    page = context.new_page()
     try:
-        context.set_default_timeout(15000)
-        _skip_unneeded_downloads(context)
-        recorder.watch(context)
-        page = context.new_page()
+        recorder.watch(page)
         attempt = run_form(page, check_units.unit_url(unit), None if record_only else form_values(profile),
-                           submit=not record_only, recorder=recorder, apartment=check_units.apartment(unit))
+                           submit=not record_only, recorder=recorder, apartment=check_units.apartment(unit),
+                           direct_url=direct_url)
     except Exception as e:
         recorder.step("crashed", error=f"{type(e).__name__}: {e}"[:1000])
         attempt = Attempt("failed", f"{type(e).__name__}: {str(e).splitlines()[0][:200]}",
-                          result_screenshot=_screenshot_of_last_page(context))
+                          result_screenshot=_screenshot(page))
     attempt.seconds = time.monotonic() - started
-    attempt.recording = recorder.finish(_outcome(attempt))  # while the browser is still open
-    try:
-        context.close()
-    except Exception:
-        pass
-    return attempt
+    recording = recorder.collect(_outcome(attempt))  # while the page is still open
+    for opened in set(context.pages) - pages_before:  # this trip's page, and any pop-up it opened
+        try:
+            opened.close()
+        except Exception:
+            pass
+    return attempt, recording
 
 
 def _outcome(attempt: Attempt) -> dict:
@@ -552,63 +799,118 @@ def _outcome(attempt: Attempt) -> dict:
             "site_messages": attempt.site_messages, "form_fields": attempt.form_fields}
 
 
-def _skip_unneeded_downloads(context) -> None:
-    try:
-        import screenshot  # the cookie banner and analytics, as for the listings screenshot
+# The cookie banner (Ketch) and analytics: blocked so the banner can't cover
+# anything and the pages settle faster.
+BLOCKED = re.compile(r"ketchcdn\.com|ketchjs\.com|googletagmanager\.com|google-analytics\.com|doubleclick\.net")
 
-        blocked = screenshot.BLOCKED
-    except ImportError:
-        blocked = None
+
+def new_context(browser):
+    """A browser session that skips images, video, fonts and trackers."""
+    context = browser.new_context(viewport={"width": 1280, "height": 900})
+    context.set_default_timeout(15000)
 
     def route(request_route):
         request = request_route.request
-        if request.resource_type in SKIPPED_RESOURCE_TYPES or (blocked and blocked.search(request.url)):
+        if request.resource_type in SKIPPED_RESOURCE_TYPES or BLOCKED.search(request.url):
             request_route.abort()
         else:
             request_route.continue_()
 
     context.route("**/*", route)
+    return context
 
 
-def run_form(page, url: str, values: dict | None, submit: bool, recorder=None, apartment: str = "") -> Attempt:
-    """Open the unit page, press APPLY NOW, and:
+def _warm_up(context):
+    """Open the listings page once, so DNS, the TLS connections and the
+    site's scripts are ready before the first application. Kept open."""
+    page = context.new_page()
+    try:
+        page.goto(check_units.LISTINGS_URL, wait_until="domcontentloaded", timeout=30000)
+    except Exception as e:
+        print(f"   WARNING: couldn't preload the StuyTown site ({type(e).__name__}); applying will still work")
+    return page
+
+
+def _reload_quietly(page) -> None:
+    try:
+        page.reload(wait_until="domcontentloaded", timeout=30000)
+    except Exception:
+        pass
+
+
+def _form_opens_directly(context, url: str | None, apartment: str) -> bool:
+    """Does opening this address on its own show the form, for this apartment?"""
+    if not url:
+        return False
+    page = context.new_page()
+    try:
+        page.goto(url, wait_until="domcontentloaded", timeout=30000)
+        found = _find_form_on(page, DIRECT_FORM_TIMEOUT_MS)
+        return found is not None and bool(apartment) and apartment in _page_text(page)
+    except Exception:
+        return False
+    finally:
+        try:
+            page.close()
+        except Exception:
+            pass
+
+
+def run_form(page, url: str, values: dict | None, submit: bool, recorder=None, apartment: str = "",
+             direct_url: str | None = None) -> Attempt:
+    """Get to the unit's form -- straight to direct_url when given (and it
+    shows this apartment's form), else the unit page and APPLY NOW -- and:
       values None      -> record the form, fill nothing
       submit False     -> fill it, check every field took its value, screenshot it (--check-form)
       submit True      -> the same, then -- only if nothing required is empty or
-                          wrong -- press SUBMIT and wait for the site's answer."""
+                          wrong -- press SUBMIT and wait for the site's answer.
+    Nothing but what's needed happens before SUBMIT: the page HTML and form
+    details are kept for the recording, but read once and cheaply."""
     recorder = recorder or apply_recorder.RunRecorder(None, apply_recorder.Redactor(None))
-    recorder.step("opening the unit page", url=url)
-    page.goto(url, wait_until="domcontentloaded", timeout=30000)
-    apply_button = _wait_for_button(page, APPLY_BUTTON, FORM_TIMEOUT_MS)
-    recorder.snapshot("1_unit_page", page)
-    if apply_button is None:
-        recorder.step("no APPLY NOW button", page_url=page.url, buttons=_buttons(page))
-        return Attempt("failed", "couldn't find the APPLY NOW button on the unit page",
-                       result_screenshot=_screenshot(page))
-    recorder.step("APPLY NOW button visible", text=_text_of(apply_button), page_url=page.url)
-    if values is None:
-        recorder.image("1_unit_page", _screenshot(page))  # recording only: no hurry
-    apply_button.scroll_into_view_if_needed()
-    apply_button.click()
-    recorder.step("pressed APPLY NOW")
-
-    found = _find_form(page.context, FORM_TIMEOUT_MS)  # same tab, a new tab, a pop-up, or an iframe
+    found = None
+    if direct_url:
+        recorder.step("opening the form directly", url=direct_url)
+        try:
+            page.goto(direct_url, wait_until="domcontentloaded", timeout=30000)
+            found = _find_form_on(page, DIRECT_FORM_TIMEOUT_MS)
+        except Exception as e:
+            recorder.step("the form's address failed", error=str(e)[:300])
+        if found is not None and not (apartment and apartment in _page_text(page)):
+            recorder.step("the form opened, but doesn't name this apartment")
+            found = None
+        if found is None:
+            recorder.step("falling back to the unit page")
     if found is None:
-        last = page.context.pages[-1]
-        recorder.snapshot("2_after_apply_now", last)
-        recorder.step("the form never appeared", page_url=last.url, buttons=_buttons(last))
-        return Attempt("failed", "the application form didn't show up after pressing APPLY NOW",
-                       result_screenshot=_screenshot(last))
+        recorder.step("opening the unit page", url=url)
+        page.goto(url, wait_until="domcontentloaded", timeout=30000)
+        apply_button = _wait_for_apply_button(page, FORM_TIMEOUT_MS)
+        if apply_button is None:
+            recorder.snapshot("1_unit_page", page)
+            recorder.step("no APPLY NOW button", page_url=page.url, buttons=_buttons(page))
+            return Attempt("failed", "couldn't find the APPLY NOW button on the unit page",
+                           result_screenshot=_screenshot(page))
+        recorder.step("APPLY NOW button visible", text=_text_of(apply_button), page_url=page.url)
+        if values is None:
+            recorder.snapshot("1_unit_page", page)
+        apply_button.click()
+        recorder.step("pressed APPLY NOW")
+        found = _find_form(page.context, FORM_TIMEOUT_MS)  # same tab, a new tab, a pop-up, or an iframe
+        if found is None:
+            last = page.context.pages[-1]
+            recorder.snapshot("2_after_apply_now", last)
+            recorder.step("the form never appeared", page_url=last.url, buttons=_buttons(last))
+            return Attempt("failed", "the application form didn't show up after pressing APPLY NOW",
+                           result_screenshot=_screenshot(last))
     page, scope = found
     form_url = page.url
     recorder.step("form found", page_url=form_url, frames=[f.url for f in page.frames],
                   inside_form_element=not hasattr(scope, "goto"))
-    recorder.note("apartment_named_on_form", bool(apartment) and apartment in _page_text(page))
-    fields = _inventory(scope)
-    recorder.note("form_fields", fields)
-    recorder.note("form_buttons", _buttons(scope))
-    recorder.snapshot("2_form_empty", page)
     if values is None:
+        fields = _inventory(scope)
+        recorder.note("apartment_named_on_form", bool(apartment) and apartment in _page_text(page))
+        recorder.note("form_fields", fields)
+        recorder.note("form_buttons", _buttons(scope))
+        recorder.snapshot("2_form_empty", page)
         recorder.image("2_form_empty", _screenshot(page))
         return Attempt("recorded", "form recorded; nothing filled or sent",
                        form_fields=[f["label"] for f in fields], form_url=form_url)
@@ -634,6 +936,7 @@ def run_form(page, url: str, values: dict | None, submit: bool, recorder=None, a
         next_button.click()
         page.wait_for_timeout(800)  # let the next page of the form render
 
+    recorder.note("form_fields", fields)  # as they stand after filling (labels and HTML, never values)
     # Every field StuyTown requires must have been found and filled: if one
     # wasn't, its label probably changed, and the form isn't safe to send.
     not_found = [key for key in REQUIRED_PROFILE_KEYS if values.get(key) not in (None, "") and key not in filled]
@@ -663,15 +966,16 @@ def run_form(page, url: str, values: dict | None, submit: bool, recorder=None, a
 
     confirmation_already_showing = _confirmation_showing(page)
     messages_before = set(_site_messages(page))
-    recorder.step("pressing SUBMIT", button=_text_of(submit_button))
+    recorder.step("pressing SUBMIT")
     if not _press(submit_button, page, recorder):
         return Attempt("failed", "the SUBMIT click didn't reach the button, so nothing was sent",
                        filled_screenshot=filled_shot, result_screenshot=_screenshot(page), **found_so_far)
     recorder.step("pressed SUBMIT")
 
     def finish(status, detail, **extra):
-        recorder.snapshot("4_after_submit", page)
         recorder.step(f"outcome: {status}", page_url=page.url, site_messages=extra.get("site_messages", []))
+        recorder.snapshot("4_after_submit", page)
+        recorder.note("form_buttons", _buttons(page))
         return Attempt(status, detail, filled_screenshot=filled_shot, result_screenshot=_screenshot(page),
                        **extra, **found_so_far)
 
@@ -735,21 +1039,36 @@ def _page_text(page) -> str:
         return ""
 
 
-def _wait_for_button(page, name: re.Pattern, timeout_ms: int):
-    """Wait for the page's own button or link. One in the site's header, menu
-    or footer (a "How to apply" nav link, say) is only taken if the page
-    never draws one of its own -- the real one appears after the page's
-    JavaScript runs."""
-    deadline = time.monotonic() + timeout_ms / 1000
-    while True:
-        out_of_time = time.monotonic() >= deadline
-        for role in ("button", "link"):
-            button = _visible_button(page, name, role, allow_site_chrome=out_of_time)
-            if button is not None:
-                return button
-        if out_of_time:
+# Finds the page's own APPLY button (not one in the site's header, menu or
+# footer, unless allow_site_chrome) and tags it data-autoapply-apply.
+_FIND_APPLY_JS = r"""allowSiteChrome => {
+    const text = el => (el.innerText || el.value || el.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim();
+    const shown = el => { const b = el.getBoundingClientRect();
+        return b.width > 0 && b.height > 0 && getComputedStyle(el).visibility !== 'hidden'; };
+    const all = [...document.querySelectorAll('button, a, [role=button], input[type=submit], input[type=button]')]
+        .filter(el => !el.disabled && /^apply\b/i.test(text(el)) && shown(el));
+    const pick = all.find(el => !el.closest('header, nav, footer')) || (allowSiteChrome ? all[0] : null);
+    document.querySelectorAll('[data-autoapply-apply]').forEach(el => el.removeAttribute('data-autoapply-apply'));
+    if (!pick) return false;
+    pick.setAttribute('data-autoapply-apply', '1');
+    return true;
+}"""
+
+
+def _wait_for_apply_button(page, timeout_ms: int):
+    """The page's own APPLY NOW button, the moment the page draws it -- the
+    browser checks on every frame it paints, instead of every 250 ms. One in
+    the site's header, menu or footer only counts if the page never draws
+    its own."""
+    try:
+        page.wait_for_function(_FIND_APPLY_JS, arg=False, polling="raf", timeout=timeout_ms)
+    except Exception:
+        try:
+            if not page.evaluate(_FIND_APPLY_JS, True):
+                return None
+        except Exception:
             return None
-        page.wait_for_timeout(250)
+    return page.locator("[data-autoapply-apply]").first
 
 
 def _visible_button(scope, name: re.Pattern, role: str = "button", allow_site_chrome: bool = True):
@@ -763,13 +1082,13 @@ def _visible_button(scope, name: re.Pattern, role: str = "button", allow_site_ch
     return visible[0] if visible and allow_site_chrome else None
 
 
-def _find_form(context, timeout_ms: int):
+def _find_form(context, timeout_ms: int, pages=None):
     """(page, scope) for the application form: the <form> around its name
     fields, or the whole frame if there isn't one. Looks in every tab and
-    frame, newest tab first."""
+    frame, newest tab first, every 50 ms."""
     deadline = time.monotonic() + timeout_ms / 1000
     while True:
-        for page in reversed(context.pages):
+        for page in pages or reversed(context.pages):
             for frame in page.frames:
                 try:
                     where = frame.evaluate(f"() => ({_FIND_FORM_JS})(document)")
@@ -781,7 +1100,12 @@ def _find_form(context, timeout_ms: int):
                     return page, frame
         if time.monotonic() >= deadline:
             return None
-        time.sleep(0.25)
+        time.sleep(0.05)
+
+
+def _find_form_on(page, timeout_ms: int):
+    """_find_form, on this page only."""
+    return _find_form(page.context, timeout_ms, pages=[page])
 
 
 def _evaluate(scope, function_js: str):
@@ -984,65 +1308,51 @@ def _screenshot_of_last_page(context) -> bytes | None:
 
 # --------------------------------------------------------------- reporting
 
-_RESULT_TITLES = {
-    "submitted": ("Applied: {unit}", 1),
-    "unconfirmed": ("Submitted {unit}? No confirmation seen - check now", 1),
-    "rejected": ("Auto-apply couldn't finish {unit} - apply yourself now", 1),
-    "incomplete": ("Auto-apply couldn't finish {unit} - apply yourself now", 1),
-    "blocked": ("Auto-apply couldn't finish {unit} - apply yourself now", 1),
-    "failed": ("Auto-apply couldn't finish {unit} - apply yourself now", 1),
-    "filled": ("[FORM CHECK] Filled the form for {unit} - not submitted", 0),
-}
-
-
-def result_alerts(unit: dict, attempt: Attempt, link: str | None = None) -> list:
-    """The alert about the outcome, with the filled-in form attached -- and,
-    when there is one, a quiet second alert with what the page showed at the
-    end."""
-    title, priority = _RESULT_TITLES[attempt.status]
+def result_alert(unit: dict, attempt: Attempt, link: str | None = None) -> dict:
+    """One normal-priority alert with the outcome: "Applied" on success, a
+    separate "didn't go through" message otherwise. Success carries the
+    filled-in form; a failure carries what the page showed at the end."""
+    label = check_units.unit_label(unit)
+    if attempt.status == "submitted":
+        title = f"Applied: {label}"
+    elif attempt.status == "unconfirmed":
+        title = f"Auto-apply unconfirmed: {label} - check your email"
+    elif attempt.status == "filled":
+        title = f"[FORM CHECK] Filled the form for {label} - not submitted"
+    else:
+        title = f"Auto-apply failed: {label} - apply yourself now"
     lines = [check_units._linked_line(unit), html.escape(attempt.detail)]
     if attempt.problems:
         lines.append("Empty or not taking the value: " + html.escape("; ".join(attempt.problems)))
     if attempt.site_messages:
         lines.append("The site says: " + html.escape("; ".join(attempt.site_messages)))
     if attempt.filled:
-        lines.append(f"Filled {len(attempt.filled)} fields from your profile in {attempt.seconds:.1f}s. "
-                     "Attached: the form as filled in.")
+        lines.append(f"Filled {len(attempt.filled)} fields from your profile in {attempt.seconds:.1f}s.")
     if attempt.status in ("submitted", "unconfirmed"):
         lines.append(NEXT_STEP_REMINDER)
-    first_image = attempt.filled_screenshot or attempt.result_screenshot
-    alerts = [{
-        "title": title.format(unit=check_units.unit_label(unit)),
+    if attempt.status in ("submitted", "filled"):
+        image, name = attempt.filled_screenshot or attempt.result_screenshot, "filled-form.jpg"
+    else:
+        image, name = attempt.result_screenshot or attempt.filled_screenshot, "page.jpg"
+    return {
+        "title": title,
         "message": check_units._fit(lines),
-        "priority": priority,
+        "priority": 0,
         "url": link or check_units.unit_url(unit),
         "url_title": "Open this unit",
-        **({"attachment": ("filled-form.jpg", first_image, "image/jpeg")} if first_image else {}),
-    }]
-    if attempt.filled_screenshot and attempt.result_screenshot:
-        alerts.append({
-            "title": f"After SUBMIT: {check_units.unit_label(unit)}",
-            "message": f"What the page showed at the end ({html.escape(attempt.status)}).",
-            "priority": -1,  # quiet: the alert above is the one that matters
-            "attachment": ("after-submit.jpg", attempt.result_screenshot, "image/jpeg"),
-        })
-    return alerts
+        **({"attachment": (name, image, "image/jpeg")} if image else {}),
+    }
 
 
-def _report(unit: dict, attempt: Attempt, link: str | None = None) -> None:
+def save_private_screenshots(unit: dict, attempt: Attempt) -> None:
+    """The screenshots, kept in the gitignored private/ folder (they show
+    your details; on GitHub's runner they're gone when the run ends)."""
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
     for name, shot in (("filled-form", attempt.filled_screenshot), ("result", attempt.result_screenshot)):
         if shot:
             path = Path(PRIVATE_DIR) / f"{stamp}_{check_units.apartment(unit)}_{name}.jpg"
-            try:
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_bytes(shot)
-            except OSError as e:
-                print(f"   Couldn't save a screenshot: {e}")
-    if attempt.recording:
-        print(f"   Recording of the form (details redacted): {attempt.recording}/")
-    for alert in result_alerts(unit, attempt, link):
-        check_units._notify_best_effort(alert)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(shot)
 
 
 # --------------------------------------------------------------------- CLI
@@ -1093,59 +1403,83 @@ def main(argv=None) -> int:
         print(f"No applicant profile found -- using the made-up one in {EXAMPLE_PROFILE.name}.")
         profile = json.loads(EXAMPLE_PROFILE.read_text(encoding="utf-8"))
 
+    if args.selftest:
+        return _selftest(profile)
+    return _check_form(args.check_form, profile, headed=args.headed)
+
+
+def _selftest(profile: dict) -> int:
+    """The real applier -- warm browser worker, queue, background alerts and
+    logging -- pointed at the fake site, applying to one fake unit."""
+    server = _serve_selftest_site()
+    base = f"http://127.0.0.1:{server.server_port}"
+    check_units.TITLE_PREFIX = "[TEST] "
+    check_units.UNIT_PAGE_URL = f"{base}/unit.html"
+    check_units.LISTINGS_URL = f"{base}/unit.html"
+    global APPLICATIONS_FILE, FORM_URL_FILE, MAX_RENT
+    MAX_RENT = MAX_RENT or 2850  # the fake unit always qualifies: its rent is set to your limit
+    APPLICATIONS_FILE = f"{SELFTEST_RUNS_DIR}/applications.json"  # never the real log
+    FORM_URL_FILE = f"{SELFTEST_RUNS_DIR}/apply_form_url.json"
+    for leftover in (APPLICATIONS_FILE, FORM_URL_FILE):
+        if os.path.exists(leftover):
+            os.remove(leftover)
+    unit = {"unitSpk": "P~SELF~U~TEST", "name": "TEST", "building": {"address": "Fake form, not a real unit"},
+            "price": MAX_RENT}
+    notifier, logger = background.Worker("notifier"), background.Worker("logger")
+    applier = Applier(profile, notifier, logger, workers=1, runs_dir=SELFTEST_RUNS_DIR)
+    logger.yield_to = applier.busy
+    try:
+        applier.start()
+        started = time.monotonic()
+        applier.dispatch([unit])
+        applier.wait_idle(60)
+        print(f"Applied in {time.monotonic() - started:.1f}s after being handed the unit (browser already open)")
+        applier.stop(10)
+        notifier.drain(60)
+        logger.drain(60)
+    finally:
+        server.shutdown()
+    attempts = applier.applications.get(unit["unitSpk"], {}).get("attempts", [])
+    last = attempts[-1] if attempts else {"status": "none", "detail": "no attempt was made"}
+    print(f"Result: {last['status']} -- {last['detail']}")
+    print(f"Filled from your profile: {', '.join(last.get('fields_filled') or []) or 'nothing'}")
+    if last.get("problems"):
+        print(f"Required fields empty or not taking the value: {'; '.join(last['problems'])}")
+    if last.get("recording"):
+        print(f"Recording (details redacted): {last['recording']}/")
+    return 0 if last["status"] == "submitted" and not last.get("problems") else 1
+
+
+def _check_form(url: str, profile: dict, headed: bool = False) -> int:
     from playwright.sync_api import sync_playwright
 
-    server = None
-    if args.selftest:
-        # The real auto-apply path, pointed at the fake site.
-        server = _serve_selftest_site()
-        check_units.TITLE_PREFIX = "[TEST] "
-        check_units.UNIT_PAGE_URL = f"http://127.0.0.1:{server.server_port}/unit.html"
-        unit = {"unitSpk": "SELFTEST", "name": "TEST", "building": {"address": "Fake form, not a real unit"},
-                "price": 2850}
-        link = check_units.LISTINGS_URL
-    else:
-        link = args.check_form
-        spk = re.search(r"unitSpk=([^&]+)", link)
-        unit = {"unitSpk": spk[1] if spk else "manual", "name": spk[1].rsplit("~", 1)[-1] if spk else "manual",
-                "building": {"address": "form check from the command line"}}
-    try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=not args.headed)
-            try:
-                if args.selftest:
-                    attempt = apply_to_unit(browser, unit, profile, runs_dir=SELFTEST_RUNS_DIR)
-                else:
-                    attempt = _check_form(browser, link, unit, profile)
-            finally:
-                browser.close()
-    finally:
-        if server:
-            server.shutdown()
-
+    spk = re.search(r"unitSpk=([^&]+)", url)
+    unit = {"unitSpk": spk[1] if spk else "manual", "name": spk[1].rsplit("~", 1)[-1] if spk else "manual",
+            "building": {"address": "form check from the command line"}}
+    recorder = apply_recorder.RunRecorder(apply_recorder.run_folder(check_units.apartment(unit), "check",
+                                                                    SELFTEST_RUNS_DIR),
+                                          apply_recorder.Redactor(profile))
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=not headed)
+        try:
+            page = new_context(browser).new_page()
+            recorder.watch(page)
+            started = time.monotonic()
+            attempt = run_form(page, url, form_values(profile), submit=False, recorder=recorder,
+                               apartment=check_units.apartment(unit))
+            attempt.seconds = time.monotonic() - started
+            folder = recorder.finish(_outcome(attempt))
+        finally:
+            browser.close()
     print(f"Result after {attempt.seconds:.1f}s: {attempt.status} -- {attempt.detail}")
     print(f"Form fields seen: {'; '.join(attempt.form_fields) or 'none'}")
     print(f"Filled from your profile: {', '.join(attempt.filled) or 'nothing'}")
     if attempt.problems:
         print(f"Required fields empty or not taking the value: {'; '.join(attempt.problems)}")
-    _report(unit, attempt, link=link)
-    return 0 if attempt.status in ("submitted", "filled") and not attempt.problems else 1
-
-
-def _check_form(browser, url: str, unit: dict, profile: dict) -> Attempt:
-    recorder = apply_recorder.RunRecorder(apply_recorder.run_folder(check_units.apartment(unit), "check",
-                                                                    SELFTEST_RUNS_DIR),
-                                          apply_recorder.Redactor(profile))
-    context = browser.new_context(viewport={"width": 1280, "height": 900})
-    context.set_default_timeout(15000)
-    started = time.monotonic()
-    recorder.watch(context)
-    attempt = run_form(context.new_page(), url, form_values(profile), submit=False, recorder=recorder,
-                       apartment=check_units.apartment(unit))
-    attempt.seconds = time.monotonic() - started
-    attempt.recording = recorder.finish(_outcome(attempt))
-    context.close()
-    return attempt
+    print(f"Recording (details redacted): {folder}/")
+    save_private_screenshots(unit, attempt)
+    background.notify_with_retries(check_units.notify, result_alert(unit, attempt, link=url), attempts=2)
+    return 0 if attempt.status == "filled" and not attempt.problems else 1
 
 
 if __name__ == "__main__":

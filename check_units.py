@@ -1,29 +1,31 @@
 """
 StuyTown / Peter Cooper Village Affordable Housing Watcher -- core logic
 ------------------------------------------------------------------------
-Fetches the real affordable-housing.stuytown.com listings API, compares it
-with what was there on the previous check, and sends Pushover alerts when
-something changed. watch_loop.py runs this every 10 seconds from 7-10am ET
-(see .github/workflows/watch.yml); tests/ runs the exact same code on fake
-data.
+Fetches the real affordable-housing.stuytown.com listings API and compares
+it with what was there on the previous check. watch_loop.py runs a check
+every 2 seconds from 7-10am ET (see .github/workflows/watch.yml); tests/
+runs the exact same code on fake data.
 
 The state -- data/last_seen.json -- holds every unit currently listed, with
-the exact data the API last returned for it. On each check:
+the exact data the API last returned for it. On each check
+(process_snapshot):
 
-  NEW unit (its ID isn't in the state)
-      -> Emergency alert (bypasses Do Not Disturb) with a link straight to
-         the unit's page so you can apply, plus an events.json entry with
-         the unit's full metadata and a screenshot of the listings page.
-  SAME unit, SAME data
-      -> nothing. This is what stops a listing from alerting every 10s.
-  SAME unit, DIFFERENT data (rent, available date, income requirement...)
-      -> one normal-priority "updated" alert + an events.json entry.
-  Unit GONE
-      -> only counts as removed once it's been missing for
-         REMOVAL_CONFIRM_POLLS checks in a row (~1 minute), so a one-off
-         API hiccup can't make a listing you already know about alert again.
-         Then: a quiet alert + events.json entry, and it leaves the state --
-         so if it's ever re-listed, it alerts as NEW again.
+  1. The applier (auto_apply.py) gets the listings FIRST, before any alert
+     or log is even queued.
+  2. NEW unit (its ID isn't in the state)
+       qualifies for auto-apply  -> Emergency alert (bypasses Do Not Disturb)
+       doesn't                   -> one normal alert
+     plus an events.json entry with the unit's full metadata.
+  3. SAME unit, DIFFERENT data (rent, available date...) -> events.json only.
+  4. Unit GONE -> only counts as removed once it's been missing for
+     REMOVAL_CONFIRM_SECONDS (and at least REMOVAL_MIN_MISSED_CHECKS checks),
+     so a one-off API hiccup can't make a listing you know about alert
+     again. Then an events.json entry, and it leaves the state -- so if it's
+     ever re-listed, it alerts as NEW again.
+
+Alerts and the events log are handed to background workers (background.py):
+a slow or failing Pushover or disk never delays the next check or an
+application.
 
 There's no silent "baseline" run: if units are already listed the first time
 this runs (no state file yet), you get alerted about them.
@@ -33,21 +35,36 @@ alerts, no state changes):
     python check_units.py
 """
 
+import gzip
 import html
+import http.client
 import json
 import os
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+
+import background
 
 # Confirmed live and working -- no authentication required (see README).
 BASE_URL = "https://units.stuytown.com/api/ah-units"
 ITEMS_PER_PAGE = 21  # matches what the site's own frontend requests
 MAX_PAGES = 20  # safety stop; there's normally just one page
+# A check every 2 seconds can't wait 20 for a slow answer: give up after this
+# and try again on the next check.
+REQUEST_TIMEOUT_SECONDS = 4
+REQUEST_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (compatible; personal-housing-watcher/1.0)",
+    "Accept": "application/json",
+    "Accept-Encoding": "gzip",
+    # Matches what a real browser sends from the affordable housing page --
+    # harmless to include, cheap insurance against origin-based filtering.
+    "Referer": "https://affordable-housing.stuytown.com/",
+    "Origin": "https://affordable-housing.stuytown.com",
+}
 
 SITE_URL = "https://affordable-housing.stuytown.com"
 LISTINGS_URL = f"{SITE_URL}/apartments/"
@@ -57,7 +74,6 @@ UNIT_PAGE_URL = f"{SITE_URL}/apartments/units"
 
 STATE_FILE = "data/last_seen.json"
 EVENTS_FILE = "data/events.json"
-SCREENSHOT_DIR = "screenshots"
 
 PUSHOVER_API = "https://api.pushover.net/1"
 PUSHOVER_TOKEN = os.environ.get("PUSHOVER_TOKEN")  # application API token
@@ -69,21 +85,28 @@ TITLE_PREFIX = ""  # tests set "[TEST] " so simulated alerts are obvious on your
 EMERGENCY_RETRY_SECONDS = 60
 EMERGENCY_EXPIRE_SECONDS = 3600
 
-# A unit has to be missing from this many checks in a row (~1 minute at one
-# check every 10s) before it counts as removed.
-REMOVAL_CONFIRM_POLLS = 6
+# A unit counts as removed once it's been missing for this long -- and from
+# at least this many checks in a row, whatever the checking pace.
+REMOVAL_CONFIRM_SECONDS = 60
+REMOVAL_MIN_MISSED_CHECKS = 2
 # Fields that can change without anything you'd care about changing.
 IGNORED_FIELDS = {"version"}
-# At most this many "updated" alerts per unit per run (one run = one
-# morning). Safety net in case some field turns out to change on every
-# response, which would otherwise mean an alert -- and a commit -- every 10s.
-MAX_UPDATE_ALERTS_PER_UNIT = 3
-_update_alerts_sent = Counter()
 
 
 class PushoverRejected(RuntimeError):
     """Pushover refused the request (bad token/user key or invalid field) --
     retrying won't help, unlike a network error."""
+
+
+class ListingsUnavailable(RuntimeError):
+    """The listings API answered, but not with listings: rate-limited (429),
+    refused (403) or a server error. The checker slows down when it sees
+    this; retry_after is the API's own Retry-After, in seconds, if it sent one."""
+
+    def __init__(self, message: str, status: int | None = None, retry_after: float | None = None):
+        super().__init__(message)
+        self.status = status
+        self.retry_after = retry_after
 
 
 @dataclass
@@ -119,38 +142,87 @@ class Changes:
 # ---------------------------------------------------------------- fetching
 
 
+class ListingsClient:
+    """Fetches the listings over ONE kept-open connection: no new TCP + TLS
+    handshake on every check (checks are 2 seconds apart), a short timeout,
+    and one silent reconnect if the server closed the idle connection."""
+
+    def __init__(self, base_url: str | None = None, timeout: float | None = None):
+        self.base_url = base_url or BASE_URL
+        self.timeout = timeout or REQUEST_TIMEOUT_SECONDS
+        parts = urllib.parse.urlsplit(self.base_url)
+        self._scheme, self._host, self._path = parts.scheme, parts.netloc, parts.path
+        self._conn = None
+
+    def fetch_all(self) -> list:
+        """Every page of unit listings. There's normally just one page, but
+        this loops in case more units ever get posted than fit on one."""
+        units = []
+        for page in range(MAX_PAGES):
+            data = self._get(f"{self._path}?page={page}&itemsOnPage={ITEMS_PER_PAGE}")
+            page_units = data.get("unitModels") if isinstance(data, dict) else None
+            if not isinstance(page_units, list):
+                # Never read an error/maintenance response as "zero units" --
+                # that would make every listed unit look like it was taken down.
+                raise ValueError(f"Unexpected API response: {json.dumps(data)[:200]}")
+            units.extend(page_units)
+            total = data.get("totalCount") or len(units)
+            if len(units) >= total or not page_units:
+                break
+        return units
+
+    def _get(self, path: str):
+        for attempt in (1, 2):
+            conn = self._connection()
+            try:
+                conn.request("GET", path, headers=REQUEST_HEADERS)
+                response = conn.getresponse()
+                body = response.read()
+            except (http.client.HTTPException, OSError):
+                self.close()
+                if attempt == 2:
+                    raise
+                continue  # a kept-open connection the server had closed: reconnect once
+            if response.getheader("Connection", "").lower() == "close":
+                self.close()
+            if response.status != 200:
+                raise ListingsUnavailable(f"listings API answered HTTP {response.status}", response.status,
+                                          _retry_after(response.getheader("Retry-After")))
+            if (response.getheader("Content-Encoding") or "").lower() == "gzip":
+                body = gzip.decompress(body)
+            return json.loads(body)
+
+    def _connection(self):
+        if self._conn is None:
+            make = http.client.HTTPSConnection if self._scheme == "https" else http.client.HTTPConnection
+            self._conn = make(self._host, timeout=self.timeout)
+        return self._conn
+
+    def close(self) -> None:
+        if self._conn is not None:
+            try:
+                self._conn.close()
+            finally:
+                self._conn = None
+
+
+def _retry_after(value) -> float | None:
+    try:
+        return max(0.0, float(value))
+    except (TypeError, ValueError):
+        return None
+
+
+_client = None
+
+
 def fetch_all_units() -> list:
-    """Fetch every page of unit listings. There's normally just one page,
-    but this loops in case more units ever get posted than fit on one."""
-    units = []
-    for page in range(MAX_PAGES):
-        url = f"{BASE_URL}?page={page}&itemsOnPage={ITEMS_PER_PAGE}"
-        req = urllib.request.Request(
-            url,
-            headers={
-                "User-Agent": "Mozilla/5.0 (compatible; personal-housing-watcher/1.0)",
-                "Accept": "application/json",
-                # Matches what a real browser sends from the affordable
-                # housing page -- harmless to include, cheap insurance
-                # against any origin-based filtering.
-                "Referer": f"{SITE_URL}/",
-                "Origin": SITE_URL,
-            },
-        )
-        with urllib.request.urlopen(req, timeout=20) as resp:
-            data = json.load(resp)
-
-        page_units = data.get("unitModels") if isinstance(data, dict) else None
-        if not isinstance(page_units, list):
-            # Never read an error/maintenance response as "zero units" --
-            # that would make every listed unit look like it was taken down.
-            raise ValueError(f"Unexpected API response: {json.dumps(data)[:200]}")
-        units.extend(page_units)
-
-        total = data.get("totalCount") or len(units)
-        if len(units) >= total or not page_units:
-            break
-    return units
+    """The listings, through a shared kept-open client (rebuilt if BASE_URL
+    changes, as the tests do)."""
+    global _client
+    if _client is None or _client.base_url != BASE_URL:
+        _client = ListingsClient(BASE_URL)
+    return _client.fetch_all()
 
 
 # ------------------------------------------------------ describing a unit
@@ -322,86 +394,84 @@ def diff_units(previous: dict, units: list, now_utc: str) -> tuple:
         if fields:
             changes.updated.append({"before": record["data"], "after": unit, "fields": fields})
         # Seen again, so any "missing" streak from an API hiccup is forgiven.
-        next_state[uid] = {**record, "missing_polls": 0, "data": unit}
+        seen = {k: v for k, v in record.items() if k != "missing_since_utc"}
+        next_state[uid] = {**seen, "missing_polls": 0, "data": unit}
 
     for uid, record in previous.items():
         if uid in current:
             continue
         missing = record.get("missing_polls", 0) + 1
-        if missing >= REMOVAL_CONFIRM_POLLS:
+        since = record.get("missing_since_utc") or now_utc
+        if missing >= REMOVAL_MIN_MISSED_CHECKS and _seconds_between(since, now_utc) >= REMOVAL_CONFIRM_SECONDS:
             changes.removed.append(record)  # dropped from the state
         else:
-            next_state[uid] = {**record, "missing_polls": missing}
+            next_state[uid] = {**record, "missing_polls": missing, "missing_since_utc": since}
 
     return next_state, changes
 
 
-def process_snapshot(units: list, take_screenshot=None, now: datetime | None = None,
-                     label: str = "", act_on_listings=None) -> Changes:
-    """Compare one API response with the saved state and act on what changed:
-    alert, save the state, take a screenshot, log events. take_screenshot is
-    a function(path) -> bool, called only when new units appear.
-    act_on_listings is a function(units), called on every check right after
-    the alert and before the screenshot -- auto_apply.py's hook."""
+def _seconds_between(earlier: str, later: str) -> float:
+    try:
+        parse = lambda s: datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ")  # noqa: E731
+        return (parse(later) - parse(earlier)).total_seconds()
+    except (TypeError, ValueError):
+        return 0.0
+
+
+_INLINE = background.Worker("inline", inline=True)
+
+
+def process_snapshot(units: list, now: datetime | None = None, label: str = "", apply=None,
+                     qualifies=None, notifier=None, logger=None) -> Changes:
+    """One check: compare the listings with the saved state, save it, and act
+    on what changed -- in order of what matters:
+
+      1. apply(units): the applier gets the listings before anything else
+         (auto_apply.Applier.dispatch -- it only queues work, so this is fast,
+         and returns the units it took on).
+      2. Alerts go to the notifier, and the events log to the logger -- both
+         background workers, so neither can delay the next check or an
+         application. qualifies(unit) picks Emergency vs normal alerts; with
+         no qualifies, every new unit is an Emergency.
+
+    Without notifier/logger (tests, the fake morning) the jobs run inline."""
     now = now or datetime.now(timezone.utc)
     stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+    notifier, logger = notifier or _INLINE, logger or _INLINE
     previous = load_state()
     next_state, changes = diff_units(previous, units, stamp)
-    muted = [c for c in changes.updated
-             if _update_alerts_sent[unit_id(c["after"])] >= MAX_UPDATE_ALERTS_PER_UNIT]
-    changes.updated = [c for c in changes.updated if c not in muted]
-    for change in changes.updated:
-        _update_alerts_sent[unit_id(change["after"])] += 1
-    print(f"[{label or stamp}] {changes.listed} listed - {changes.summary()}")
-    if muted:
-        print(f"   (not alerting: {', '.join(unit_label(c['after']) for c in muted)} already "
-              f"changed {MAX_UPDATE_ALERTS_PER_UNIT}+ times this run)")
-
-    alert_sent = False
-    if changes.new:
-        # The alert that matters, sent before anything else. If it fails this
-        # raises BEFORE the state is saved, so the next check (10s later) sees
-        # the same units as new and tries again -- a Pushover hiccup can delay
-        # this alert, but never swallow it.
-        alert_sent = notify(**new_units_alert(changes.new))
-        if alert_sent:
-            print(f"   Emergency alert sent for {len(changes.new)} new unit(s)")
-
     if next_state != previous:
         save_state(next_state)
 
-    if act_on_listings:
-        # After the alert (so you hear about the unit first) and before the
-        # screenshot (so applying doesn't wait on it). Never allowed to stop
-        # the watcher: the alert has already gone out.
+    queued = []  # the units the applier took on
+    if apply:
         try:
-            act_on_listings(units)
+            queued = list(apply(units) or [])
         except Exception as e:
-            print(f"   WARNING: auto-apply step failed: {e}")
+            print(f"   WARNING: handing the listings to the applier failed: {e}")
 
+    if changes:
+        print(f"[{label or stamp}] {changes.listed} listed - {changes.summary()}")
     if changes.new:
-        screenshot = None
-        if take_screenshot:
-            path = f"{SCREENSHOT_DIR}/{build_screenshot_filename(now, changes.new)}"
-            try:
-                if take_screenshot(path):
-                    screenshot = path
-                    print(f"   Screenshot saved: {path}")
-            except Exception as e:
-                print(f"   Screenshot failed (alert already sent, not critical): {e}")
-        record_event({
+        qualifying = [u for u in changes.new if qualifies is None or _safe_bool(qualifies, u)]
+        others = [u for u in changes.new if u not in qualifying]
+        if qualifying:
+            # "auto-applying now" only when the applier really took it on (it
+            # won't, say, for a unit it already applied to before a re-listing).
+            taken = {unit_id(u) for u in queued}
+            notifier.submit(background.notify_with_retries, notify,
+                            qualifying_alert(qualifying, auto_applying=all(unit_id(u) in taken for u in qualifying)))
+        if others:
+            notifier.submit(background.notify_with_retries, notify, new_units_alert(others))
+        logger.submit(record_event, {
             "event": "new",
             "detected_at_utc": stamp,
             "unit_count": len(changes.new),
-            "units": [unit_summary(u, include_data=True) for u in changes.new],
-            "screenshot": screenshot,
-            "alert_sent": alert_sent,
+            "units": [{**unit_summary(u, include_data=True), "qualifies_for_auto_apply": u in qualifying}
+                      for u in changes.new],
         })
-
-    # Lower-priority alerts are best-effort: the state is already saved, so
-    # a failure here is logged rather than retried.
     if changes.updated:
-        record_event({
+        logger.submit(record_event, {
             "event": "updated",
             "detected_at_utc": stamp,
             "units": [
@@ -415,10 +485,8 @@ def process_snapshot(units: list, take_screenshot=None, now: datetime | None = N
                 for c in changes.updated
             ],
         })
-        _notify_best_effort(updated_alert(changes.updated))
-
     if changes.removed:
-        record_event({
+        logger.submit(record_event, {
             "event": "removed",
             "detected_at_utc": stamp,
             "units": [
@@ -426,18 +494,14 @@ def process_snapshot(units: list, take_screenshot=None, now: datetime | None = N
                 for r in changes.removed
             ],
         })
-        _notify_best_effort(removed_alert(changes.removed, now))
-
     return changes
 
 
-def build_screenshot_filename(now: datetime, new_units: list) -> str:
-    # Apartment numbers rather than the long internal unitSpk keys, and no
-    # ":" in the timestamp (not allowed in Windows filenames).
-    apartments = ",".join(sorted(apartment(u) for u in new_units))
-    cleaned = "".join(c if c.isalnum() or c in "-_," else "_" for c in apartments)[:80]
-    stamp = now.strftime("%Y-%m-%dT%H-%M-%SZ")
-    return f"{stamp}_{cleaned}.png" if cleaned else f"{stamp}.png"
+def _safe_bool(fn, unit) -> bool:
+    try:
+        return bool(fn(unit))
+    except Exception:
+        return True  # when in doubt, the louder alert
 
 
 def record_event(event: dict) -> None:
@@ -449,83 +513,49 @@ def record_event(event: dict) -> None:
             events = json.load(f)
     events.append(event)
     os.makedirs(os.path.dirname(EVENTS_FILE) or ".", exist_ok=True)
-    with open(EVENTS_FILE, "w", encoding="utf-8") as f:
+    tmp = EVENTS_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
         json.dump(events, f, indent=2)
         f.write("\n")
+    os.replace(tmp, EVENTS_FILE)  # all-or-nothing: a commit can't catch half a file
 
 
 # ------------------------------------------------------------------ alerts
 
 
-def new_units_alert(units: list) -> dict:
+def qualifying_alert(units: list, auto_applying: bool) -> dict:
+    """Emergency: a unit at or under your rent limit. The only alert that
+    breaks through Do Not Disturb."""
+    action = "auto-applying now" if auto_applying else "apply now"
     if len(units) == 1:
-        title = "New StuyTown affordable unit - apply now"
-        url, url_title = unit_url(units[0]), "Open this unit to apply"
+        title = f"Qualifying StuyTown unit - {action}"
+        url, url_title = unit_url(units[0]), "Open this unit"
     else:
-        title = f"{len(units)} new StuyTown affordable units - apply now"
-        url, url_title = LISTINGS_URL, "Open all listings to apply"
-    message = _fit([_linked_line(u) for u in units],
-                   footer="Each unit closes after 3 applications.")
+        title = f"{len(units)} qualifying StuyTown units - {action}"
+        url, url_title = LISTINGS_URL, "Open all listings"
+    footer = ("Auto-apply is on: you'll get the result in a separate message."
+              if auto_applying else "Each unit closes after 3 applications.")
+    message = _fit([_linked_line(u) for u in units], footer=footer)
     return {"title": title, "message": message, "url": url, "url_title": url_title, "priority": 2}
 
 
-def updated_alert(updates: list) -> dict:
-    lines = []
-    for change in updates:
-        what = ", ".join(_describe_change(name, change["before"].get(name), change["after"].get(name))
-                         for name in change["fields"])
-        lines.append(f"{_linked_line(change['after'])}\nChanged: {html.escape(what)}")
-    one = len(updates) == 1
-    return {
-        "title": "StuyTown listing updated" if one else f"{len(updates)} StuyTown listings updated",
-        "message": _fit(lines),
-        "url": unit_url(updates[0]["after"]) if one else LISTINGS_URL,
-        "url_title": "Open this unit" if one else "Open all listings",
-        "priority": 0,
-    }
-
-
-def removed_alert(records: list, now: datetime) -> dict:
-    lines = []
-    for record in records:
-        listed_for = _listed_for(record.get("first_seen_utc"), now)
-        lines.append(html.escape(unit_label(record["data"]) + (f" - {listed_for}" if listed_for else "")))
-    one = len(records) == 1
-    return {
-        "title": "StuyTown unit no longer listed" if one else f"{len(records)} StuyTown units no longer listed",
-        "message": _fit(lines),
-        "url": LISTINGS_URL,
-        "url_title": "Open all listings",
-        "priority": -1,  # quiet: shows up, no sound
-    }
+def new_units_alert(units: list) -> dict:
+    """Normal priority: new units that don't qualify (over your rent limit or
+    above your income)."""
+    if len(units) == 1:
+        title = "New StuyTown unit (doesn't qualify)"
+        url, url_title = unit_url(units[0]), "Open this unit"
+    else:
+        title = f"{len(units)} new StuyTown units (don't qualify)"
+        url, url_title = LISTINGS_URL, "Open all listings"
+    message = _fit([_linked_line(u) for u in units], footer="Each unit closes after 3 applications.")
+    return {"title": title, "message": message, "url": url, "url_title": url_title, "priority": 0}
 
 
 def _linked_line(unit: dict) -> str:
     line = f'<a href="{html.escape(unit_url(unit))}">{html.escape(unit_label(unit))}</a>'
     details = unit_details(unit)
     return f"{line} - {html.escape(details)}" if details else line
-
-
-def _describe_change(name: str, before, after) -> str:
-    if isinstance(before, (dict, list)) or isinstance(after, (dict, list)):
-        return name
-    if name in ("price", "incomeRequirement"):
-        before, after = _money(before) or before, _money(after) or after
-    return f"{name} {before} to {after}"
-
-
-def _listed_for(first_seen_utc, now: datetime) -> str:
-    try:
-        start = datetime.strptime(first_seen_utc, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-    except (TypeError, ValueError):
-        return ""
-    minutes = max(0, int((now - start).total_seconds() // 60))
-    if minutes < 60:
-        return f"was listed for {minutes} min"
-    hours, mins = divmod(minutes, 60)
-    if hours < 48:
-        return f"was listed for {hours}h {mins:02d}m"
-    return f"was listed for {hours // 24} days"
 
 
 def _fit(lines: list, footer: str = "") -> str:
@@ -590,13 +620,6 @@ def notify(title: str, message: str, *, priority: int = 0, url: str | None = Non
         fields["expire"] = EMERGENCY_EXPIRE_SECONDS
     _pushover_post("messages.json", fields, attachment=attachment)
     return True
-
-
-def _notify_best_effort(alert: dict) -> None:
-    try:
-        notify(**alert)
-    except Exception as e:
-        print(f"   WARNING: couldn't send '{alert['title']}' alert: {e}")
 
 
 def validate_pushover_credentials() -> str | None:

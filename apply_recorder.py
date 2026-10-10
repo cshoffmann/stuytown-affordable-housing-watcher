@@ -102,7 +102,10 @@ def _patterns_for(key: str, value) -> list:
 
 class RunRecorder:
     """One trip through the form. Collects in memory while the browser works
-    (nothing slows down the application) and writes it all in finish()."""
+    (nothing slows down the application). Afterwards, collect() gathers the
+    network data from the browser -- quick, and done by the applier, because
+    only its thread can talk to its browser -- and the Recording it returns is
+    redacted and written by the background logger, never by the applier."""
 
     def __init__(self, folder: str | Path | None, redact: Redactor):
         self.folder = Path(folder) if folder else None
@@ -115,18 +118,16 @@ class RunRecorder:
 
     # ---------------------------------------------------------------- collect
 
-    def watch(self, context) -> None:
-        """Start recording the browser's network traffic and console."""
-        context.on("request", self._on_request)
-        context.on("response", self._on_response)
-        context.on("requestfailed", self._on_failed)
-        context.on("page", self._watch_page)
-        for page in context.pages:
-            self._watch_page(page)
-
-    def _watch_page(self, page) -> None:
+    def watch(self, page) -> None:
+        """Start recording one page's network traffic and console -- and any
+        pop-up it opens. Per page, not per browser: the applier's browser is
+        reused all morning, and each trip gets its own page."""
+        page.on("request", self._on_request)
+        page.on("response", self._on_response)
+        page.on("requestfailed", self._on_failed)
         page.on("console", lambda msg: self._on_console(msg.type, msg.text))
         page.on("pageerror", lambda error: self._on_console("pageerror", str(error)))
+        page.on("popup", self.watch)
 
     def _on_console(self, kind: str, text: str) -> None:
         if kind in ("error", "warning", "pageerror") and len(self.console) < 100:
@@ -165,27 +166,79 @@ class RunRecorder:
     def _now(self) -> float:
         return round(time.monotonic() - self.started, 3)
 
-    # ------------------------------------------------------------------ write
+    # ---------------------------------------------------------------- collect
+
+    def collect(self, outcome: dict) -> "Recording":
+        """Everything gathered so far, plus the network data read from the
+        browser (request bodies, response bodies). Call while the page is
+        still open. Unredacted: hand it to the background logger, which
+        redacts it in Recording.write(). Never raises."""
+        try:
+            network = self._network()
+        except Exception as e:
+            network = [{"error": f"couldn't read the network data: {e}"}]
+        return Recording(self.folder, self.redact, {
+            "started_utc": self.started_utc,
+            "seconds": self._now(),
+            "outcome": outcome,
+            "steps": self.steps,
+            "notes": self.notes,
+            "console": self.console,
+        }, network, dict(self.pages), dict(self.images))
 
     def finish(self, outcome: dict) -> Path | None:
-        """Write everything (redacted). Call while the browser is still open:
-        response bodies are read here. Never raises."""
+        """collect() and write() in one go, for the command-line tools."""
+        return self.collect(outcome).write()
+
+    def _network(self) -> list:
+        entries = []
+        for entry in self._requests:
+            request = entry["request"]
+            item = {
+                "t": entry["t"],
+                "method": request.method,
+                "type": request.resource_type,
+                "url": request.url,
+            }
+            if entry.get("failure"):
+                item["failed"] = entry["failure"]  # incl. what auto-apply itself blocks (images etc.)
+            if request.method != "GET" or request.resource_type in BODY_TYPES:
+                item["request_headers"] = dict(request.headers)
+                body = _safe(lambda: request.post_data)
+                if body:
+                    item["request_body"] = body
+            answered = self._responses.get(id(request))
+            if answered:
+                t, response = answered
+                item.update({"answered_t": t, "status": response.status})
+                if request.method != "GET" or request.resource_type in BODY_TYPES:
+                    item["response_headers"] = dict(response.headers)
+                    body = _safe(lambda: response.text())
+                    if body is not None:
+                        item["response_body"] = body[:MAX_BODY_CHARS * 4]
+            entries.append(item)
+        return entries
+
+
+class Recording:
+    """A collected trip through the form, ready to be redacted and written --
+    by the background logger."""
+
+    def __init__(self, folder, redact: Redactor, report: dict, network: list, pages: dict, images: dict):
+        self.folder = Path(folder) if folder else None
+        self.redact = redact
+        self.report, self.network, self.pages, self.images = report, network, pages, images
+
+    def write(self) -> Path | None:
+        """Redact and write everything. Never raises."""
         if self.folder is None:
             return None
         try:
             self.folder.mkdir(parents=True, exist_ok=True)
-            report = {
-                "started_utc": self.started_utc,
-                "seconds": self._now(),
-                "outcome": outcome,
-                "steps": self.steps,
-                "notes": self.notes,
-                "console": self.console,
-                "files": sorted([f"{n}.html" for n in self.pages] + [f"{n}.jpg" for n in self.images]
-                                + ["network.json"]),
-            }
+            report = {**self.report, "files": sorted([f"{n}.html" for n in self.pages]
+                                                     + [f"{n}.jpg" for n in self.images] + ["network.json"])}
             self._write("report.json", json.dumps(self.redact.deep(report), indent=2))
-            self._write("network.json", json.dumps(self._network(), indent=2))
+            self._write("network.json", json.dumps([self._redact_entry(e) for e in self.network], indent=2))
             for name, content in self.pages.items():
                 self._write(f"{name}.html", self.redact(content)[:MAX_HTML_BYTES])
             for name, jpeg in self.images.items():
@@ -198,34 +251,19 @@ class RunRecorder:
     def _write(self, name: str, text: str) -> None:
         (self.folder / name).write_text(text, encoding="utf-8")
 
-    def _network(self) -> list:
-        entries = []
-        for entry in self._requests:
-            request = entry["request"]
-            item = {
-                "t": entry["t"],
-                "method": request.method,
-                "type": request.resource_type,
-                "url": self._redact_url(request.url),
-            }
-            if entry.get("failure"):
-                item["failed"] = entry["failure"]  # incl. what auto-apply itself blocks (images etc.)
-            if request.method != "GET" or request.resource_type in BODY_TYPES:
-                item["request_headers"] = self._headers(request.headers)
-                body = _safe(lambda: request.post_data)
-                if body:
-                    item["request_body"] = self._redact_body(body, request.headers.get("content-type", ""))
-            answered = self._responses.get(id(request))
-            if answered:
-                t, response = answered
-                item.update({"answered_t": t, "status": response.status})
-                if request.method != "GET" or request.resource_type in BODY_TYPES:
-                    item["response_headers"] = self._headers(response.headers)
-                    body = _safe(lambda: response.text())
-                    if body is not None:
-                        item["response_body"] = self.redact(body)[:MAX_BODY_CHARS]
-            entries.append(item)
-        return entries
+    def _redact_entry(self, entry: dict) -> dict:
+        item = dict(entry)
+        if "url" in item:
+            item["url"] = self._redact_url(item["url"])
+        for key in ("request_headers", "response_headers"):
+            if key in item:
+                item[key] = self._headers(item[key])
+        if "request_body" in item:
+            content_type = (entry.get("request_headers") or {}).get("content-type", "")
+            item["request_body"] = self._redact_body(item["request_body"], content_type)
+        if "response_body" in item:
+            item["response_body"] = self.redact(item["response_body"])[:MAX_BODY_CHARS]
+        return item
 
     def _headers(self, headers: dict) -> dict:
         return {k: self.redact(v) for k, v in headers.items() if k.lower() not in DROPPED_HEADERS}

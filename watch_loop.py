@@ -1,18 +1,25 @@
 """
-The live watcher: checks the StuyTown affordable listings every 10 seconds
-from 7:00 to 10:00am ET, then exits. GitHub Actions starts it every morning
-(.github/workflows/watch.yml). All of the "is this new? should I alert?"
-logic lives in check_units.py, and applying to cheap units in auto_apply.py
--- this file is the timing, the screenshot, and saving results back to the
-repo.
+The live watcher, 7:00 to 10:00am ET. GitHub Actions starts it every morning
+(.github/workflows/watch.yml). It runs four things side by side:
+
+    checker    this thread: fetches the listings every 2 seconds (Pace) and
+               never stops -- not for alerts, logging, git or applying.
+    applier    auto_apply.Applier: browsers opened at 6:59, handed each
+               check's listings FIRST; applies to qualifying units at once.
+    notifier   background: Pushover alerts, with their own retries.
+    logger     background: events, applications, recordings, git commits --
+               batched, and paused while an application is running.
+
+"Is this new? Which alert?" lives in check_units.py, applying in
+auto_apply.py; this file is the timing and the wiring. docs/architecture.md
+draws it, next to the old design.
 
     python watch_loop.py                     # the real thing: if started before 7:00 ET it waits, then checks until 10:00 ET
-    python watch_loop.py --minutes 5         # test run: check every 10s for 5 minutes starting now, ignoring the window
+    python watch_loop.py --minutes 5         # test run: check every 2s for 5 minutes starting now, ignoring the window
     python watch_loop.py --send-test-alert   # also send a [TEST] alert at startup, proving the Pushover keys work
 
-Results (data/, screenshots/) are committed and pushed only when
-COMMIT_RESULTS=true, which only the workflow sets -- running this on your
-own computer never touches git.
+Results (data/) are committed and pushed only when COMMIT_RESULTS=true, which
+only the workflow sets -- running this on your own computer never touches git.
 """
 
 import argparse
@@ -26,9 +33,15 @@ from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 import auto_apply
+import background
 import check_units
 
-POLL_INTERVAL_SECONDS = 10  # the cheap units have been gone within 30-90 seconds
+POLL_INTERVAL_SECONDS = 2  # every check is one small request; cheap units have been gone in 15-45s
+SLOWEST_POLL_SECONDS = 30  # back-off ceiling when the site asks us to slow down (its own Retry-After wins, up to 120)
+HICCUP_POLL_SECONDS = 8  # back-off ceiling for plain errors (timeouts, server errors): retried quickly
+STATUS_EVERY_SECONDS = 60  # one "still checking" log line a minute, instead of one per check
+COMMIT_EVERY_SECONDS = 300  # results are committed in batches, not on every change
+APPLIER_HEAD_START = timedelta(minutes=1)  # browsers open (and the site loaded) this long before 7:00
 WINDOW_START_HOUR = 7  # 7:00am ET
 WINDOW_END_HOUR = 10  # 10:00am ET
 # A run started more than this long before 7:00 exits instead of sitting
@@ -64,62 +77,153 @@ def plan(now: datetime) -> tuple:
     return "watch", start, end
 
 
-def live_screenshot(path: str) -> bool:
-    import screenshot  # here, so Playwright is only needed once a screenshot is actually taken
+class Pace:
+    """How long to wait between checks: POLL_INTERVAL_SECONDS normally.
 
-    screenshot.take(path)
-    return True
+    - The site asks us to slow down (429 Too Many Requests, 403 refused):
+      double the wait, up to SLOWEST_POLL_SECONDS -- or the site's own
+      Retry-After -- and come back down gradually, halving after every 3 good
+      checks in a row.
+    - A plain error (timeout, server error, network): it's the site's
+      trouble, not our pace, so retry soon -- double the wait, up to
+      HICCUP_POLL_SECONDS -- and go straight back to normal on the first good
+      check. That keeps a hiccup at 7:14 from slowing down the checks at 7:15."""
 
+    def __init__(self, normal: float = POLL_INTERVAL_SECONDS, slowest: float = SLOWEST_POLL_SECONDS,
+                 hiccup_ceiling: float = HICCUP_POLL_SECONDS):
+        self.normal, self.slowest, self.hiccup_ceiling = normal, slowest, hiccup_ceiling
+        self.interval = normal
+        self._pushed_back = False
+        self._good = 0
 
-def poll_once(take_screenshot=live_screenshot, label: str | None = None) -> check_units.Changes:
-    """One check: fetch the listings, compare, alert, and save the results.
-    Pass take_screenshot=None to skip screenshots."""
-    units = check_units.fetch_all_units()
-    changes = check_units.process_snapshot(
-        units, take_screenshot=take_screenshot, label=label or f"{now_et():%H:%M:%S} ET",
-        act_on_listings=auto_apply.act_on_listings,
-    )
-    if changes:
-        commit_and_push(f"Listings changed: {changes.summary()}")
-    return changes
+    def ok(self) -> None:
+        if not self._pushed_back:
+            self.interval = self.normal
+            return
+        self._good += 1
+        if self._good >= 3:
+            self._good = 0
+            self.interval = max(self.normal, self.interval / 2)
+            self._pushed_back = self.interval > self.normal
 
-
-def watch_until(end: datetime) -> None:
-    print(f"Checking every {POLL_INTERVAL_SECONDS}s until {end:%H:%M} ET -- {check_units.LISTINGS_URL}")
-    checks = failures = 0
-    next_check = time.monotonic()
-    while now_et() < end:
-        checks += 1
-        try:
-            poll_once()
-        except Exception as e:
-            failures += 1
-            print(f"[{now_et():%H:%M:%S} ET] Check failed, trying again next check: {e}")
-        # Keep a steady rhythm measured start-to-start, so a slow check
-        # (e.g. one that took a screenshot) doesn't push everything later.
-        next_check += POLL_INTERVAL_SECONDS
-        delay = next_check - time.monotonic()
-        if delay > 0:
-            time.sleep(delay)
+    def trouble(self, retry_after: float | None = None, pushed_back: bool = False) -> None:
+        self._good = 0
+        if pushed_back:
+            self._pushed_back = True
+            self.interval = max(min(self.slowest, self.interval * 2), min(retry_after or 0, 120))
         else:
-            next_check = time.monotonic()
-    print(f"Done: {checks} checks, {failures} failed.")
+            self.interval = max(self.interval, min(self.hiccup_ceiling, self.interval * 2))
+
+
+class Watcher:
+    """The checker, and the wiring between it, the applier and the two
+    background workers."""
+
+    def __init__(self, applier=None, notifier=None, logger=None, pace: Pace | None = None):
+        self.applier = applier
+        self.notifier = notifier or background.Worker("notifier")
+        self.logger = logger or background.Worker("logger", yield_to=applier.busy if applier else None)
+        self.pace = pace or Pace()
+        self.checks = self.failures = 0
+        self._unsent = []  # change summaries since the last commit
+        self._last_status = self._last_commit = time.monotonic()
+        self._last_error = None
+
+    def check(self, units: list, now: datetime | None = None, label: str | None = None) -> check_units.Changes:
+        """One check's worth of work for a fetched list of units."""
+        changes = check_units.process_snapshot(
+            units, now=now, label=label or f"{now_et():%H:%M:%S} ET",
+            apply=self.applier.dispatch if self.applier else None,
+            qualifies=auto_apply.qualifies if auto_apply.MAX_RENT is not None else None,
+            notifier=self.notifier, logger=self.logger,
+        )
+        if changes:
+            self._unsent.append(f"{now_et():%H:%M} {changes.summary()}")
+        return changes
+
+    def run_until(self, end: datetime) -> None:
+        print(f"Checking every {self.pace.normal:g}s until {end:%H:%M} ET -- {check_units.LISTINGS_URL}")
+        client = check_units.ListingsClient()
+        next_check = time.monotonic()
+        while now_et() < end:
+            self.checks += 1
+            try:
+                units = client.fetch_all()
+            except check_units.ListingsUnavailable as e:
+                self._failed(e, retry_after=e.retry_after, pushed_back=e.status in (403, 429))
+            except Exception as e:
+                self._failed(e)
+            else:
+                if self._last_error:
+                    print(f"[{now_et():%H:%M:%S} ET] Listings reachable again")
+                    self._last_error = None
+                self.pace.ok()
+                try:
+                    self.check(units)
+                except Exception as e:
+                    print(f"[{now_et():%H:%M:%S} ET] Check failed: {e}")
+            self._housekeeping()
+            # A steady beat measured start-to-start; a slow answer doesn't
+            # push every later check back.
+            next_check += self.pace.interval
+            delay = next_check - time.monotonic()
+            if delay > 0:
+                time.sleep(delay)
+            else:
+                next_check = time.monotonic()
+        client.close()
+        print(f"Done: {self.checks} checks, {self.failures} failed.")
+
+    def _failed(self, error: Exception, retry_after: float | None = None, pushed_back: bool = False) -> None:
+        self.failures += 1
+        before = self.pace.interval
+        self.pace.trouble(retry_after, pushed_back)
+        message = str(error)[:200]
+        if message != self._last_error or self.pace.interval != before:
+            print(f"[{now_et():%H:%M:%S} ET] Check failed ({message}); "
+                  f"next checks every {self.pace.interval:g}s")
+        self._last_error = message
+
+    def _housekeeping(self) -> None:
+        now = time.monotonic()
+        if now - self._last_status >= STATUS_EVERY_SECONDS:
+            self._last_status = now
+            print(f"[{now_et():%H:%M:%S} ET] still checking: {self.checks} checks so far, "
+                  f"{self.failures} failed, every {self.pace.interval:g}s")
+        if now - self._last_commit >= COMMIT_EVERY_SECONDS:
+            self._last_commit = now
+            self.commit_soon()
+
+    def commit_soon(self, final: bool = False) -> None:
+        """Queue a commit of everything since the last one, on the logger --
+        after the jobs already queued there, and not while an application runs."""
+        summaries, self._unsent = self._unsent, []
+        message = ("End of watch window" if final else "Listings changed") + (
+            ": " + " | ".join(summaries) if summaries else ": save state")
+        self.logger.submit(commit_and_push, message)
+
+    def finish(self, timeout: float = 120) -> None:
+        """Let a running application finish, send what's queued, commit."""
+        if self.applier:
+            self.applier.stop(timeout=60)
+        self.notifier.drain(timeout)
+        self.commit_soon(final=True)
+        self.logger.drain(timeout)
 
 
 def commit_and_push(message: str) -> None:
-    """Commit data/ and screenshots/ and push, so the next morning's run
-    starts from today's state (and you can browse it on GitHub). Only when
-    COMMIT_RESULTS=true. Never raises -- a git hiccup must not stop the
-    watcher."""
+    """Commit data/ and push, so the next morning's run starts from today's
+    state (and you can browse it on GitHub). Only when COMMIT_RESULTS=true.
+    Runs on the background logger; never raises."""
     if os.environ.get("COMMIT_RESULTS", "").lower() != "true":
         return
     try:
         _git("config", "user.name", "github-actions[bot]")
         _git("config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com")
-        _git("add", "--", "data", "screenshots")
+        _git("add", "--", "data")
         if _git("diff", "--cached", "--quiet", check=False).returncode == 0:
             return  # nothing to commit
-        _git("commit", "--quiet", "-m", message[:200])
+        _git("commit", "--quiet", "-m", message[:300])
         for _ in range(3):
             if _git("push", "--quiet", check=False).returncode == 0:
                 print("   Results committed and pushed.")
@@ -150,6 +254,28 @@ def keep_schedule_alive() -> None:
     commit_and_push("Keepalive: no commits in a while (stops GitHub disabling the daily schedule)")
 
 
+def start_applier(notifier, logger):
+    """The applier, with its browsers open -- or None if auto-apply is off or
+    can't run this morning (startup_check has already said why)."""
+    if not auto_apply.ENABLED:
+        return None
+    profile = auto_apply._profile_for_run()
+    if profile is None:
+        return None
+    applier = auto_apply.Applier(profile, notifier, logger)
+    logger.yield_to = applier.busy
+    started = time.monotonic()
+    applier.start()
+    print(f"Auto-apply: {applier.workers} browsers open and the site loaded in {time.monotonic() - started:.1f}s")
+    return applier
+
+
+def _sleep_until(when: datetime) -> None:
+    wait = (when - now_et()).total_seconds()
+    if wait > 0:
+        time.sleep(wait)
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Watch the StuyTown affordable listings, 7-10am ET.")
     parser.add_argument("--minutes", type=float, default=0,
@@ -161,24 +287,25 @@ def main(argv=None) -> int:
     # First, so the applicant profile is masked in the log before anything else prints.
     auto_apply.startup_check()
     print(f"Pushover credentials loaded: {bool(check_units.PUSHOVER_TOKEN and check_units.PUSHOVER_USER)}")
+    pushover_problem = None
     if os.environ.get("GITHUB_ACTIONS") == "true":
-        problem = check_units.validate_pushover_credentials()
-        if problem:
-            # Fail loudly (red X + an email from GitHub) rather than watch
-            # all morning with no way to reach your phone.
-            print(f"ERROR: {problem}. Check the PUSHOVER_TOKEN / PUSHOVER_USER repository secrets.")
-            return 1
+        pushover_problem = check_units.validate_pushover_credentials()
+        if pushover_problem:
+            # Alerts can't reach you, but auto-apply doesn't need them: keep
+            # going, and fail the run at the end (red X + an email from GitHub).
+            print(f"ERROR: {pushover_problem}. Check the PUSHOVER_TOKEN / PUSHOVER_USER repository secrets. "
+                  "Watching and auto-applying anyway.")
 
-    if args.send_test_alert and check_units.notify(
-        "[TEST] StuyTown watcher is running",
-        "If you're reading this on your phone, new-unit alerts will reach you too.",
-        url=check_units.LISTINGS_URL,
-        url_title="Open the listings page",
-    ):
+    if args.send_test_alert and background.notify_with_retries(check_units.notify, {
+        "title": "[TEST] StuyTown watcher is running",
+        "message": "If you're reading this on your phone, alerts will reach you too.",
+        "url": check_units.LISTINGS_URL,
+        "url_title": "Open the listings page",
+    }, attempts=2):
         print("Test alert sent.")
 
     if args.minutes > 0:
-        end = now_et() + timedelta(minutes=args.minutes)
+        start, end = None, now_et() + timedelta(minutes=args.minutes)
     else:
         status, start, end = plan(now_et())
         if status == "done":
@@ -189,15 +316,22 @@ def main(argv=None) -> int:
         if status == "too_early":
             print(f"More than an hour before the {WINDOW_START_HOUR}:00 ET window -- exiting.")
             return 0
-        wait = (start - now_et()).total_seconds()
-        if wait > 0:
-            print(f"Started early -- waiting {wait / 60:.0f} min for the {WINDOW_START_HOUR}:00 ET window.")
-            time.sleep(wait)
+        if now_et() < start - APPLIER_HEAD_START:
+            print(f"Started early -- waiting for {start - APPLIER_HEAD_START:%H:%M} ET to open the browsers.")
+            _sleep_until(start - APPLIER_HEAD_START)
 
-    watch_until(end)
-    commit_and_push("End of watch window: save state")
+    notifier = background.Worker("notifier")
+    logger = background.Worker("logger")
+    applier = start_applier(notifier, logger)
+    watcher = Watcher(applier, notifier, logger)
+    if start is not None:
+        _sleep_until(start)
+    try:
+        watcher.run_until(end)
+    finally:
+        watcher.finish()
     keep_schedule_alive()
-    return 0
+    return 1 if pushover_problem else 0
 
 
 if __name__ == "__main__":
