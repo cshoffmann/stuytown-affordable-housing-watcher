@@ -74,6 +74,7 @@ import urllib.parse
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import apply_recorder
 import background
@@ -113,9 +114,10 @@ REQUIRED_PROFILE_KEYS = tuple(key for key, _, required in FORM_FIELDS if require
 PHONE_KEYS = ("cell_phone", "work_phone")
 
 # Every qualifying unit is applied to -- there's no daily limit -- but each
-# at most once, ever (the site allows one application per apartment). An
-# attempt that crashed or couldn't press SUBMIT (so nothing was sent) gets
-# one more try on a later check.
+# at most once a day (New York time). If the same unit is listed again on a
+# later day, it's applied to again: the site ranks applications in the order
+# they arrive, so it's worth being early again. An attempt that crashed or
+# couldn't press SUBMIT (so nothing was sent) gets one more try that day.
 MAX_FAILED_ATTEMPTS_PER_UNIT = 2
 MAX_FORM_RECORDINGS_PER_RUN = 2  # over-limit units whose (unfilled) form gets recorded
 APPLY_WORKERS = 2  # browsers kept open, so two qualifying units are applied to at once
@@ -283,11 +285,24 @@ def skip_reason(unit: dict, profile: dict) -> str | None:
     return None
 
 
-def already_handled(record: dict | None) -> str | None:
-    """Why this unit shouldn't be tried (again), or None."""
-    attempts = (record or {}).get("attempts", [])
+NEW_YORK = ZoneInfo("America/New_York")
+
+
+def new_york_date(utc_stamp: str | None = None):
+    """The New York calendar date of a "2026-10-11T11:02:03Z" stamp (now if None)."""
+    when = datetime.fromisoformat(utc_stamp.replace("Z", "+00:00")) if utc_stamp else datetime.now(timezone.utc)
+    return when.astimezone(NEW_YORK).date()
+
+
+def already_handled(record: dict | None, today=None) -> str | None:
+    """Why this unit shouldn't be tried (again) today, or None. Only today's
+    attempts count (New York date): a unit listed again on a later day gets
+    applied to again."""
+    today = today or new_york_date()
+    attempts = [a for a in (record or {}).get("attempts", [])
+                if not a.get("at_utc") or new_york_date(a["at_utc"]) == today]
     if any(a["status"] in ("submitted", "unconfirmed") for a in attempts):
-        return "already applied"  # an unconfirmed submit may have gone through: never send a second
+        return "already applied today"  # an unconfirmed submit may have gone through: never send a second
     done = [a for a in attempts if a["status"] != "failed"]
     if done:
         return f"already tried ({done[-1]['status']})"

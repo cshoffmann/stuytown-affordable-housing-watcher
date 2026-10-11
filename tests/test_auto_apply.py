@@ -75,7 +75,7 @@ class EligibilityTests(unittest.TestCase):
         self.assertIn("$104,257 minimum", reason)
         self.assertNotIn("95", reason)
 
-    def test_a_unit_is_never_applied_to_twice(self):
+    def test_a_unit_is_applied_to_once_a_day(self):
         def record(*statuses):
             return {"attempts": [{"status": status} for status in statuses]}
 
@@ -87,6 +87,15 @@ class EligibilityTests(unittest.TestCase):
         self.assertIn("already applied", auto_apply.already_handled(record("unconfirmed")))
         self.assertIn("rejected", auto_apply.already_handled(record("rejected")))
         self.assertIn("incomplete", auto_apply.already_handled(record("incomplete")))
+
+    def test_a_unit_listed_again_on_a_later_day_is_applied_to_again(self):
+        yesterday = {"attempts": [{"status": "submitted", "at_utc": "2026-10-10T11:02:03Z"}]}
+        oct_10, oct_11 = auto_apply.new_york_date("2026-10-10T12:00:00Z"), auto_apply.new_york_date("2026-10-11T12:00:00Z")
+        self.assertIn("already applied", auto_apply.already_handled(yesterday, today=oct_10))
+        self.assertIsNone(auto_apply.already_handled(yesterday, today=oct_11))
+        # The day is New York's: 11pm ET on Oct 10 is already Oct 11 in UTC.
+        late = {"attempts": [{"status": "submitted", "at_utc": "2026-10-11T03:00:00Z"}]}
+        self.assertIn("already applied", auto_apply.already_handled(late, today=oct_10))
 
 
 class ProfileTests(unittest.TestCase):

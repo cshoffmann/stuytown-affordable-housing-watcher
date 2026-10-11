@@ -241,22 +241,26 @@ change is needed.
 
   | Result | What happened | Tried again? |
   | --- | --- | --- |
-  | submitted | Confirmation text appeared | Never |
-  | unconfirmed | SUBMIT pressed, no confirmation within 30s | Never: it may have gone through, and the site allows one application per apartment |
-  | rejected | The site showed errors and kept the form | No |
-  | incomplete | Something required couldn't be filled; nothing sent | No |
-  | blocked | A CAPTCHA you'd have to click; nothing sent | No |
-  | failed | It crashed, timed out, or couldn't press SUBMIT; nothing sent | Once more, on a later check |
+  | submitted | Confirmation text appeared | Not that day |
+  | unconfirmed | SUBMIT pressed, no confirmation within 30s | Not that day: it may have gone through |
+  | rejected | The site showed errors and kept the form | Not that day |
+  | incomplete | Something required couldn't be filled; nothing sent | Not that day |
+  | blocked | A CAPTCHA you'd have to click; nothing sent | Not that day |
+  | failed | It crashed, timed out, or couldn't press SUBMIT; nothing sent | Once more that day, on a later check |
+
+  "That day" is the New York date. If the same unit is listed again on a
+  later morning, it's applied to again.
 
   Everything except *submitted* gets its own "Auto-apply failed" (or
   "unconfirmed") message telling you to **apply yourself now**, with the unit
   link and a screenshot of where it ended.
-- **Every qualifying unit, once:** there's no daily limit, so every unit at
-  or under your rent limit gets applied to, but each unit only once, ever: a
-  unit being applied to is never queued again by the next checks, and one
-  that was submitted (or may have been) is never sent again, even on a later
-  morning. Only an attempt that sent nothing (a crash, a missed SUBMIT
-  click) gets one more try.
+- **Every qualifying unit, once a day:** there's no daily limit, so every
+  unit at or under your rent limit gets applied to, but each unit only once
+  a day: a unit being applied to is never queued again by the next checks,
+  and one that was submitted (or may have been) isn't sent again that day.
+  If it's listed again on a later morning, it's applied to again, since the
+  site ranks applications in the order they arrive. Only an attempt that
+  sent nothing (a crash, a missed SUBMIT click) gets one more try that day.
 - **Isolation:** the applier never waits on Pushover, disk or git, and a
   failure in any of those can't reach it. If an applier browser crashes, it's
   restarted.
