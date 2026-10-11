@@ -1,0 +1,74 @@
+{
+  "applier": {
+    "browser_ready_seconds": [
+      0.91,
+      0.94
+    ],
+    "form_url": null,
+    "idle_listings_page": {
+      "errors": {},
+      "loads": 46,
+      "requests_on_its_own": [],
+      "watched_minutes": 173.0,
+      "websockets": {}
+    },
+    "workers": 2
+  },
+  "listings_api": {
+    "connections": {
+      "kept-open connection": 5354,
+      "new connection": 46
+    },
+    "distinct_responses": 1,
+    "etag": {
+      "seen": false
+    },
+    "failures": {},
+    "headers": {
+      "access-control-allow-origin": {
+        "*": 5400
+      },
+      "connection": {
+        "close": 45,
+        "keep-alive": 5355
+      },
+      "strict-transport-security": {
+        "max-age=15724800; includeSubDomains": 5400
+      },
+      "x-cache": {
+        "CONFIG_NOCACHE": 5400
+      }
+    },
+    "headers_present": {
+      "x-azure-ref": 5400
+    },
+    "requests": 5400,
+    "response_bytes": {
+      "max": 42,
+      "min": 42
+    },
+    "response_ms": {
+      "max": 2016.9,
+      "median": 16.2,
+      "min": 13.4,
+      "p90": 22.3,
+      "p99": 223.7
+    },
+    "statuses": {
+      "200": 5400
+    },
+    "their_clock_minus_ours_s": {
+      "max": -0.0,
+      "median": -0.0,
+      "min": -0.3,
+      "p90": -0.0,
+      "p99": -0.0
+    }
+  },
+  "pace": [],
+  "run": {
+    "ended_utc": "2026-10-11T14:00:00.447Z",
+    "started_utc": "2026-10-11T10:59:01.444Z"
+  },
+  "units": {}
+}
