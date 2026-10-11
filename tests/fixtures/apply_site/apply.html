@@ -26,7 +26,7 @@
 </style></head>
 <body>
 <a href="#" onclick="history.back()">&larr; BACK TO APARTMENT</a>
-<h2>Hi, you're applying to Fake Building, Apt TEST</h2>
+<h2 id="applying-to">Hi, you're applying to Fake Building</h2>
 <p>The minimum income required to lease this unit is $60000.00.</p>
 <p>This apartment is leased through the Affordable Housing Program. Note that you will not be
   allowed to submit more than one application per apartment.</p>
@@ -59,6 +59,9 @@
   const form = document.getElementById('application');
   const options = new URLSearchParams(location.search);
   const centsFirst = options.get('income') === 'cents';
+  // Like the real form, it names the apartment it was opened for.
+  document.getElementById('applying-to').textContent =
+    "Hi, you're applying to Fake Building, Apt " + (options.get('unitSpk') || 'TEST').split('~').pop();
 
   // Phone boxes: always "+" then digits, grouped like "+1 212 555 0123".
   for (const box of form.querySelectorAll('.phone')) {

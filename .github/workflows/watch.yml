@@ -1,4 +1,4 @@
-name: StuyTown watcher (7-10am ET, every 10s)
+name: StuyTown watcher (7-10am ET, every 2s)
 
 on:
   schedule:
@@ -8,12 +8,12 @@ on:
     # this repo's first week its runs arrived 4-9 hours late or not at all.
     #
     # Every day at 6:13, 6:43, 7:13 ... 9:43 New York time (daylight saving
-    # handled by GitHub via `timezone`). A run sets up, waits for 7:00, then
-    # checks every 10 seconds until 10:00. If the Google trigger fails, the
-    # first of these that shows up takes over for whatever is left of the
-    # window. While a watcher is running, these wait in line (see
-    # `concurrency` below) and exit within seconds once it's done, so most
-    # of them show as "cancelled" in the Actions tab -- that's normal.
+    # handled by GitHub via `timezone`). A run sets up, opens the auto-apply
+    # browsers at 6:59, then checks every 2 seconds until 10:00. If the Google
+    # trigger fails, the first of these that shows up takes over for whatever
+    # is left of the window. While a watcher is running, these wait in line
+    # (see `concurrency` below) and exit within seconds once it's done, so
+    # most of them show as "cancelled" in the Actions tab -- that's normal.
     # Off the top of the hour on purpose: GitHub's busiest (most delayed)
     # time is :00.
     - cron: '13,43 6-9 * * *'
@@ -29,7 +29,7 @@ on:
         type: boolean
         default: false
       fake_morning:
-        description: 'Test the whole flow instead: replay a fake morning (fake units, real [TEST] alerts + screenshots; no commits)'
+        description: 'Test the alerts instead: replay a fake morning (fake units, real [TEST] alerts; no commits)'
         type: boolean
         default: false
       auto_apply_selftest:
@@ -59,8 +59,8 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        # The browser for screenshots is installed up front, so a screenshot
-        # (taken right after an alert goes out) doesn't wait on a download.
+        # Chromium for auto-apply is installed up front; the applier opens it
+        # (and loads the StuyTown site) at 6:59, before the first check.
         run: |
           pip install -r requirements.txt
           playwright install --with-deps chromium
