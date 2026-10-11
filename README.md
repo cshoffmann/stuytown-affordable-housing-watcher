@@ -251,8 +251,12 @@ change is needed.
   Everything except *submitted* gets its own "Auto-apply failed" (or
   "unconfirmed") message telling you to **apply yourself now**, with the unit
   link and a screenshot of where it ended.
-- **Limits:** one application per unit, ever (a unit being applied to is
-  never queued again by the next checks), and at most 3 per morning.
+- **Every qualifying unit, once:** there's no daily limit, so every unit at
+  or under your rent limit gets applied to, but each unit only once, ever: a
+  unit being applied to is never queued again by the next checks, and one
+  that was submitted (or may have been) is never sent again, even on a later
+  morning. Only an attempt that sent nothing (a crash, a missed SUBMIT
+  click) gets one more try.
 - **Isolation:** the applier never waits on Pushover, disk or git, and a
   failure in any of those can't reach it. If an applier browser crashes, it's
   restarted.

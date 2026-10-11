@@ -112,10 +112,10 @@ FORM_FIELDS = [
 REQUIRED_PROFILE_KEYS = tuple(key for key, _, required in FORM_FIELDS if required)
 PHONE_KEYS = ("cell_phone", "work_phone")
 
-# Safety limits. A unit is applied to at most once, ever (the site allows one
-# application per apartment); an attempt that crashed or couldn't press
-# SUBMIT gets one more try on a later check.
-MAX_APPLICATIONS_PER_RUN = 3
+# Every qualifying unit is applied to -- there's no daily limit -- but each
+# at most once, ever (the site allows one application per apartment). An
+# attempt that crashed or couldn't press SUBMIT (so nothing was sent) gets
+# one more try on a later check.
 MAX_FAILED_ATTEMPTS_PER_UNIT = 2
 MAX_FORM_RECORDINGS_PER_RUN = 2  # over-limit units whose (unfilled) form gets recorded
 APPLY_WORKERS = 2  # browsers kept open, so two qualifying units are applied to at once
@@ -406,7 +406,6 @@ class Applier:
         self.site_watch = apply_recorder.SiteWatch()  # what the idle listings page does on its own
         self._recorded = set()
         self._skips_logged = set()
-        self._counted = 0  # applications queued, running, or sent this run (MAX_APPLICATIONS_PER_RUN)
         self._recording = False
         self._stopping = threading.Event()
         self._started = threading.Semaphore(0)
@@ -470,12 +469,9 @@ class Applier:
                     continue
                 not_eligible = skip_reason(unit, self.profile)
                 reason = not_eligible or already_handled(self.applications.get(uid))
-                if not reason and self._counted >= MAX_APPLICATIONS_PER_RUN:
-                    reason = f"already applied to {MAX_APPLICATIONS_PER_RUN} units this run"
                 if not reason:
                     self._in_flight.add(uid)
                     self._queued_at[uid] = (time.monotonic(), _utc_ms())
-                    self._counted += 1
                     queued.append(unit)
                     continue
                 if uid not in self._skips_logged:
@@ -611,8 +607,6 @@ class Applier:
                                 "finished_utc": _utc_ms()}
             _record(self.applications, unit, attempt)
             snapshot = copy.deepcopy(self.applications)
-            if attempt.status not in ("submitted", "unconfirmed"):
-                self._counted -= 1  # nothing sent: doesn't count toward the limit
             self._in_flight.discard(uid)
         # Everything from here on is background work.
         self.notifier.submit(background.notify_with_retries, check_units.notify, result_alert(unit, attempt))

@@ -298,9 +298,12 @@ class ApplierDispatchTests(unittest.TestCase):
             self.check([unit("1A", 2500)])
         self.assertEqual(len(self.tried), 1)
 
-    def test_no_more_than_the_per_run_limit_even_when_they_arrive_at_once(self):
-        self.check([unit(f"{n}A", 2000 + n) for n in range(1, 6)])
-        self.assertEqual(len(self.tried), auto_apply.MAX_APPLICATIONS_PER_RUN)
+    def test_every_qualifying_unit_is_applied_to_once_however_many_appear(self):
+        self.check([unit(f"{n}A", 2000 + n) for n in range(1, 6)])  # five at once
+        self.check([unit(f"{n}B", 2500 + n) for n in range(1, 4)])  # three more later
+        for _ in range(3):  # and all eight stay listed
+            self.check([unit(f"{n}A", 2000 + n) for n in range(1, 6)] + [unit(f"{n}B", 2500 + n) for n in range(1, 4)])
+        self.assertEqual(sorted(self.tried), ["1A", "1B", "2A", "2B", "3A", "3B", "4A", "5A"])
 
     def test_the_public_log_has_the_unit_and_outcome_but_none_of_your_details(self):
         self.check([unit("1A", 2500)])
