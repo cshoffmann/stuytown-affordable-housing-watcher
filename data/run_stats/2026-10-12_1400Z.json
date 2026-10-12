@@ -1,0 +1,158 @@
+{
+  "applier": {
+    "browser_ready_seconds": [
+      1.13,
+      1.14
+    ],
+    "form_url": {
+      "learned_utc": "2026-10-12T12:15:02Z",
+      "spelling": "raw",
+      "template": "https://affordable-housing.stuytown.com/apartments/units?unitSpk={unitSpk}",
+      "verified": false
+    },
+    "idle_listings_page": {
+      "errors": {},
+      "loads": 45,
+      "requests_on_its_own": [],
+      "watched_minutes": 173.0,
+      "websockets": {}
+    },
+    "workers": 2
+  },
+  "listings_api": {
+    "connections": {
+      "kept-open connection": 5355,
+      "new connection": 45
+    },
+    "distinct_responses": 5,
+    "etag": {
+      "seen": false
+    },
+    "failures": {},
+    "headers": {
+      "access-control-allow-origin": {
+        "*": 5400
+      },
+      "connection": {
+        "close": 44,
+        "keep-alive": 5356
+      },
+      "strict-transport-security": {
+        "max-age=15724800; includeSubDomains": 5400
+      },
+      "x-cache": {
+        "CONFIG_NOCACHE": 5400
+      }
+    },
+    "headers_present": {
+      "x-azure-ref": 5400
+    },
+    "requests": 5400,
+    "response_bytes": {
+      "max": 1849,
+      "min": 42
+    },
+    "response_ms": {
+      "max": 2407.9,
+      "median": 45.0,
+      "min": 39.9,
+      "p90": 58.8,
+      "p99": 257.9
+    },
+    "statuses": {
+      "200": 5400
+    },
+    "their_clock_minus_ours_s": {
+      "max": -0.0,
+      "median": -0.1,
+      "min": -0.4,
+      "p90": -0.0,
+      "p99": -0.0
+    }
+  },
+  "pace": [],
+  "run": {
+    "ended_utc": "2026-10-12T14:00:00.975Z",
+    "started_utc": "2026-10-12T10:59:01.661Z"
+  },
+  "units": {
+    "P~NYST31~B~330~U~08-B": {
+      "address": "330 First Avenue",
+      "apartment": "08-B",
+      "auto_apply": {
+        "seconds": 31.7,
+        "status": "unconfirmed",
+        "still_listed_seconds_after_submit": 38.773,
+        "submit_seconds_after_first_seen": 1.183,
+        "timeline": {
+          "answer_utc": "2026-10-12T11:15:31.632Z",
+          "finished_utc": "2026-10-12T11:15:31.774Z",
+          "first_change_utc": "2026-10-12T11:15:07.363Z",
+          "form_found_utc": "2026-10-12T11:15:00.927Z",
+          "form_via": "unit page",
+          "queue_wait_seconds": 0.0,
+          "queued_utc": "2026-10-12T11:15:00.045Z",
+          "started_utc": "2026-10-12T11:15:00.045Z",
+          "submit_pressed_utc": "2026-10-12T11:15:01.227Z"
+        }
+      },
+      "first_seen_utc": "2026-10-12T11:15:00.044Z",
+      "income_requirement": 95555.66,
+      "last_seen_utc": "2026-10-12T11:15:40Z",
+      "listed_for_seconds": 40.0,
+      "qualifies_for_auto_apply": true,
+      "removal_confirmed_utc": "2026-10-12T11:16:42.047Z",
+      "rent": 2787.04
+    },
+    "P~NYST31~B~445~U~02-A": {
+      "address": "445 East 14th Street",
+      "apartment": "02-A",
+      "auto_apply": {
+        "seconds": 31.5,
+        "status": "unconfirmed",
+        "still_listed_seconds_after_submit": 38.878,
+        "submit_seconds_after_first_seen": 1.033,
+        "timeline": {
+          "answer_utc": "2026-10-12T12:00:31.499Z",
+          "finished_utc": "2026-10-12T12:00:31.629Z",
+          "first_change_utc": "2026-10-12T12:00:02.205Z",
+          "form_found_utc": "2026-10-12T12:00:00.880Z",
+          "form_via": "unit page",
+          "queue_wait_seconds": 0.0,
+          "queued_utc": "2026-10-12T12:00:00.092Z",
+          "started_utc": "2026-10-12T12:00:00.093Z",
+          "submit_pressed_utc": "2026-10-12T12:00:01.122Z"
+        }
+      },
+      "first_seen_utc": "2026-10-12T12:00:00.089Z",
+      "income_requirement": 75519.09,
+      "last_seen_utc": "2026-10-12T12:00:40Z",
+      "listed_for_seconds": 40.0,
+      "qualifies_for_auto_apply": true,
+      "removal_confirmed_utc": "2026-10-12T12:01:42.091Z",
+      "rent": 2202.64
+    },
+    "P~NYST31~B~610~U~03-B": {
+      "address": "610 East 20th Street",
+      "apartment": "03-B",
+      "first_seen_utc": "2026-10-12T12:15:00.093Z",
+      "income_requirement": 186660.0,
+      "last_seen_utc": "2026-10-12T12:18:22Z",
+      "listed_for_seconds": 202.0,
+      "qualifies_for_auto_apply": false,
+      "removal_confirmed_utc": "2026-10-12T12:19:24.092Z",
+      "rent": 5444.25
+    },
+    "P~NYST31~B~647~U~06-B": {
+      "address": "647 East 14th Street",
+      "apartment": "06-B",
+      "first_seen_utc": "2026-10-12T11:30:00.092Z",
+      "income_requirement": 105160.8,
+      "last_seen_utc": "2026-10-12T11:31:30Z",
+      "listed_for_seconds": 90.0,
+      "qualifies_for_auto_apply": false,
+      "removal_confirmed_utc": "2026-10-12T11:32:32.317Z",
+      "rent": 3067.19
+    }
+  }
+}
