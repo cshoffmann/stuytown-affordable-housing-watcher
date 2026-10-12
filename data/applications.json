@@ -1,0 +1,45 @@
+{
+  "P~NYST31~B~330~U~08-B": {
+    "address": "330 First Avenue",
+    "apartment": "08-B",
+    "attempts": [
+      {
+        "at_utc": "2026-10-12T11:15:31Z",
+        "detail": "pressed SUBMIT but no confirmation appeared within 30s",
+        "fields_filled": [
+          "first_name",
+          "last_name",
+          "email",
+          "cell_phone",
+          "work_phone",
+          "building",
+          "street_name",
+          "apartment_no",
+          "city",
+          "state",
+          "zip",
+          "household_size",
+          "annual_income"
+        ],
+        "form_url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~330~U~08-B",
+        "problems": [],
+        "recording": "data/apply_runs/2026-10-12T11-15-00Z_08-B_apply",
+        "seconds": 31.7,
+        "status": "unconfirmed",
+        "timeline": {
+          "answer_utc": "2026-10-12T11:15:31.632Z",
+          "finished_utc": "2026-10-12T11:15:31.774Z",
+          "first_change_utc": "2026-10-12T11:15:07.363Z",
+          "form_found_utc": "2026-10-12T11:15:00.927Z",
+          "form_via": "unit page",
+          "queue_wait_seconds": 0.0,
+          "queued_utc": "2026-10-12T11:15:00.045Z",
+          "started_utc": "2026-10-12T11:15:00.045Z",
+          "submit_pressed_utc": "2026-10-12T11:15:01.227Z"
+        }
+      }
+    ],
+    "rent": 2787.04,
+    "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~330~U~08-B"
+  }
+}
