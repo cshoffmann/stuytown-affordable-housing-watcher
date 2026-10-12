@@ -1,3 +1,106 @@
 {
-  "units": {}
+  "units": {
+    "P~NYST31~B~610~U~03-B": {
+      "data": {
+        "amenities": [
+          {
+            "code": "ELFA",
+            "friendlyDescription": "ELFA closet systems",
+            "searchCode": null
+          },
+          {
+            "code": "PS40",
+            "friendlyDescription": "PS40 School District",
+            "searchCode": "PS40Code"
+          },
+          {
+            "code": "ATW3",
+            "friendlyDescription": "3 Through wall A/C Units",
+            "searchCode": null
+          },
+          {
+            "code": "zCRRE",
+            "friendlyDescription": "Platinum finish",
+            "searchCode": null
+          },
+          {
+            "code": "OKU",
+            "friendlyDescription": "Open kitchen with breakfast bar",
+            "searchCode": "OpenKitchen"
+          },
+          {
+            "code": "FS03",
+            "friendlyDescription": "3rd floor",
+            "searchCode": null
+          }
+        ],
+        "availableDate": "2026-01-24T00:00:00Z",
+        "bathrooms": 1,
+        "bedrooms": 3,
+        "building": {
+          "address": "610 EAST 20TH STREET",
+          "buildingId": "297",
+          "buildingName": "610 EAST 20TH STREET",
+          "latitude": "40.732758",
+          "longitude": "-73.9752",
+          "transportationDescription": "Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.",
+          "transports": [
+            {
+              "description": "22_L",
+              "imageUrl": "/media/t02dfmty/l.png"
+            },
+            {
+              "description": "32_M23",
+              "imageUrl": "/media/rcvl4pqk/m23.png"
+            },
+            {
+              "description": "29_M9",
+              "imageUrl": "/media/w4rlarll/m9.png"
+            },
+            {
+              "description": "37_RiverFerry",
+              "imageUrl": "/media/trsfb4aw/east-river-ferry.jpg"
+            },
+            {
+              "description": "35_CityBike",
+              "imageUrl": "/media/1ojhg5wj/citbike.png"
+            }
+          ]
+        },
+        "description": null,
+        "finish": "Platinum",
+        "floorplan": {
+          "floorplanSvg": "/media/1g1ffvt4/141.svg",
+          "staticImageUrl": null
+        },
+        "images": [],
+        "incomeRequirement": 186660.0,
+        "isFlex": false,
+        "name": "03-B",
+        "price": 5444.25,
+        "property": {
+          "commonImages": [],
+          "name": "Stuyvesant Town",
+          "propertySpk": "P~103ST"
+        },
+        "sqft": 1148,
+        "style": {
+          "id": 612,
+          "name": "141"
+        },
+        "unitFloor": "03",
+        "unitRates": {
+          "12": 5444.25,
+          "24": 5521.1
+        },
+        "unitSpk": "P~NYST31~B~610~U~03-B",
+        "version": 2,
+        "virtualTourUrl": null
+      },
+      "first_seen_utc": "2026-10-12T12:15:00Z",
+      "last_seen_utc": "2026-10-12T12:18:22Z",
+      "missing_polls": 27,
+      "missing_since_utc": "2026-10-12T12:18:24Z"
+    }
+  }
 }
