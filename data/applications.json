@@ -41,5 +41,48 @@
     ],
     "rent": 2787.04,
     "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~330~U~08-B"
+  },
+  "P~NYST31~B~445~U~02-A": {
+    "address": "445 East 14th Street",
+    "apartment": "02-A",
+    "attempts": [
+      {
+        "at_utc": "2026-10-12T12:00:31Z",
+        "detail": "pressed SUBMIT but no confirmation appeared within 30s",
+        "fields_filled": [
+          "first_name",
+          "last_name",
+          "email",
+          "cell_phone",
+          "work_phone",
+          "building",
+          "street_name",
+          "apartment_no",
+          "city",
+          "state",
+          "zip",
+          "household_size",
+          "annual_income"
+        ],
+        "form_url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~445~U~02-A",
+        "problems": [],
+        "recording": "data/apply_runs/2026-10-12T12-00-00Z_02-A_apply",
+        "seconds": 31.5,
+        "status": "unconfirmed",
+        "timeline": {
+          "answer_utc": "2026-10-12T12:00:31.499Z",
+          "finished_utc": "2026-10-12T12:00:31.629Z",
+          "first_change_utc": "2026-10-12T12:00:02.205Z",
+          "form_found_utc": "2026-10-12T12:00:00.880Z",
+          "form_via": "unit page",
+          "queue_wait_seconds": 0.0,
+          "queued_utc": "2026-10-12T12:00:00.092Z",
+          "started_utc": "2026-10-12T12:00:00.093Z",
+          "submit_pressed_utc": "2026-10-12T12:00:01.122Z"
+        }
+      }
+    ],
+    "rent": 2202.64,
+    "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~445~U~02-A"
   }
 }
