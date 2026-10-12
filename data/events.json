@@ -1810,5 +1810,25 @@
         "qualifies_for_auto_apply": false
       }
     ]
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-10-12T12:19:24Z",
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~610~U~03-B",
+        "apartment": "03-B",
+        "address": "610 East 20th Street",
+        "bedrooms": 3,
+        "bathrooms": 1,
+        "price": 5444.25,
+        "income_requirement": 186660.0,
+        "available_date": "2026-01-24T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~610~U~03-B",
+        "first_seen_utc": "2026-10-12T12:15:00Z",
+        "last_seen_utc": "2026-10-12T12:18:22Z",
+        "listed_for_seconds": 202.0
+      }
+    ]
   }
 ]
