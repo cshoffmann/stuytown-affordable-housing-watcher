@@ -565,6 +565,49 @@ class RedactorTests(unittest.TestCase):
         self.assertEqual(redact.deep({"applicant": {"name": "Jane", "phones": ["212.555.0123"]}}),
                          {"applicant": {"name": "<first_name>", "phones": ["<cell_phone>"]}})
 
+    # What the real site answered on 2026-10-12, shape for shape: the income as
+    # a bare number before a comma, a token, short values ("4B", "NY", 1).
+    SITE_ANSWER = json.dumps({
+        "token": "jOT0hCR8OlWicbA6ZLz8U9kzqdN", "unitSpk": "P~X~U~08-B", "totalAnnualEarnings": 95000,
+        "applyingAddress": "330 First Avenue, Apt 08-B", "status": "Created",
+        "contacts": [{"id": 1774, "firstName": "Jane", "cellPhone": "12125550123", "householdSize": 1,
+                      "address": {"apartment": "4B", "building": "123", "state": "NY", "zip": "10009"}}],
+        "version": 1})
+
+    def test_the_sites_answer_to_an_application_keeps_nothing_of_yours(self):
+        recording = apply_recorder.Recording(None, apply_recorder.Redactor(EXAMPLE_PROFILE), {}, [], {}, {})
+        answer = json.loads(recording._redact_body(self.SITE_ANSWER, "", personal=True))
+        contact = answer["contacts"][0]
+        self.assertEqual((answer["token"], answer["totalAnnualEarnings"]), ("<secret>", "<annual_income>"))
+        self.assertEqual((contact["firstName"], contact["cellPhone"], contact["householdSize"]),
+                         ("<first_name>", "<cell_phone>", "<household_size>"))
+        self.assertEqual(contact["address"], {"apartment": "<apartment_no>", "building": "<building>",
+                                              "state": "<state>", "zip": "<zip>"})
+        self.assertEqual((answer["applyingAddress"], answer["version"]), ("330 First Avenue, Apt 08-B", 1))
+
+    def test_a_bare_income_number_and_a_token_are_caught_anywhere(self):
+        redact = apply_recorder.Redactor(EXAMPLE_PROFILE)
+        recording = apply_recorder.Recording(None, redact, {}, [], {}, {})
+        self.assertEqual(redact('{"a":95000,"b":95000}'), '{"a":<annual_income>,"b":<annual_income>}')
+        anywhere = json.loads(recording._redact_body(self.SITE_ANSWER, "", personal=False))
+        self.assertEqual((anywhere["token"], anywhere["totalAnnualEarnings"]), ("<secret>", "<annual_income>"))
+
+    def test_a_cut_short_answer_is_scrubbed_by_pattern(self):
+        redact = apply_recorder.Redactor(EXAMPLE_PROFILE)
+        excerpt = json.dumps({"response_excerpt": self.SITE_ANSWER[:330]})  # escaped JSON, cut mid-way
+        scrubbed = redact.scrub_pairs(excerpt, personal=True)
+        for value in ("jOT0hC", "95000", '\\"4B', "12125550123"):
+            self.assertNotIn(value, scrubbed)
+        self.assertIn('\\"token\\":\\"<secret>\\"', scrubbed)
+
+    def test_api_keys_are_kept_by_name_only_and_typed_values_never_saved(self):
+        recording = apply_recorder.Recording(None, apply_recorder.Redactor(EXAMPLE_PROFILE), {}, [], {}, {})
+        self.assertEqual(recording._headers({"Subscription-Key": "312f7785-864c", "Accept": "*/*"}),
+                         {"Subscription-Key": "<13 chars>", "Accept": "*/*"})
+        page = '<input name="apartmentField" value="4B"><input type="hidden" name="x" value="keep">'
+        self.assertEqual(apply_recorder.blank_input_values(page),
+                         '<input name="apartmentField" value="(typed)"><input type="hidden" name="x" value="keep">')
+
 
 @unittest.skipUnless(_browser_available(), "Playwright + Chromium not installed")
 class EndToEndTests(unittest.TestCase):
