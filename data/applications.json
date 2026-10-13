@@ -1,4 +1,47 @@
 {
+  "P~NYST31~B~017~U~06-H": {
+    "address": "17 Stuyvesant Oval",
+    "apartment": "06-H",
+    "attempts": [
+      {
+        "at_utc": "2026-10-13T11:15:04Z",
+        "detail": "StuyTown's application API accepted it",
+        "fields_filled": [
+          "first_name",
+          "last_name",
+          "email",
+          "cell_phone",
+          "work_phone",
+          "building",
+          "street_name",
+          "apartment_no",
+          "city",
+          "state",
+          "zip",
+          "household_size",
+          "annual_income"
+        ],
+        "form_url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~017~U~06-H",
+        "problems": [],
+        "recording": "data/apply_runs/2026-10-13T11-15-00Z_06-H_apply",
+        "seconds": 4.4,
+        "status": "submitted",
+        "timeline": {
+          "answer_utc": "2026-10-13T11:15:04.383Z",
+          "finished_utc": "2026-10-13T11:15:04.547Z",
+          "form_found_utc": "2026-10-13T11:15:01.402Z",
+          "form_via": "unit page",
+          "queue_wait_seconds": 0.0,
+          "queued_utc": "2026-10-13T11:15:00.073Z",
+          "server_submitted_utc": "2026-10-13T11:15:04.0108944Z",
+          "started_utc": "2026-10-13T11:15:00.074Z",
+          "submit_pressed_utc": "2026-10-13T11:15:01.797Z"
+        }
+      }
+    ],
+    "rent": 2080.6,
+    "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~017~U~06-H"
+  },
   "P~NYST31~B~330~U~08-B": {
     "address": "330 First Avenue",
     "apartment": "08-B",
@@ -84,5 +127,48 @@
     ],
     "rent": 2202.64,
     "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~445~U~02-A"
+  },
+  "P~NYST31~B~545~U~0M-D": {
+    "address": "545 East 14th Street",
+    "apartment": "0M-D",
+    "attempts": [
+      {
+        "at_utc": "2026-10-13T11:15:04Z",
+        "detail": "StuyTown's application API accepted it",
+        "fields_filled": [
+          "first_name",
+          "last_name",
+          "email",
+          "cell_phone",
+          "work_phone",
+          "building",
+          "street_name",
+          "apartment_no",
+          "city",
+          "state",
+          "zip",
+          "household_size",
+          "annual_income"
+        ],
+        "form_url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~545~U~0M-D",
+        "problems": [],
+        "recording": "data/apply_runs/2026-10-13T11-15-00Z_0M-D_apply",
+        "seconds": 4.0,
+        "status": "submitted",
+        "timeline": {
+          "answer_utc": "2026-10-13T11:15:03.876Z",
+          "finished_utc": "2026-10-13T11:15:04.080Z",
+          "form_found_utc": "2026-10-13T11:15:01.427Z",
+          "form_via": "unit page",
+          "queue_wait_seconds": 0.001,
+          "queued_utc": "2026-10-13T11:15:00.073Z",
+          "server_submitted_utc": "2026-10-13T11:15:03.4142695Z",
+          "started_utc": "2026-10-13T11:15:00.075Z",
+          "submit_pressed_utc": "2026-10-13T11:15:01.834Z"
+        }
+      }
+    ],
+    "rent": 2234.25,
+    "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~545~U~0M-D"
   }
 }

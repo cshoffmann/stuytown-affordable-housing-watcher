@@ -1,0 +1,426 @@
+[
+  {
+    "t": 0.083,
+    "method": "GET",
+    "type": "document",
+    "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~017~U~06-H",
+    "request_headers": {
+      "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+      "upgrade-insecure-requests": "1",
+      "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.8010.12 Safari/537.36",
+      "sec-ch-ua": "\"HeadlessChrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Linux\""
+    },
+    "answered_t": 0.378,
+    "status": 200,
+    "response_headers": {
+      "content-type": "text/html; charset=utf-8",
+      "date": "Tue, 13 Oct 2026 11:15:00 GMT",
+      "strict-transport-security": "max-age=15724800; includeSubDomains",
+      "x-azure-ref": "20261013T111500Z-r1fbdfc658dwfhzghC1CO17c0w00000004b000000000h2qs",
+      "x-cache": "CONFIG_NOCACHE"
+    },
+    "response_body": "\n\n\n<!doctype html>\n<html id=\"html\" lang=\"en\">\n<head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title></title>\n    <script>!function(){window.semaphore=window.semaphore||[],window.ketch=function(){window.semaphore.push(arguments)};var e=document.createElement(\"script\");e.type=\"text/javascript\",e.src=\"https://global.ketchcdn.com/web/v3/config/beam_living/affordable_housing_stuytown/boot.js\",e.defer=e.async=!0,document.getElementsByTagName(\"head\")[0].appendChild(e)}();</script>\n    <link rel=\"shortcut icon\" type=\"image/x-icon\" href=\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/m1qp1kfm/frame-513.png?width=32&amp;height=32&amp;v=1dbef7e11539650\" />\n    <meta name=\"description\" content=\"\">\n        <meta name=\"google-site-verification\" content=\"nufe-d-_RjzgTjALvr2fRPcLouin8eZ4pkeKwOmRcTs\" />\n    <meta property=\"og:url\" content=\"https://affordable-housing.stuytown.com/apartments/units/\" />\n    <meta property=\"og:type\" content=\"website\" />\n        <meta property=\"og:image\" content=\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ptvdshto/microsoftteams-image-73.jpg\">\n</head>\n<body>\n    <h1 style=\"position:absolute;width:1px;height:1px;margin:-1px;border:0;padding:0;clip: rect(0 0 0 0);overflow:hidden;\" hidden></h1>\n    <div id=\"portal\"></div>\n    \n\n<link href=\"/sb/common-style-css.css.v639262698149509707\" rel=\"stylesheet\">\n<link href=\"/sb/vendor-css.css.v639262698149509707\" rel=\"stylesheet\">\n<script src=\"/sb/common-js.js.v639262698149509707\"></script>\n<script src=\"/sb/aHUnit-js.js.v639262698149509707\"></script>\n\n<div id=\"react_0HNOU15TOA6C5\"></div>\n<script>ReactDOM.hydrate(React.createElement(AHUnitPage, {\"header\":{\"logo\":\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/mg1mg0sp/stuytown-pcv_combo_ko.png\",\"logoLink\":{\"name\":\"Affordable Housing\",\"href\":\"/\",\"target\":null},\"navigationLinks\":[{\"name\":\"Eligibility\",\"href\":\"/eligibility/\",\"target\":null},{\"name\":\"FAQs\",\"href\":\"/faqs/\",\"target\":null},{\"name\":\"Availability\",\"href\":\"/apartments/\",\"target\":null}],\"mobileCTA\":{\"name\":\"Availability\",\"href\":\"/apartments/\",\"target\":null}},\"mainContent\":[{\"content\":{\"incomeRequirementLabel\":\"Income Requirement\",\"incomeRequirementDescription\":\"\",\"descriptionLabel\":\"Description  \",\"unitDescription\":\"\",\"finishLabel\":\"Finish\",\"featureLabel\":\"Amenities\",\"transportationLabel\":\"Transportations\",\"floorplanDisclaimer\":\"\\u003cp\\u003e\\u003cspan style=\\u0022font-family: Lato, sans-serif;\\u0022\\u003eThe photo gallery and floorplan pictured is an example. Actual layout of this floorplan may vary. Consult our leasing specialists for details.\\u003c/span\\u003e\\u003c/p\\u003e\",\"juniorTooltip\":{\"componentName\":\"JuniorTooltipComponent\",\"juniorLabel\":\"Junior\",\"juniorSubhead\":\"JUNIOR APARTMENTS\",\"juniorTitle\":\"What\u2019s a junior?\",\"juniorDescription\":{\"componentName\":\"RichTextComponent\",\"richTextDesktop\":\"\\u003cp style=\\u0022text-align: center;\\u0022\\u003e\\u003cspan style=\\u0022font-size: 16pt; font-family: raleway, sans-serif;\\u0022\\u003eA junior apartment comes preconfigured with an additional walled-off room for extra private space that can be used for a home office, den or sleeping area.\\u003c/span\\u003e\\u003c/p\\u003e\",\"richTextTablet\":\"\",\"richTextMobile\":\"\"},\"ctas\":[{\"name\":\"Apartments\",\"href\":\"/apartments/\",\"target\":null}]},\"unitImageGalleries\":{\"componentName\":\"UnitImageGalleries\",\"defaultCommonImagesTabSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/yi0j1pcz/kitchen.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/3zrjf4nj/bedroom.jpg\"],\"specificGalleries\":[{\"componentName\":\"SpecificUnitGalleryComponent\",\"finishes\":[\"Classic\"],\"bedCount\":1,\"imagesSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fxmlpblg/12a_-living-room-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/kmidithr/12a_-living-room-3.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/clqb3pvs/12a_-bathroom-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ibrjjtbg/12a_-bedroom-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/t0fgkz0j/12a_-kitchen-1.jpg\"]},{\"componentName\":\"SpecificUnitGalleryComponent\",\"finishes\":[\"Modern\"],\"bedCount\":1,\"imagesSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/iogeiwih/revision_final_1632_stuytown-rug-additions_lr_dr_02_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ew0azapr/revision_final_1632_stuytown-rug-additions_lr_dr_01_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/csmn4b14/revision_final_1632_stuytown-rug-additions_lr_dr_03_final_01_web.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fbsmgny0/1422-330fa-9a-stuytown1-276-first-ave-kt_01_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/klyd2sz2/1422_330fa-9a-stuytown1-276-first-ave_br_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/h4gl2yxr/1422_330fa-9a-stuytown1-276-first-ave_br_001_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/pu3dxadg/8b_-living-room-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ldvjcyx5/8b_-bedroom1-3.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/3tncjfet/8b_-bedroom2-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ct1hmurw/8b_-bathroom-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/npwft3i4/8b_-kitchen-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/c21o43xg/pcv_modern_2br_livingroom_hero-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/x1wltizf/st_modern_2-br_kitchen_wide_angle_extra_wide.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/wrrbjgic/59081156d49ee31346c4290a0ecae3e6.jpg\"]},{\"componentName\":\"SpecificUnitGalleryComponent\",\"finishes\":[\"Platinum\"],\"bedCount\":1,\"imagesSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/gkcjzdhi/dsc07006.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/2a1l0cws/dsc06962.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ru3pc23h/dsc06952.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/1mxm3qz4/dsc06944.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/k35oee4c/dsc06945.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/qp0pdvsx/dsc06954.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/2zel0hnr/dsc06967.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/vduj4imo/dsc06963.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/uwqlxca2/dsc06982.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/5jpmjb3z/dsc06968.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/t5gpvwzl/dsc06973.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/cxdbaf1s/dsc06983.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ij3c5ghz/dsc06984.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/0evlxjxs/dsc06985.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/2egli5mu/dsc06989.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/xb4cp3if/dsc06991.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/hppnbnxr/dsc06994.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ru2bjzlq/dsc06996.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/tt0glyjs/dsc06999.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/p0jjnonv/dsc06998.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/k3zh13ak/dsc06997.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fepngqao/dsc07002.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/mswkdjeu/dsc07005.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ka1dksxg/st_platinum-1br_living_room_2_hero.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/sssott3n/st_platinum-1br_kitchen_stove_detail_extra_wide.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/4ykiclpq/stpcv-platinum-dining-1380x600px.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/vslmoa1k/st_platinum-1br_living_area_wide_angle_extra_tall.jpg\"]},{\"componentName\":\"SpecificUnitGalleryComponent\",\"finishes\":[\"Classic\"],\"bedCount\":2,\"imagesSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/gmxoceqn/revision_final_1632_330fa-7h-stuytown1-276-first-ave_lrplusdr_001_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/b1ohecje/1423_330fa-7h-stuytown1-276-first-ave_lrplusdr_002_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/5renrkmo/1423_330fa-7h-stuytown1-276-first-ave_kitchen_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/kwkfddze/1423_330fa-7h-stuytown1-276-first-ave_br_01_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ch4dbqxh/1423-330fa-7h-stuytown1-276-first-ave-br_01_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/1bqjbtfh/st_classic_flex-2-br_stove_detail_extra_wide.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/f5hguh5d/stuytown-classic-furnished-apartment-bedroom-1380x600px.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/srlljzmm/2-pcr-12h-living-v1-1380x600-px-1.jpg\"]},{\"componentName\":\"SpecificUnitGalleryComponent\",\"finishes\":[\"Modern\"],\"bedCount\":2,\"imagesSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/iogeiwih/revision_final_1632_stuytown-rug-additions_lr_dr_02_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ew0azapr/revision_final_1632_stuytown-rug-additions_lr_dr_01_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/csmn4b14/revision_final_1632_stuytown-rug-additions_lr_dr_03_final_01_web.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fbsmgny0/1422-330fa-9a-stuytown1-276-first-ave-kt_01_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/klyd2sz2/1422_330fa-9a-stuytown1-276-first-ave_br_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/h4gl2yxr/1422_330fa-9a-stuytown1-276-first-ave_br_001_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/pu3dxadg/8b_-living-room-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ldvjcyx5/8b_-bedroom1-3.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/3tncjfet/8b_-bedroom2-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ct1hmurw/8b_-bathroom-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/npwft3i4/8b_-kitchen-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/c21o43xg/pcv_modern_2br_livingroom_hero-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/x1wltizf/st_modern_2-br_kitchen_wide_angle_extra_wide.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/wrrbjgic/59081156d49ee31346c4290a0ecae3e6.jpg\"]},{\"componentName\":\"SpecificUnitGalleryComponent\",\"finishes\":[\"Platinum\"],\"bedCount\":2,\"imagesSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ypylmgxw/1159_276-first-ave_den_001_230119.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ldifml0l/1159_276-first-ave_kitchen_001_230119.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/xxdbrkmi/1159_276-first-ave_lrplusdr_002_230119.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/4r5pueew/1159_276-first-ave_br_01_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/00xntvoh/1159_276-first-ave_lrplusdr_001_230119.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/rhrakdmy/20220318_beamliving_pcv_360fa-9e_dsc00323.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/bbmly0qr/20220318_beamliving_pcv_360fa-9e_dsc00335.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/vqaa5qlq/20220318_beamliving_pcv_360fa-9e_dsc00326.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/kqrja5uw/20220318_beamliving_pcv_360fa-9e_dsc00338.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/toob2mep/20220318_beamliving_pcv_360fa-9e_dsc00329.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/05jonzl3/20220318_beamliving_pcv_360fa-9e_dsc00344_staging.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/iuebh1vm/20220318_beamliving_pcv_360fa-9e_dsc00347.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/zwolcaci/20220318_beamliving_pcv_360fa-9e_dsc00341.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/rtleinlj/20220318_beamliving_pcv_360fa-9e_dsc00350.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/a4qp4apr/20220318_beamliving_pcv_360fa-9e_dsc00344.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/qxjmrp1v/revision_draft_1606_pcv-9e_br_draft_03.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/xavnt20p/revision_draft_1606_pcv-9e_kitchen_draft_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/rkhl1ngg/revision_draft_1606_pcv-9e_kitchen02_draft_02.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/rpipvilu/revision_draft_1606_-pcv-9e-_kids_draft_02.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/tatknoql/20220318_beamliving_pcv_360fa-9e_dsc00353.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/vxpjfkmf/revision_draft_1606_pcv-9e_lr_dr_draft_04.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/wjrbq34z/1607_pcv-4f_br_draft_03-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/bgmeerms/1607_pcv-4f_br_draft_03-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/l2wb2lns/20220318_beamliving_pcv_350fa-4f_dsc00356.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/55olshhr/20220318_beamliving_pcv_350fa-4f_dsc00362.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/uvmlc0w0/20220318_beamliving_pcv_350fa-4f_dsc00359.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/rq5bdkuq/20220318_beamliving_pcv_350fa-4f_dsc00371.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/afvpm5so/20220318_beamliving_pcv_350fa-4f_dsc00377.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/gczbpy1z/20220318_beamliving_pcv_350fa-4f_dsc00374.jpg\"]},{\"componentName\":\"SpecificUnitGalleryComponent\",\"finishes\":[\"Classic\"],\"bedCount\":3,\"imagesSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ht3n4alg/dsc00213.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/exrblwtk/dsc00215.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/hwylt243/dsc00201.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/igqotagi/dsc00205.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fvpa0oya/dsc00228.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/hozjza40/dsc00218.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/barpg5yk/dsc00203.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fadj3qx3/dsc00178.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/5uyplixk/dsc00193.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/smgj0uty/dsc00174.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/f2em1k4g/dsc00170.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fxri4013/dsc00175.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/oqlewo2b/dsc00167.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/5ojj0b5g/dsc00165.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/nfkald1f/dsc00166.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ar5dsqzk/dsc00154.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/c5xh14ec/dsc00152.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/bmdopo5e/dsc00138.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/25vn5z13/dsc00135.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/21ioqc5q/dsc00137.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/bwwbu0tj/dsc00134.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/necndw2b/dsc00132.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/1j1pkopw/dsc00127.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fvwg2evh/dsc00133.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/b0oarwwd/dsc00120.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/wmthxnsm/dsc00123.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/qt2jm5dw/dsc00124.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/g22h2ekv/dsc00116.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/v2ppc51p/dsc00118.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/gicbpfso/dsc00119.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/hl1drwgo/dsc00109.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/vndnafss/dsc00112.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/xflfzhoa/dsc00107.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/0zgffnvf/dsc00094.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/gghhz0da/dsc00099.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/lklfvc14/dsc00105.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/sgalr1vz/dsc00206-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/h4zmpw1v/dsc00212.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/obhjn3h2/dsc00093.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/h0kadmq1/dsc00211-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/n0jhcb3i/dsc00209-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/yfoedoyg/st-classic-hero-1380-600-02-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/diojm3au/9dd790063d3325b051bc55964b6e45b3.jpg\"]},{\"componentName\":\"SpecificUnitGalleryComponent\",\"finishes\":[\"Modern\"],\"bedCount\":3,\"imagesSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/iogeiwih/revision_final_1632_stuytown-rug-additions_lr_dr_02_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ew0azapr/revision_final_1632_stuytown-rug-additions_lr_dr_01_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/csmn4b14/revision_final_1632_stuytown-rug-additions_lr_dr_03_final_01_web.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fbsmgny0/1422-330fa-9a-stuytown1-276-first-ave-kt_01_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/klyd2sz2/1422_330fa-9a-stuytown1-276-first-ave_br_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/h4gl2yxr/1422_330fa-9a-stuytown1-276-first-ave_br_001_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/pu3dxadg/8b_-living-room-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ldvjcyx5/8b_-bedroom1-3.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/3tncjfet/8b_-bedroom2-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ct1hmurw/8b_-bathroom-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/npwft3i4/8b_-kitchen-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/c21o43xg/pcv_modern_2br_livingroom_hero-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/x1wltizf/st_modern_2-br_kitchen_wide_angle_extra_wide.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/wrrbjgic/59081156d49ee31346c4290a0ecae3e6.jpg\"]},{\"componentName\":\"SpecificUnitGalleryComponent\",\"finishes\":[\"Platinum\"],\"bedCount\":3,\"imagesSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/rqkbtj1c/revision_final_2375_280fa-11g-stuytown1-276-first-ave_lr_2_final_2_web.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/gvrpvvty/revision_final_2375_280fa-11g-stuytown1-276-first-ave_lr_3_final_2_web.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/snmpedw4/8b_-bedroom2-1-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/5qops5ln/8b_-living-room-4-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/crvgkrnj/8b_-bathroom-1-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/p0mf443m/8b_-kitchen-2-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/m5nphwin/11a_-kitchen-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/uosecokp/8b_-bedroom1-3-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/qqcfopk3/8b_-bedroom2-3.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/1echl0mf/11a_-bathroom-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/sfxdqkqc/11a_-kitchen-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fg5h3gwy/8b_-living-room-2-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ahvoucmf/11a_-bedroom1-3.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/korn3i2j/11a_-livingroom-3.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fmpfbttq/11a_-livingroom-4.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/kz1nq2p0/11a_-bedroom1-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/vuxnm2rd/11a_-livingroom-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/beml2lde/11a_-bedroom-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/rf0hegyy/1421_280fa-11g-stuytown1-276-first-ave_br3_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/14wdlbwb/1421_280fa-11g-stuytown1-276-first-ave_br1_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/3rwpne4o/1421_280fa_11g_stuytown1_276_first_ave_br_2_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/3ljkbhh4/1421-_280fa-11g-stuytown1-276-first-ave_kd_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/pptb4aos/2375_280fa-11g-stuytown1-276-first-ave_lr_1_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/sohh3vlc/1421_280fa_11g_stuytown1_276_first_ave_br_1_final.jpg\"]},{\"componentName\":\"SpecificUnitGalleryComponent\",\"finishes\":[\"Classic\"],\"bedCount\":4,\"imagesSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ht3n4alg/dsc00213.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/exrblwtk/dsc00215.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/hwylt243/dsc00201.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/igqotagi/dsc00205.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fvpa0oya/dsc00228.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/hozjza40/dsc00218.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/barpg5yk/dsc00203.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fadj3qx3/dsc00178.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/5uyplixk/dsc00193.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/smgj0uty/dsc00174.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/f2em1k4g/dsc00170.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fxri4013/dsc00175.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/oqlewo2b/dsc00167.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/5ojj0b5g/dsc00165.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/nfkald1f/dsc00166.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ar5dsqzk/dsc00154.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/c5xh14ec/dsc00152.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/bmdopo5e/dsc00138.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/25vn5z13/dsc00135.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/21ioqc5q/dsc00137.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/bwwbu0tj/dsc00134.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/necndw2b/dsc00132.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/1j1pkopw/dsc00127.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fvwg2evh/dsc00133.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/b0oarwwd/dsc00120.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/wmthxnsm/dsc00123.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/qt2jm5dw/dsc00124.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/g22h2ekv/dsc00116.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/v2ppc51p/dsc00118.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/gicbpfso/dsc00119.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/hl1drwgo/dsc00109.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/vndnafss/dsc00112.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/xflfzhoa/dsc00107.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/0zgffnvf/dsc00094.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/gghhz0da/dsc00099.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/lklfvc14/dsc00105.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/sgalr1vz/dsc00206-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/h4zmpw1v/dsc00212.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/obhjn3h2/dsc00093.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/h0kadmq1/dsc00211-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/n0jhcb3i/dsc00209-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/yfoedoyg/st-classic-hero-1380-600-02-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/diojm3au/9dd790063d3325b051bc55964b6e45b3.jpg\"]},{\"componentName\":\"SpecificUnitGalleryComponent\",\"finishes\":[\"Modern\"],\"bedCount\":4,\"imagesSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/iogeiwih/revision_final_1632_stuytown-rug-additions_lr_dr_02_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ew0azapr/revision_final_1632_stuytown-rug-additions_lr_dr_01_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/csmn4b14/revision_final_1632_stuytown-rug-additions_lr_dr_03_final_01_web.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fbsmgny0/1422-330fa-9a-stuytown1-276-first-ave-kt_01_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/klyd2sz2/1422_330fa-9a-stuytown1-276-first-ave_br_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/h4gl2yxr/1422_330fa-9a-stuytown1-276-first-ave_br_001_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/pu3dxadg/8b_-living-room-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ldvjcyx5/8b_-bedroom1-3.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/3tncjfet/8b_-bedroom2-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ct1hmurw/8b_-bathroom-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/npwft3i4/8b_-kitchen-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/c21o43xg/pcv_modern_2br_livingroom_hero-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/x1wltizf/st_modern_2-br_kitchen_wide_angle_extra_wide.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/wrrbjgic/59081156d49ee31346c4290a0ecae3e6.jpg\"]},{\"componentName\":\"SpecificUnitGalleryComponent\",\"finishes\":[\"Platinum\"],\"bedCount\":4,\"imagesSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/rqkbtj1c/revision_final_2375_280fa-11g-stuytown1-276-first-ave_lr_2_final_2_web.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/gvrpvvty/revision_final_2375_280fa-11g-stuytown1-276-first-ave_lr_3_final_2_web.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/snmpedw4/8b_-bedroom2-1-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/5qops5ln/8b_-living-room-4-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/crvgkrnj/8b_-bathroom-1-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/p0mf443m/8b_-kitchen-2-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/m5nphwin/11a_-kitchen-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/uosecokp/8b_-bedroom1-3-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/qqcfopk3/8b_-bedroom2-3.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/1echl0mf/11a_-bathroom-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/sfxdqkqc/11a_-kitchen-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fg5h3gwy/8b_-living-room-2-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ahvoucmf/11a_-bedroom1-3.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/korn3i2j/11a_-livingroom-3.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fmpfbttq/11a_-livingroom-4.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/kz1nq2p0/11a_-bedroom1-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/vuxnm2rd/11a_-livingroom-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/beml2lde/11a_-bedroom-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/rf0hegyy/1421_280fa-11g-stuytown1-276-first-ave_br3_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/14wdlbwb/1421_280fa-11g-stuytown1-276-first-ave_br1_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/3rwpne4o/1421_280fa_11g_stuytown1_276_first_ave_br_2_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/3ljkbhh4/1421-_280fa-11g-stuytown1-276-first-ave_kd_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/pptb4aos/2375_280fa-11g-stuytown1-276-first-ave_lr_1_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/sohh3vlc/1421_280fa_11g_stuytown1_276_first_ave_br_1_final.jpg\"]},{\"componentName\":\"SpecificUnitGalleryComponent\",\"finishes\":[\"Classic\"],\"bedCount\":5,\"imagesSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ht3n4alg/dsc00213.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/exrblwtk/dsc00215.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/hwylt243/dsc00201.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/igqotagi/dsc00205.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fvpa0oya/dsc00228.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/hozjza40/dsc00218.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/barpg5yk/dsc00203.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fadj3qx3/dsc00178.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/5uyplixk/dsc00193.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/smgj0uty/dsc00174.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/f2em1k4g/dsc00170.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fxri4013/dsc00175.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/oqlewo2b/dsc00167.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/5ojj0b5g/dsc00165.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/nfkald1f/dsc00166.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ar5dsqzk/dsc00154.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/c5xh14ec/dsc00152.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/bmdopo5e/dsc00138.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/25vn5z13/dsc00135.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/21ioqc5q/dsc00137.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/bwwbu0tj/dsc00134.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/necndw2b/dsc00132.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/1j1pkopw/dsc00127.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fvwg2evh/dsc00133.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/b0oarwwd/dsc00120.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/wmthxnsm/dsc00123.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/qt2jm5dw/dsc00124.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/g22h2ekv/dsc00116.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/v2ppc51p/dsc00118.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/gicbpfso/dsc00119.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/hl1drwgo/dsc00109.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/vndnafss/dsc00112.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/xflfzhoa/dsc00107.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/0zgffnvf/dsc00094.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/gghhz0da/dsc00099.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/lklfvc14/dsc00105.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/sgalr1vz/dsc00206-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/h4zmpw1v/dsc00212.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/obhjn3h2/dsc00093.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/h0kadmq1/dsc00211-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/n0jhcb3i/dsc00209-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/yfoedoyg/st-classic-hero-1380-600-02-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/diojm3au/9dd790063d3325b051bc55964b6e45b3.jpg\"]},{\"componentName\":\"SpecificUnitGalleryComponent\",\"finishes\":[\"Modern\"],\"bedCount\":5,\"imagesSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/iogeiwih/revision_final_1632_stuytown-rug-additions_lr_dr_02_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ew0azapr/revision_final_1632_stuytown-rug-additions_lr_dr_01_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/csmn4b14/revision_final_1632_stuytown-rug-additions_lr_dr_03_final_01_web.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fbsmgny0/1422-330fa-9a-stuytown1-276-first-ave-kt_01_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/klyd2sz2/1422_330fa-9a-stuytown1-276-first-ave_br_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/h4gl2yxr/1422_330fa-9a-stuytown1-276-first-ave_br_001_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/pu3dxadg/8b_-living-room-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ldvjcyx5/8b_-bedroom1-3.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/3tncjfet/8b_-bedroom2-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ct1hmurw/8b_-bathroom-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/npwft3i4/8b_-kitchen-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/c21o43xg/pcv_modern_2br_livingroom_hero-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/x1wltizf/st_modern_2-br_kitchen_wide_angle_extra_wide.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/wrrbjgic/59081156d49ee31346c4290a0ecae3e6.jpg\"]},{\"componentName\":\"SpecificUnitGalleryComponent\",\"finishes\":[\"Platinum\"],\"bedCount\":5,\"imagesSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/rqkbtj1c/revision_final_2375_280fa-11g-stuytown1-276-first-ave_lr_2_final_2_web.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/gvrpvvty/revision_final_2375_280fa-11g-stuytown1-276-first-ave_lr_3_final_2_web.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/snmpedw4/8b_-bedroom2-1-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/5qops5ln/8b_-living-room-4-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/crvgkrnj/8b_-bathroom-1-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/p0mf443m/8b_-kitchen-2-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/m5nphwin/11a_-kitchen-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/uosecokp/8b_-bedroom1-3-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/qqcfopk3/8b_-bedroom2-3.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/1echl0mf/11a_-bathroom-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/sfxdqkqc/11a_-kitchen-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fg5h3gwy/8b_-living-room-2-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ahvoucmf/11a_-bedroom1-3.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/korn3i2j/11a_-livingroom-3.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fmpfbttq/11a_-livingroom-4.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/kz1nq2p0/11a_-bedroom1-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/vuxnm2rd/11a_-livingroom-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/beml2lde/11a_-bedroom-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/rf0hegyy/1421_280fa-11g-stuytown1-276-first-ave_br3_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/14wdlbwb/1421_280fa-11g-stuytown1-276-first-ave_br1_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/3rwpne4o/1421_280fa_11g_stuytown1_276_first_ave_br_2_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/3ljkbhh4/1421-_280fa-11g-stuytown1-276-first-ave_kd_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/pptb4aos/2375_280fa-11g-stuytown1-276-first-ave_lr_1_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/sohh3vlc/1421_280fa_11g_stuytown1_276_first_ave_br_1_final.jpg\"]},{\"componentName\":\"SpecificUnitGalleryComponent\",\"finishes\":[\"Classic\"],\"bedCount\":0,\"imagesSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fxmlpblg/12a_-living-room-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/kmidithr/12a_-living-room-3.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/clqb3pvs/12a_-bathroom-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ibrjjtbg/12a_-bedroom-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/t0fgkz0j/12a_-kitchen-1.jpg\"]},{\"componentName\":\"SpecificUnitGalleryComponent\",\"finishes\":[\"Modern\"],\"bedCount\":0,\"imagesSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/iogeiwih/revision_final_1632_stuytown-rug-additions_lr_dr_02_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ew0azapr/revision_final_1632_stuytown-rug-additions_lr_dr_01_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/csmn4b14/revision_final_1632_stuytown-rug-additions_lr_dr_03_final_01_web.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fbsmgny0/1422-330fa-9a-stuytown1-276-first-ave-kt_01_final_01.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/klyd2sz2/1422_330fa-9a-stuytown1-276-first-ave_br_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/h4gl2yxr/1422_330fa-9a-stuytown1-276-first-ave_br_001_final.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/pu3dxadg/8b_-living-room-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ldvjcyx5/8b_-bedroom1-3.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/3tncjfet/8b_-bedroom2-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ct1hmurw/8b_-bathroom-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/npwft3i4/8b_-kitchen-2.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/c21o43xg/pcv_modern_2br_livingroom_hero-1.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/x1wltizf/st_modern_2-br_kitchen_wide_angle_extra_wide.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/wrrbjgic/59081156d49ee31346c4290a0ecae3e6.jpg\"]},{\"componentName\":\"SpecificUnitGalleryComponent\",\"finishes\":[\"Platinum\"],\"bedCount\":0,\"imagesSource\":[\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/gkcjzdhi/dsc07006.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/2a1l0cws/dsc06962.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ru3pc23h/dsc06952.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/1mxm3qz4/dsc06944.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/k35oee4c/dsc06945.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/qp0pdvsx/dsc06954.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/2zel0hnr/dsc06967.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/vduj4imo/dsc06963.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/uwqlxca2/dsc06982.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/5jpmjb3z/dsc06968.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/t5gpvwzl/dsc06973.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/cxdbaf1s/dsc06983.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ij3c5ghz/dsc06984.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/0evlxjxs/dsc06985.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/2egli5mu/dsc06989.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/xb4cp3if/dsc06991.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/hppnbnxr/dsc06994.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ru2bjzlq/dsc06996.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/tt0glyjs/dsc06999.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/p0jjnonv/dsc06998.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/k3zh13ak/dsc06997.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/fepngqao/dsc07002.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/mswkdjeu/dsc07005.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ka1dksxg/st_platinum-1br_living_room_2_hero.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/sssott3n/st_platinum-1br_kitchen_stove_detail_extra_wide.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/4ykiclpq/stpcv-platinum-dining-1380x600px.jpg\",\"https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/vslmoa1k/st_platinum-1br_living_area_wide_angle_extra_tall.jpg\"]}],\"isRandomized\":false},\"applyForm\":{\"apiUrl\":\"https://pd-dlcore.beamliving.com/affordable-housing/create-application\",\"apiUrlHeaderName\":\"Subscription-Key\",\"apiUrlHeaderValue\":\"312f7785-864c-43ba-aca8-1f8259183a22\",\"backLabel\":\"Back to Apartment\",\"formDescription\":\"\\u003cp\\u003e\\u003cspan style=\\u0022font-size: 16pt; color: rgb(70, 143, 214);\\u0022\\u003e\\u003cimg style=\\u0022float: left; margin: 0 20px;\\u0022 src=\\u0022https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/feqpwzse/building.png?rmode=max\\u0026amp;width=136\\u0026amp;height=133\\u0022 alt=\\u0022\\u0022 width=\\u0022136\\u0022 height=\\u0022133\\u0022\\u003e\\u003c/span\\u003e\\u003c/p\\u003e\\n\\u003ch4\\u003e\\u003cspan style=\\u0022font-family: \\u0027PT Serif\\u0027, serif;\\u0022\\u003e\\u003cspan style=\\u0022font-size: 16pt; color: rgb(53, 152, 219);\\u0022\\u003eHi, you\u2019re applying to \\u003c/span\\u003e\\u003cspan style=\\u0022color: rgb(70, 143, 214);\\u0022\\u003e\\u003cspan style=\\u0022font-size: 16pt; color: rgb(53, 152, 219);\\u0022\\u003e{{UnitAddress}}, Apt {{UnitName}}\\u003c/span\\u003e\\u003c/span\\u003e\\u003c/span\\u003e\\u003c/h4\\u003e\\n\\u003ch4\\u003e\\u003cspan style=\\u0022font-family: \\u0027PT Serif\\u0027, serif;\\u0022\\u003e\\u003cspan style=\\u0022color: rgb(70, 143, 214);\\u0022\\u003e\\u003cbr\\u003e\\u003c/span\\u003e\\u003c/span\\u003e\\u003cspan style=\\u0022font-family: \\u0027PT Serif\\u0027, serif;\\u0022\\u003e\\u003cspan style=\\u0022font-size: 14pt;\\u0022\\u003eThe minimum income required to lease this unit is \\u003c/span\\u003e\\u003cspan style=\\u0022color: rgb(70, 143, 214);\\u0022\\u003e\\u003cspan style=\\u0022font-size: 14pt;\\u0022\\u003e{{IncomeReq}}.\\u003c/span\\u003e\\u003cbr\\u003e\\u003cbr\\u003e\\u003c/span\\u003e\\u003c/span\\u003e\\u003c/h4\\u003e\\n\\u003ch4\\u003e\\u003cspan style=\\u0022font-size: 14pt; font-family: \\u0027PT Serif\\u0027, serif;\\u0022\\u003eThis apartment is leased through the Affordable Housing Program. Please check the \\u003cspan style=\\u0022color: rgb(70, 143, 214);\\u0022\\u003e\\u003ca style=\\u0022color: rgb(70, 143, 214);\\u0022 href=\\u0022/eligibility/\\u0022 title=\\u0022Eligibility\\u0022\\u003eEligibility\\u003c/a\\u003e \\u003cspan style=\\u0022color: rgb(0, 0, 0);\\u0022\\u003eand\\u003c/span\\u003e \\u003ca style=\\u0022color: rgb(70, 143, 214);\\u0022 href=\\u0022/faqs/\\u0022 title=\\u0022FAQs\\u0022\\u003eFAQ\\u003c/a\\u003e \\u003cspan style=\\u0022color: rgb(0, 0, 0);\\u0022\\u003epage before applying to review the application process. Note that you will not be allowed to submit more than one application per apartment.\\u003c/span\\u003e\\u003c/span\\u003e\\u003c/span\\u003e\\u003c/h4\\u003e\\n\\u003cp\\u003e\\u003cspan style=\\u0022font-size: 16pt; color: rgb(70, 143, 214);\\u0022\\u003e\u00a0\\u003c/span\\u003e\\u003c/p\\u003e\",\"disclaimer\":\"\\u003cp\\u003e\\u003cspan style=\\u0022font-family: Lato, sans-serif;\\u0022\\u003eUpon submitting this form you will receive an email that will include a link to a more detailed application. Please complete the form within 24 hours to remain eligible for this application process.\\u003c/span\\u003e\\u003c/p\\u003e\",\"submitButtonLabel\":\"SUBMIT\",\"successMessage\":\"\\u003cp\\u003e\\u003cspan style=\\u0022font-size: 16pt; font-family: Lato, sans-serif; color: rgb(70, 143, 214);\\u0022\\u003e\\u003cimg style=\\u0022float: left; margin: 0 20px;\\u0022 src=\\u0022https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/icqfrr1y/building.png?rmode=max\\u0026amp;width=136\\u0026amp;height=133\\u0022 alt=\\u0022\\u0022 width=\\u0022136\\u0022 height=\\u0022133\\u0022\\u003e\\u003cbr\\u003e\\u003c/span\\u003e\\u003c/p\\u003e\\n\\u003cp\\u003e\u00a0\\u003c/p\\u003e\\n\\u003cp\\u003e\\u003cspan style=\\u0022font-size: 16pt; font-family: Lato, sans-serif;\\u0022\\u003eWe\u2019ve sent a link with the detailed Application Form to your email. Please complete the form within 24 hours and we will process your application.\\u003c/span\\u003e\\u003c/p\\u003e\\n\\u003cp\\u003e\u00a0\\u003c/p\\u003e\",\"successBackButton\":null,\"errorMessage\":\"\\u003cp\\u003e\\u003cspan style=\\u0022font-size: 16pt; font-family: Lato, sans-serif; color: rgb(70, 143, 214);\\u0022\\u003e\\u003cimg style=\\u0022float: left; margin: 0 20px;\\u0022 src=\\u0022https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/icqfrr1y/building.png?rmode=max\\u0026amp;width=136\\u0026amp;height=133\\u0022 alt=\\u0022\\u0022 width=\\u0022136\\u0022 height=\\u0022133\\u0022\\u003eUh Oh!\\u003c/span\\u003e\\u003c/p\\u003e\\n\\u003cp\\u003e\u00a0\\u003c/p\\u003e\\n\\u003cp\\u003e\\u003cspan style=\\u0022font-size: 16pt; font-family: Lato, sans-serif;\\u0022\\u003eWe found that you have an open application for this apartment. Note that you will not be allowed to submit more than one application per the apartment. You may select and apply for another available apartment.\\u003c/span\\u003e\\u003c/p\\u003e\",\"unavailableUnitErrorMessage\":\"\\u003cp\\u003e\\u003cspan style=\\u0022font-size: 16pt; font-family: Lato, sans-serif; color: rgb(70, 143, 214);\\u0022\\u003e\\u003cimg style=\\u0022float: left; margin: 0 20px;\\u0022 src=\\u0022https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/icqfrr1y/building.png?rmode=max\\u0026amp;width=136\\u0026amp;height=133\\u0022 alt=\\u0022\\u0022 width=\\u0022136\\u0022 height=\\u0022133\\u0022\\u003eUh Oh!\\u003c/span\\u003e\\u003c/p\\u003e\\n\\u003cp\\u003e\u00a0\\u003c/p\\u003e\\n\\u003cp\\u003e\\u003cspan style=\\u0022font-size: 16pt; font-family: Lato, sans-serif;\\u0022\\u003eUnfortunately your application cannot be processed. Application have already been submitted by 3 other applicants. Please continue to monitor the website daily for new inventory.\\u003c/span\\u003e\\u003c/p\\u003e\",\"errorBackButton\":\"/apartments/\",\"firstNameField\":{\"minLength\":1,\"maxLength\":20,\"label\":\"First Name\",\"placeholder\":\"\",\"tooltip\":\"\",\"validation\":[\"Required\",\"Is ASCII\"]},\"lastNameField\":{\"minLength\":1,\"maxLength\":25,\"label\":\"Last Name\",\"placeholder\":\"\",\"tooltip\":\"\",\"validation\":[\"Required\",\"Is ASCII\"]},\"emailField\":{\"label\":\"Email\",\"placeholder\":\"\",\"tooltip\":\"\",\"validation\":[\"Required\",\"Email\"]},\"cellPhoneField\":{\"label\":\"Cell Phone\",\"placeholder\":\"\",\"tooltip\":\"\",\"validation\":[\"Required\",\"Phone Number\"]},\"workPhoneField\":{\"label\":\"Work Phone\",\"placeholder\":\"\",\"tooltip\":\"\",\"validation\":[]},\"buildingField\":{\"minLength\":1,\"maxLength\":7,\"label\":\"Building\",\"placeholder\":\"\",\"tooltip\":\"\",\"validation\":[\"Required\"]},\"streetField\":{\"minLength\":1,\"maxLength\":32,\"label\":\"Street name\",\"placeholder\":\"\",\"tooltip\":\"\",\"validation\":[\"Required\"]},\"apartmentField\":{\"minLength\":1,\"maxLength\":6,\"label\":\"Apartment No.\",\"placeholder\":\"\",\"tooltip\":\"\",\"validation\":[]},\"cityField\":{\"minLength\":1,\"maxLength\":30,\"label\":\"City\",\"placeholder\":\"\",\"tooltip\":\"\",\"validation\":[\"Required\"]},\"stateField\":{\"minLength\":2,\"maxLength\":2,\"label\":\"State\",\"placeholder\":\"\",\"tooltip\":\"\",\"validation\":[\"Is ASCII\"]},\"zipField\":{\"minLength\":2,\"maxLength\":10,\"label\":\"Zip\",\"placeholder\":\"\",\"tooltip\":\"\",\"validation\":[\"Required\",\"Is ASCII\"]},\"householdSizeField\":{\"minLength\":0,\"maxLength\":2,\"label\":\"Household Size\",\"placeholder\":\"\",\"tooltip\":\"\\u003cp style=\\u0022line-height: 1.5;\\u0022\\u003e\\u003cspan style=\\u0022font-size: 11pt;\\u0022\\u003e\\u003cspan style=\\u0022font-family: Lato, sans-serif;\\u0022\\u003eMake sure your household size fit the below criteria for the apartment size:\\u003cbr\\u003e\\u003cstrong\\u003e1 Bedroom\\u003c/strong\\u003e: 1-3 people,\\u003cbr\\u003e\\u003cstrong\\u003e2 Bedroom\\u003c/strong\\u003e: 2-5 people,\\u00"
+  },
+  {
+    "t": 0.386,
+    "method": "GET",
+    "type": "stylesheet",
+    "url": "https://affordable-housing.stuytown.com/sb/common-style-css.css.v639262698149509707",
+    "answered_t": 0.584,
+    "status": 200
+  },
+  {
+    "t": 0.387,
+    "method": "GET",
+    "type": "stylesheet",
+    "url": "https://affordable-housing.stuytown.com/sb/vendor-css.css.v639262698149509707",
+    "answered_t": 0.584,
+    "status": 200
+  },
+  {
+    "t": 0.388,
+    "method": "GET",
+    "type": "script",
+    "url": "https://affordable-housing.stuytown.com/sb/common-js.js.v639262698149509707",
+    "answered_t": 0.836,
+    "status": 200
+  },
+  {
+    "t": 0.389,
+    "method": "GET",
+    "type": "script",
+    "url": "https://affordable-housing.stuytown.com/sb/aHUnit-js.js.v639262698149509707",
+    "answered_t": 0.596,
+    "status": 200
+  },
+  {
+    "t": 0.39,
+    "method": "GET",
+    "type": "script",
+    "url": "https://global.ketchcdn.com/web/v3/config/beam_living/affordable_housing_stuytown/boot.js",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 0.586,
+    "method": "GET",
+    "type": "stylesheet",
+    "url": "https://fonts.googleapis.com/css2?family=Commissioner:wght@100;300;500;700&family=Montserrat:wght@300;500;700;900&family=League Spartan:wght@100;300;500;700&display=swap",
+    "answered_t": 0.628,
+    "status": 200
+  },
+  {
+    "t": 0.587,
+    "method": "GET",
+    "type": "stylesheet",
+    "url": "https://fonts.googleapis.com/css?family=Lato:300,400,500,700,900",
+    "answered_t": 0.634,
+    "status": 200
+  },
+  {
+    "t": 0.588,
+    "method": "GET",
+    "type": "stylesheet",
+    "url": "https://fonts.googleapis.com/css?family=PT Serif",
+    "answered_t": 0.635,
+    "status": 200
+  },
+  {
+    "t": 0.589,
+    "method": "GET",
+    "type": "stylesheet",
+    "url": "https://use.typekit.net/rqd3fkb.css",
+    "answered_t": 0.62,
+    "status": 200
+  },
+  {
+    "t": 0.59,
+    "method": "GET",
+    "type": "stylesheet",
+    "url": "https://use.typekit.net/srd6tih.css",
+    "answered_t": 0.621,
+    "status": 200
+  },
+  {
+    "t": 0.591,
+    "method": "GET",
+    "type": "stylesheet",
+    "url": "https://fast.fonts.net/lt/1.css?apiType=css&c=75d9b260-c60c-4e6c-95a6-c22a9d233893&fontids=6149651,6149672,8703532",
+    "answered_t": 0.611,
+    "status": 200
+  },
+  {
+    "t": 0.624,
+    "method": "GET",
+    "type": "stylesheet",
+    "url": "https://p.typekit.net/p.css?s=1&k=rqd3fkb&ht=tk&f=5557.26053.26058.26062&a=113256503&app=typekit&e=css",
+    "answered_t": 0.653,
+    "status": 200
+  },
+  {
+    "t": 0.626,
+    "method": "GET",
+    "type": "stylesheet",
+    "url": "https://p.typekit.net/p.css?s=1&k=srd6tih&ht=tk&f=1291.18456.18457.37555.37558.15528.15530.17253.16353.37462.37466.25495.25496.25497.25498.25499.25500.25501.39200.39201.39202.39203.43784.43785&a=113256503&app=typekit&e=css",
+    "answered_t": 0.652,
+    "status": 200
+  },
+  {
+    "t": 0.936,
+    "method": "GET",
+    "type": "script",
+    "url": "https://www.googletagmanager.com/gtm.js?id=GTM-NC3TJKLJ&gtm_auth=&gtm_preview=&gtm_cookies_win=x",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 0.938,
+    "method": "GET",
+    "type": "stylesheet",
+    "url": "https://affordable-housing.stuytown.com/static/css/853.01172867.chunk.css",
+    "answered_t": 1.074,
+    "status": 200
+  },
+  {
+    "t": 0.941,
+    "method": "GET",
+    "type": "script",
+    "url": "https://affordable-housing.stuytown.com/static/js/853.23207547.chunk.js",
+    "answered_t": 1.132,
+    "status": 200
+  },
+  {
+    "t": 0.946,
+    "method": "GET",
+    "type": "image",
+    "url": "https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/mg1mg0sp/stuytown-pcv_combo_ko.png",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 0.947,
+    "method": "GET",
+    "type": "image",
+    "url": "https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/41facw4l/stuytown-pcv_combo_short_ko.png",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 0.948,
+    "method": "GET",
+    "type": "image",
+    "url": "https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/zujgjusn/eho_ko.png",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 0.979,
+    "method": "GET",
+    "type": "font",
+    "url": "https://fonts.gstatic.com/s/lato/v25/S6u9w4BMUTPHh50XSwiPGQ.woff2",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 0.98,
+    "method": "GET",
+    "type": "font",
+    "url": "https://fonts.gstatic.com/s/lato/v25/S6u9w4BMUTPHh6UVSwiPGQ.woff2",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 0.981,
+    "method": "GET",
+    "type": "font",
+    "url": "https://fonts.gstatic.com/s/lato/v25/S6uyw4BMUTPHjx4wXg.woff2",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 0.99,
+    "method": "GET",
+    "type": "image",
+    "url": "https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/yi0j1pcz/kitchen.jpg",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 0.992,
+    "method": "GET",
+    "type": "fetch",
+    "url": "https://units.stuytown.com/api/ah-units/P~NYST31~B~017~U~06-H",
+    "request_headers": {
+      "accept": "*/*",
+      "access-control-allow-origin": "*",
+      "origin": "https://affordable-housing.stuytown.com",
+      "referer": "https://affordable-housing.stuytown.com/",
+      "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.8010.12 Safari/537.36",
+      "content-type": "application/json; charset=utf-8",
+      "sec-ch-ua": "\"HeadlessChrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Linux\""
+    },
+    "answered_t": 1.087,
+    "status": 200,
+    "response_headers": {
+      "strict-transport-security": "max-age=15724800; includeSubDomains",
+      "access-control-allow-origin": "*",
+      "x-cache": "CONFIG_NOCACHE",
+      "date": "Tue, 13 Oct 2026 11:15:01 GMT",
+      "content-type": "application/json; charset=utf-8",
+      "x-azure-ref": "20261013T111501Z-r1fbdfc658d6z69khC1CO1pgy0000000043000000000f4du"
+    },
+    "response_body": "[{\"unitSpk\":\"P~NYST31~B~017~U~06-H\",\"unitFloor\":\"06\",\"name\":\"06-H\",\"property\":{\"name\":\"Stuyvesant Town\",\"propertySpk\":\"P~103ST\",\"commonImages\":[]},\"building\":{\"address\":\"17 STUYVESANT OVAL\",\"latitude\":\"40.73296\",\"longitude\":\"-73.9794\",\"buildingId\":\"308\",\"buildingName\":\"17 STUYVESANT OVAL\",\"transportationDescription\":\"Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.\",\"transports\":[{\"imageUrl\":\"/media/3khh00cg/4.png\",\"description\":\"14_4-train\"},{\"imageUrl\":\"/media/vk3nwm2c/5.png\",\"description\":\"15_5-train\"},{\"imageUrl\":\"/media/w45lmn1h/6.png\",\"description\":\"16_6-train\"},{\"imageUrl\":\"/media/wlrdmxwl/r.png\",\"description\":\"26_R-train\"},{\"imageUrl\":\"/media/g00l3sei/w.png\",\"description\":\"27_W-train\"},{\"imageUrl\":\"/media/t02dfmty/l.png\",\"description\":\"22_L\"},{\"imageUrl\":\"/media/rcvl4pqk/m23.png\",\"description\":\"32_M23\"},{\"imageUrl\":\"/media/trsfb4aw/east-river-ferry.jpg\",\"description\":\"37_RiverFerry\"},{\"imageUrl\":\"/media/ipvba2uo/q.png\",\"description\":\"25_Q\"},{\"imageUrl\":\"/media/vx5fhuim/n.png\",\"description\":\"24_N\"},{\"imageUrl\":\"/media/1ojhg5wj/citbike.png\",\"description\":\"35_CityBike\"}]},\"finish\":\"Blank\",\"style\":{\"id\":581,\"name\":\"108\"},\"incomeRequirement\":71334.86,\"bedrooms\":1,\"bathrooms\":1,\"sqft\":764,\"availableDate\":\"2026-10-24T00:00:00Z\",\"price\":2080.6,\"unitRates\":{\"12\":2080.6,\"24\":2080.6},\"isFlex\":false,\"floorplan\":{\"floorplanSvg\":\"/media/kiwdfaqb/108.svg\",\"staticImageUrl\":null},\"description\":null,\"virtualTourUrl\":null,\"version\":1,\"amenities\":[{\"searchCode\":null,\"code\":\"IBSS\",\"friendlyDescription\":\"Stainless steel appliances\"},{\"searchCode\":null,\"code\":\"FS06\",\"friendlyDescription\":\"6th floor\"}],\"images\":[]}]"
+  },
+  {
+    "t": 1.105,
+    "method": "GET",
+    "type": "xhr",
+    "url": "https://affordable-housing.stuytown.com/media/kiwdfaqb/108.svg",
+    "request_headers": {
+      "accept": "application/json, text/plain, */*",
+      "referer": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~017~U~06-H",
+      "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.8010.12 Safari/537.36",
+      "sec-ch-ua": "\"HeadlessChrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Linux\""
+    },
+    "answered_t": 1.218,
+    "status": 200,
+    "response_headers": {
+      "strict-transport-security": "max-age=15724800; includeSubDomains",
+      "etag": "\"1db1e2c7b162664\"",
+      "accept-ranges": "bytes",
+      "x-cache": "CONFIG_NOCACHE",
+      "content-length": "13540",
+      "date": "Tue, 13 Oct 2026 11:15:01 GMT",
+      "content-type": "image/svg+xml",
+      "last-modified": "Mon, 14 Oct 2024 11:30:33 GMT",
+      "x-azure-ref": "20261013T111501Z-r1fbdfc658dwfhzghC1CO17c0w00000004b000000000h2vr"
+    },
+    "response_body": "<svg width=\"1326\" height=\"636\" viewBox=\"0 0 1326 636\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\">\n<g clip-path=\"url(#clip0_97_1202)\">\n<path d=\"M1183.9 221.5V339.7L1144.6 340V414.5H1270.4V295.8V221.5H1183.9Z\" fill=\"white\"/>\n<path d=\"M1144.6 414.5V507.2L1324.6 507.8V415.2L1144.6 414.5Z\" fill=\"white\"/>\n<path d=\"M247.4 85.3002L247.2 246.3H344.7V168.8H508.8V241.7H515.9V85.2002L247.4 85.3002Z\" fill=\"white\"/>\n<path d=\"M388.9 0.5V85.3H514.2V0.9L388.9 0.5Z\" fill=\"white\"/>\n<path d=\"M247.7 0.5L247.4 85.3H388.9V0.5H247.7Z\" fill=\"white\"/>\n<path d=\"M1066.5 628.5L1144.6 507.2V339L897.6 339.7L898.6 627.6L1066.5 628.5Z\" fill=\"white\"/>\n<path opacity=\"0.8\" d=\"M1066 627.9H901.7L900.5 501.1H967.6L968.1 555H1050.4L1085.6 504.3V415.6C1085.6 415.5 1144.5 415.7 1144.6 415.7V507.2L1066 627.9Z\" fill=\"white\" fill-opacity=\"0.8\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path opacity=\"0.8\" d=\"M960.9 340V440C960.9 440.1 960.9 440.1 960.8 440.1H901.7C901.6 440.1 901.6 440.1 901.6 440V340C901.6 339.9 901.6 339.9 901.7 339.9H960.8C960.9 339.9 960.9 339.9 960.9 340Z\" fill=\"white\" fill-opacity=\"0.8\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<text fill=\"#09283B\" xml:space=\"preserve\" style=\"white-space: pre\" font-family=\"Lato\" font-size=\"18\" font-weight=\"bold\" letter-spacing=\"0em\"><tspan x=\"1005.17\" y=\"451.218\">Kitchen </tspan></text>\n<path d=\"M900.4 339V624.3\" stroke=\"#67747B\"/>\n<path d=\"M896.6 339.3V626.6\" stroke=\"#C1C9CE\" stroke-opacity=\"0.15\" stroke-width=\"7\"/>\n<path d=\"M1144.6 339V507.3\" stroke=\"#67747B\"/>\n<path d=\"M1148.9 339.3V499\" stroke=\"#C1C9CE\" stroke-opacity=\"0.15\" stroke-width=\"7\"/>\n<path d=\"M975.5 442.1V499C975.5 500.1 974.6 501 973.5 501H903C901.9 501 901 500.1 901 499V442.1C901 441 901.9 440.1 903 440.1H973.5C974.6 440.1 975.5 441 975.5 442.1Z\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M917.7 464.4C923.168 464.4 927.6 459.968 927.6 454.5C927.6 449.032 923.168 444.6 917.7 444.6C912.232 444.6 907.8 449.032 907.8 454.5C907.8 459.968 912.232 464.4 917.7 464.4Z\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M951.4 496.1C956.868 496.1 961.3 491.668 961.3 486.2C961.3 480.733 956.868 476.3 951.4 476.3C945.932 476.3 941.5 480.733 941.5 486.2C941.5 491.668 945.932 496.1 951.4 496.1Z\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M951.4 464.4C956.868 464.4 961.3 459.968 961.3 454.5C961.3 449.032 956.868 444.6 951.4 444.6C945.932 444.6 941.5 449.032 941.5 454.5C941.5 459.968 945.932 464.4 951.4 464.4Z\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M917.7 496.1C923.168 496.1 927.6 491.668 927.6 486.2C927.6 480.733 923.168 476.3 917.7 476.3C912.232 476.3 907.8 480.733 907.8 486.2C907.8 491.668 912.232 496.1 917.7 496.1Z\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M967.5 501.1V439.7\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M935.4 500.4V440.1\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M901 470.4H967.5\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M1144.6 342.6V413.1C1144.6 414.5 1143.4 415.7 1142 415.7H1086.7C1085.3 415.7 1084.1 414.5 1084.1 413.1V342.6C1084.1 341.2 1085.3 340 1086.7 340H1142C1143.5 340 1144.6 341.2 1144.6 342.6Z\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M1090.7 415.6H1078.1C1077.3 415.7 1076.5 415 1076.4 414.2V341.3C1076.5 340.5 1077.2 339.8 1078.1 339.9H1090.7\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M1076.6 410.6H1072.1C1071.6 410.6 1071.2 410 1071.2 409.2V406.5C1071.2 405.7 1071.6 405.1 1072.1 405.1H1076.6\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M1106.5 543.8L1090.3 567.3L1073.5 555.8C1069.3 552.9 1067.6 548 1069.9 544.8L1082.5 526.4C1084.7 523.2 1089.9 523 1094 525.8L1110.8 537.3L1098.9 554.7\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M6.3999 88.8003H247.3L247.4 246.3H6.3999V88.8003Z\" fill=\"white\"/>\n<path d=\"M247.2 87.7002V246.3H6.3999\" stroke=\"#67747B\"/>\n<path d=\"M243.2 97.6001V242.3H14.2\" stroke=\"#C1C9CE\" stroke-opacity=\"0.15\" stroke-width=\"7\"/>\n<text fill=\"#09283B\" xml:space=\"preserve\" style=\"white-space: pre\" font-family=\"Lato\" font-size=\"18\" font-weight=\"bold\" letter-spacing=\"0em\"><tspan x=\"120.026\" y=\"190.608\">Bathroom </tspan></text>\n<path d=\"M247.1 178.4H244.8V233.4H247.1V178.4Z\" fill=\"#84939D\"/>\n<path opacity=\"0.07\" d=\"M245.5 188.9C227.3 188.9 212.6 203.9 212.6 222.4H245.4L245.5 188.9Z\" fill=\"#84939D\"/>\n<path d=\"M245.5 188.9C227.3 188.9 212.6 203.9 212.6 222.4\" stroke=\"#84939D\" stroke-linecap=\"round\" stroke-dasharray=\"1 1\"/>\n<path d=\"M191.8 95.2002H238.4C238.7 95.2002 238.9 95.4002 238.9 95.7002V106.5C238.9 110.5 235.6 113.8 231.6 113.8H198C194.3 113.8 191.2 110.8 191.2 107V95.7002C191.2 95.4002 191.5 95.2002 191.8 95.2002Z\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M194.2 124.3C194.2 121.2 196.8 118.7 199.9 118.7H229.7C233.2 118.7 236 121.5 236.1 125\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M236.1 111.3L235.9 140.7C235.9 150.9 227.6 159.2 217.3 159.3H212.4C202.3 159.3 194.1 151.1 194.1 141V111.9\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M84.5998 98.4002V236.1C84.5998 237.9 83.1998 239.3 81.3998 239.3H17.9998C16.1998 239.3 14.7998 237.9 14.7998 236.1V98.4002C14.7998 96.6002 16.1998 95.2002 17.9998 95.2002H81.3998C83.1998 95.2002 84.5998 96.6002 84.5998 98.4002Z\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M53.4999 104.4H70.9999C73.6999 104.4 75.8999 106.6 75.8999 109.3V198.9C75.8999 198.9 75.1999 225.8 51.9999 225.8C24.0999 225.8 24.0999 200.1 24.0999 200.1V109.3C24.0999 106.6 26.2999 104.4 28.9999 104.4H46.4999\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M53.4999 104.4H70.9999C73.6999 104.4 75.8999 106.3 75.8999 108.6V185.6C75.8999 185.6 75.1999 208.7 51.9999 208.7C24.0999 208.7 24.0999 186.6 24.0999 186.6V108.6C24.0999 106.3 26.2999 104.4 28.9999 104.4H53.4999Z\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path opacity=\"0.8\" d=\"M182.6 95.2002H101.7V147.5H182.6V95.2002Z\" fill=\"white\" fill-opacity=\"0.8\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M166 95.2002V117.9C166 125.2 161.9 131.2 156.8 131.2H127.5C122.4 131.2 118.3 125.2 118.3 117.9V95.2002\" stroke=\"#AFAFAF\" stroke-miterlimit=\"10\"/>\n<path d=\"M508.8 241.7H898.1V627.6H508.8V241.7Z\" fill=\"white\"/>\n<text fill=\"#09283B\" xml:space=\"preserve\" style=\"white-space: pre\" font-family=\"Lato\" font-size=\"18\" font-weight=\"bold\" letter-spacing=\"0em\"><tspan x=\"663.629\" y=\"437.291\">Living Room </tspan></text>\n<text fill=\"#09283B\" xml:space=\"preserve\" style=\"white-space: pre\" font-family=\"PT Serif\" font-size=\"14\" letter-spacing=\"0em\"><tspan x=\"669.868\" y=\"456.43\">12&#x2019;1 </tspan></text>\n<text fill=\"#09283B\" xml:space=\"preserve\" style=\"white-space: pre\" font-family=\"PT Serif\" font-size=\"14\" letter-spacing=\"0em\"><tspan x=\"697.07\" y=\"456.43\">&#x201d; </tspan></text>\n<text fill=\"#09283B\" xml:space=\"preserve\" style=\"white-space: pre\" font-family=\"PT Serif\" font-size=\"14\" letter-spacing=\"0em\"><tspan x=\"703.327\" y=\"456.43\">x 18&#x2019;8&#x201d; </tspan></text>\n<path d=\"M898.8 39.2002H1183.9V339.7L898.1 340.8V242.9H515.9V39.4002L898.8 39.2002Z\" fill=\"white\"/>\n<text fill=\"#09283B\" xml:space=\"preserve\" style=\"white-space: pre\" font-family=\"Lato\" font-size=\"18\" font-weight=\"bold\" letter-spacing=\"0em\"><tspan x=\"830.036\" y=\"145.422\">Dining Area </tspan></text>\n<text fill=\"#09283B\" xml:space=\"preserve\" style=\"white-space: pre\" font-family=\"PT Serif\" font-size=\"14\" letter-spacing=\"0em\"><tspan x=\"841.275\" y=\"164.561\">9&#x2019;6 </tspan></text>\n<text fill=\"#09283B\" xml:space=\"preserve\" style=\"white-space: pre\" font-family=\"PT Serif\" font-size=\"14\" letter-spacing=\"0em\"><tspan x=\"860.833\" y=\"164.561\">&#x201d; </tspan></text>\n<text fill=\"#09283B\" xml:space=\"preserve\" style=\"white-space: pre\" font-family=\"PT Serif\" font-size=\"14\" letter-spacing=\"0em\"><tspan x=\"867.091\" y=\"164.561\">x 8&#x2019;1&#x201d; </tspan></text>\n<path d=\"M5.30005 248.7H342.7L343.9 171.1H505.3L506.8 630H5.30005V248.7Z\" fill=\"white\"/>\n<path d=\"M4 247.5H342.3V170H506.4V630.4\" stroke=\"#67747B\"/>\n<path d=\"M503 622.9V251.8L11.2 251.5\" stroke=\"#C1C9CE\" stroke-opacity=\"0.15\" stroke-width=\"7\"/>\n<path d=\"M506.4 247.5H342.3\" stroke=\"#67747B\"/>\n<text fill=\"#09283B\" xml:space=\"preserve\" style=\"white-space: pre\" font-family=\"Lato\" font-size=\"18\" font-weight=\"bold\" letter-spacing=\"0em\"><tspan x=\"397.207\" y=\"214.107\">Closet </tspan></text>\n<text fill=\"#09283B\" xml:space=\"preserve\" style=\"white-space: pre\" font-family=\"Lato\" font-size=\"18\" font-weight=\"bold\" letter-spacing=\"0em\"><tspan x=\"197.358\" y=\"429.396\">Master Bedroom </tspan></text>\n<text fill=\"#09283B\" xml:space=\"preserve\" style=\"white-space: pre\" font-family=\"PT Serif\" font-size=\"14\" letter-spacing=\"0em\"><tspan x=\"220.762\" y=\"449.202\">15&#x2019;0&#10;</tspan><tspan x=\"220.762\" y=\"468.202\"> </tspan></text>\n<text fill=\"#09283B\" xml:space=\"preserve\" style=\"white-space: pre\" font-family=\"PT Serif\" font-size=\"14\" letter-spacing=\"0em\"><tspan x=\"247.963\" y=\"449.202\">&#x201d; </tspan></text>\n<text fill=\"#09283B\" xml:space=\"preserve\" style=\"white-space: pre\" font-family=\"PT Serif\" font-size=\"14\" letter-spacing=\"0em\"><tspan x=\"255.6\" y=\"448.971\">x 12&#x2019;0&#x201d; </tspan></text>\n<path d=\"M326.4 248.1H268.6V251.4H326.4V248.1Z\" fill=\"#84939D\"/>\n<path opacity=\"0.07\" d=\"M281.2 250.5C281.2 268.7 296 283.5 314.3 283.5V250.6L281.2 250.5Z\" fill=\"#84939D\"/>\n<path d=\"M281.2 249.8C281.2 268 296 282.8 314.3 282.8\" stroke=\"#84939D\" stroke-linecap=\"round\" stroke-dasharray=\"1 1\"/>\n<path d=\"M455 247.7H397.2V251H455V247.7Z\" fill=\"#84939D\"/>\n<path opacity=\"0.07\" d=\"M409.8 250C409.8 268.2 424.6 283 442.9 283V250.2L409.8 250Z\" fill=\"#84939D\"/>\n<path d=\"M409.8 249.3C409.8 267.5 424.6 282.3 442.9 282.3\" stroke=\"#84939D\" stroke-linecap=\"round\" stroke-dasharray=\"1 1\"/>\n<path d=\"M1270.4 295.8V220H1182.6V38H514.2V0.9L247.7 0.5L247.1 88.6L6.7999 88.9L6.3999 629.5H1064.2L1142 507.8H1324.8V415.2L1270.6 415.3L1270.4 295.8Z\" stroke=\"#67747B\"/>\n<path d=\"M1266.7 224.5H1179V42.2H510.3V4.9L251.7 4.5L251.4 92.9L10.1 92.2L9.30005 626H1062.4L1140.4 503L1320.9 503.7L1320.5 419.5L1266.7 419.4V295.6V224.5Z\" stroke=\"#C1C9CE\" stroke-opacity=\"0.15\" stroke-width=\"7\"/>\n<path d=\"M438.7 629.5H300.6V635.4H438.7V629.5Z\" fill=\"#AFAFAF\" stroke=\"#67747B\"/>\n<path d=\"M6.4 331H0.5V419.6H6.4V331Z\" fill=\"#AFAFAF\" stroke=\"#67747B\"/>\n<path d=\"M6.4 184.3H0.5V223.3H6.4V184.3Z\" fill=\"#AFAFAF\" stroke=\"#67747B\"/>\n<path d=\"M785.1 629.5H596.6V635.4H785.1V629.5Z\" fill=\"#AFAFAF\" stroke=\"#67747B\"/>\n<path d=\"M1028 629.5H932.3V635.4H1028V629.5Z\" fill=\"#AFAFAF\" stroke=\"#67747B\"/>\n<path d=\"M247.4 85.3H514.2V37.5\" stroke=\"#67747B\"/>\n<path d=\"M255.1 81.6H510.3V45.5\" stroke=\"#C1C9CE\" stroke-opacity=\"0.15\" stroke-width=\"7\"/>\n<path d=\"M1270 306.8H1266.1V375H1270V306.8Z\" fill=\"#84939D\"/>\n<path opacity=\"0.07\" d=\"M1268.1 321.2C1246.6 321.2 1229.1 338.7 1229.1 360.2H1267.9L1268.1 321.2Z\" fill=\"#84939D\"/>\n<path d=\"M1268.1 321.2C1246.6 321.2 1229.1 338.7 1229.1 360.2\" stroke=\"#84939D\" stroke-linecap=\"round\" stroke-dasharray=\"1 1\"/>\n<text fill=\"#09283B\" xml:space=\"preserve\" style=\"white-space: pre\" font-family=\"Lato\" font-size=\"17.832\" font-weight=\"bold\" letter-spacing=\"0em\"><tspan x=\"418.559\" y=\"46.4015\">Closet </tspan></text>\n<text fill=\"#09283B\" xml:space=\"preserve\" style=\"white-space: pre\" font-family=\"Lato\" font-size=\"17.832\" font-weight=\"bold\" letter-spacing=\"0em\"><tspan x=\"292.559\" y=\"46.4015\">Closet </tspan></text>\n<text fill=\"#09283B\" xml:space=\"preserve\" style=\"white-space: pre\" font-family=\"Lato\" font-size=\"18\" font-weight=\"bold\" letter-spacing=\"0em\"><tspan x=\"1215.79\" y=\"465.636\">Closet </tspan></text>\n<path d=\"M1240.5 412.9H1175.1V415.2H1240.5V412.9Z\" fill=\"#84939D\"/>\n<path opacity=\"0.07\" d=\"M1190.9 413.6C1190.9 395.4 1205.9 380.7 1224.4 380.7V413.5L1190.9 413.6Z\" fill=\"#84939D\"/>\n<path d=\"M1190.9 413.6C1190.9 395.4 1205.9 380.7 1224.4 380.7\" stroke=\"#84939D\" stroke-linecap=\"round\" stroke-dasharray=\"1 1\"/>\n<path d=\"M388.9 0.5V85.3\" stroke=\"#67747B\"/>\n<path d=\"M392.9 77.9999V8.3999\" stroke=\"#C1C9CE\" stroke-opacity=\"0.15\" stroke-width=\"7\"/>\n<path d=\"M384.7 77.9999V8.3999\" stroke=\"#C1C9CE\" stroke-opacity=\"0.15\" stroke-width=\"7\"/>\n<path opacity=\"0.1\" d=\"M961.7 341H888.7V292.2L926.2 292V333H961.7V341Z\" fill=\"#C1C9CE\"/>\n<path opacity=\"0.1\" d=\"M36 289.802L13 289.802V253.002L36 253V289.802Z\" fill=\"#C1C9CE\"/>\n<path opacity=\"0.1\" d=\"M36 623L13 623V600.001L36 600V623Z\" fill=\"#C1C9CE\"/>\n<path opacity=\"0.1\" d=\"M537 623L509 623V595.001L537 595V623Z\" fill=\"#C1C9CE\"/>\n<path opacity=\"0.1\" d=\"M565 71L514 70.9999V46.0012L565 46V71Z\" fill=\"#C1C9CE\"/>\n<path opacity=\"0.1\" d=\"M1229.1 499.7H1149.4V461.1L1190.4 461V493.4H1229.1V499.7Z\" fill=\"#C1C9CE\"/>\n<path opacity=\"0.1\" d=\"M1142.9 333.5H1046.6V341H1142.9V333.5Z\" fill=\"#C1C9CE\"/>\n<path d=\"M360.8 81.2998H292.6V85.1998H360.8V81.2998Z\" fill=\"#84939D\"/>\n<path opacity=\"0.07\" d=\"M345.9 83.2998C345.9 104.8 328.4 122.3 306.9 122.3V83.4998L345.9 83.2998Z\" fill=\"#84939D\"/>\n<path d=\"M345.9 83.2998C345.9 104.8 328.4 122.3 306.9 122.3\" stroke=\"#84939D\" stroke-linecap=\"round\" stroke-dasharray=\"1 1\"/>\n<path d=\"M488.8 81.2998H420.6V85.1998H488.8V81.2998Z\" fill=\"#84939D\"/>\n<path opacity=\"0.07\" d=\"M473.9 83.2998C473.9 104.8 456.4 122.3 434.9 122.3V83.4998L473.9 83.2998Z\" fill=\"#84939D\"/>\n<path d=\"M473.9 83.2998C473.9 104.8 456.4 122.3 434.9 122.3\" stroke=\"#84939D\" stroke-linecap=\"round\" stroke-dasharray=\"1 1\"/>\n<path d=\"M1273.7 414.5H1140.3\" stroke=\"#67747B\"/>\n<path d=\"M1264.1 418.7H1149.4\" stroke=\"#C1C9CE\" stroke-opacity=\"0.15\" stroke-width=\"7\"/>\n<path d=\"M505.2 172.8H348.9V242.3H505.2V172.8Z\" stroke=\"#C1C9CE\" stroke-opacity=\"0.15\" stroke-width=\"7\"/>\n</g>\n<defs>\n<clipPath id=\"clip0_97_1202\">\n<rect width=\"1325.1\" height=\"635.9\" fill=\"white\"/>\n</clipPath>\n</defs>\n</svg>\n"
+  },
+  {
+    "t": 1.111,
+    "method": "GET",
+    "type": "image",
+    "url": "https://affordable-housing.stuytown.com/media/3khh00cg/4.png",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 1.112,
+    "method": "GET",
+    "type": "image",
+    "url": "https://affordable-housing.stuytown.com/media/vk3nwm2c/5.png",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 1.113,
+    "method": "GET",
+    "type": "image",
+    "url": "https://affordable-housing.stuytown.com/media/w45lmn1h/6.png",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 1.114,
+    "method": "GET",
+    "type": "image",
+    "url": "https://affordable-housing.stuytown.com/media/wlrdmxwl/r.png",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 1.117,
+    "method": "GET",
+    "type": "image",
+    "url": "https://affordable-housing.stuytown.com/media/g00l3sei/w.png",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 1.119,
+    "method": "GET",
+    "type": "image",
+    "url": "https://affordable-housing.stuytown.com/media/t02dfmty/l.png",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 1.12,
+    "method": "GET",
+    "type": "image",
+    "url": "https://affordable-housing.stuytown.com/media/rcvl4pqk/m23.png",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 1.121,
+    "method": "GET",
+    "type": "image",
+    "url": "https://affordable-housing.stuytown.com/media/trsfb4aw/east-river-ferry.jpg",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 1.124,
+    "method": "GET",
+    "type": "image",
+    "url": "https://affordable-housing.stuytown.com/media/ipvba2uo/q.png",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 1.129,
+    "method": "GET",
+    "type": "image",
+    "url": "https://affordable-housing.stuytown.com/media/vx5fhuim/n.png",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 1.13,
+    "method": "GET",
+    "type": "image",
+    "url": "https://affordable-housing.stuytown.com/media/1ojhg5wj/citbike.png",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 1.141,
+    "method": "GET",
+    "type": "font",
+    "url": "https://use.typekit.net/af/497298/000000000000000077359a1e/30/l?primer=7cdcb44be4a7db8877ffa5c0007b8dd865b3bbc383831fe2ea177f62257a9191&fvd=n4&v=3",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 1.18,
+    "method": "GET",
+    "type": "font",
+    "url": "https://use.typekit.net/af/497298/000000000000000077359a1e/30/d?primer=7cdcb44be4a7db8877ffa5c0007b8dd865b3bbc383831fe2ea177f62257a9191&fvd=n4&v=3",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 1.191,
+    "method": "GET",
+    "type": "font",
+    "url": "https://use.typekit.net/af/497298/000000000000000077359a1e/30/a?primer=7cdcb44be4a7db8877ffa5c0007b8dd865b3bbc383831fe2ea177f62257a9191&fvd=n4&v=3",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 1.321,
+    "method": "GET",
+    "type": "font",
+    "url": "https://fonts.gstatic.com/s/ptserif/v19/EJRVQgYoZZY2vCFuvAFWzr8.woff2",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 1.322,
+    "method": "GET",
+    "type": "image",
+    "url": "https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/feqpwzse/building.png?rmode=max&width=136&height=133",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 1.807,
+    "method": "GET",
+    "type": "image",
+    "url": "https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/feqpwzse/building.png?rmode=max&width=136&height=133",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 1.808,
+    "method": "POST",
+    "type": "xhr",
+    "url": "https://pd-dlcore.beamliving.com/affordable-housing/create-application",
+    "request_headers": {
+      "accept": "application/json, text/plain, */*",
+      "content-type": "application/json",
+      "origin": "https://affordable-housing.stuytown.com",
+      "referer": "https://affordable-housing.stuytown.com/",
+      "subscription-key": "<36 chars>",
+      "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.8010.12 Safari/537.36",
+      "sec-ch-ua": "\"HeadlessChrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Linux\""
+    },
+    "request_body": "{\"unitSpk\":\"P~NYST31~B~017~U~06-H\",\"firstName\":\"<first_name>\",\"lastName\":\"<last_name>\",\"cellPhone\":\"<cell_phone>\",\"householdSize\":\"<household_size>\",\"email\":\"<email>\",\"totalAnnualEarnings\":\"<annual_income>\",\"buildingAddress\":\"17 Stuyvesant Oval\",\"workPhone\":\"<cell_phone>\",\"address\":{\"apartment\":\"<apartment_no>\",\"building\":\"<building>\",\"streetName\":\"<street_name>\",\"city\":\"<city>\",\"state\":\"<state>\",\"zip\":\"<zip>\"},\"version\":1}",
+    "answered_t": 4.286,
+    "status": 200,
+    "response_headers": {
+      "strict-transport-security": "max-age=15724800; includeSubDomains",
+      "access-control-allow-origin": "*",
+      "x-cache": "CONFIG_NOCACHE",
+      "date": "Tue, 13 Oct 2026 11:15:04 GMT",
+      "content-type": "application/json; charset=utf-8",
+      "x-azure-ref": "20261013T111502Z-r1fdd756c95586qbhC1CO157d40000001450000000002rbw"
+    },
+    "response_body": "{\"token\":\"<secret>\",\"unitSpk\":\"P~NYST31~B~017~U~06-H\",\"submittedOn\":\"2026-10-13T11:15:04.0108944Z\",\"totalAnnualEarnings\":\"<annual_income>\",\"applyingAddress\":\"17 Stuyvesant Oval, Apt 06-H\",\"status\":\"Created\",\"contacts\":[{\"id\":1793,\"firstName\":\"<first_name>\",\"lastName\":\"<last_name>\",\"email\":\"<email>\",\"role\":\"MainApplicant\",\"cellPhone\":\"<cell_phone>\",\"workPhone\":\"<cell_phone>\",\"relationshipToApplicant\":\"Self\",\"address\":{\"id\":3009,\"apartment\":\"<apartment_no>\",\"building\":\"<building>\",\"streetName\":\"<street_name>\",\"city\":\"<city>\",\"state\":\"<state>\",\"zip\":\"<zip>\"},\"otherIncomes\":[],\"assets\":[]}]}"
+  },
+  {
+    "t": 1.883,
+    "method": "GET",
+    "type": "image",
+    "url": "https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/feqpwzse/building.png?rmode=max&width=136&height=133",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 1.924,
+    "method": "GET",
+    "type": "image",
+    "url": "https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/feqpwzse/building.png?rmode=max&width=136&height=133",
+    "failed": "net::ERR_FAILED"
+  },
+  {
+    "t": 4.287,
+    "method": "GET",
+    "type": "image",
+    "url": "https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/icqfrr1y/building.png?rmode=max&width=136&height=133",
+    "failed": "net::ERR_FAILED"
+  }
+]
