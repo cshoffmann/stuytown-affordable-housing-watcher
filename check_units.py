@@ -219,6 +219,16 @@ class ListingsClient:
             finally:
                 self._conn = None
 
+    def renew(self) -> None:
+        """Open a fresh connection now (TCP + TLS done ahead of time). The
+        server closes a kept-open connection after ~120 requests; renewing
+        just before a burst of checks keeps that reconnect out of the burst."""
+        self.close()
+        try:
+            self._connection().connect()
+        except (http.client.HTTPException, OSError):
+            self.close()  # the next request connects as usual
+
 
 def _retry_after(value) -> float | None:
     try:

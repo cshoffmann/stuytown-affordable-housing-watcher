@@ -15,7 +15,7 @@ import threading
 import time
 import unittest
 from contextlib import redirect_stdout
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest import mock
 
@@ -144,6 +144,41 @@ class CheckerTests(unittest.TestCase):
         self.assertIn("NEW: Apt 5A", commits[0])
         self.assertIn("NEW: Apt 12C", commits[0])
         self.assertTrue(commits[1].startswith("End of watch window"))
+
+
+class BurstTests(unittest.TestCase):
+    """Units are posted on the quarter hour: the checks bunch up around it."""
+
+    def at(self, hour, minute, second, micro=0):
+        return datetime(2026, 10, 13, hour, minute, second, micro, tzinfo=watch_loop._eastern())
+
+    def next_check(self, now, previous, interval=None):
+        inline = background.Worker("inline", inline=True)
+        watcher = watch_loop.Watcher(FakeApplier(), inline, inline)
+        if interval:
+            watcher.pace.interval = interval
+        with mock.patch.object(watch_loop, "now_et", return_value=now), \
+                mock.patch.object(watch_loop.time, "monotonic", return_value=1000.0):
+            return watcher._next_check(previous)
+
+    def test_the_burst_runs_from_3s_before_to_15s_after_each_quarter_hour(self):
+        self.assertIsNone(watch_loop.burst_slot(self.at(7, 14, 56)))
+        self.assertEqual(watch_loop.burst_slot(self.at(7, 14, 57)), self.at(7, 15, 0))
+        self.assertEqual(watch_loop.burst_slot(self.at(7, 15, 14, 900000)), self.at(7, 15, 0))
+        self.assertIsNone(watch_loop.burst_slot(self.at(7, 15, 15)))
+        self.assertEqual(watch_loop.burst_slot(self.at(7, 59, 58)), self.at(8, 0, 0))
+        self.assertEqual(watch_loop.next_burst_start(self.at(7, 15, 20)), self.at(7, 29, 57))
+
+    def test_a_check_lands_exactly_on_the_quarter_hour(self):
+        self.assertAlmostEqual(self.next_check(self.at(7, 14, 59, 900000), previous=999.0), 1000.1)
+        self.assertAlmostEqual(self.next_check(self.at(7, 15, 0, 30000), previous=999.0), 1000.22)
+
+    def test_between_bursts_the_normal_beat_but_never_past_the_next_burst(self):
+        self.assertAlmostEqual(self.next_check(self.at(7, 10, 0), previous=999.0), 1001.0)
+        self.assertAlmostEqual(self.next_check(self.at(7, 14, 56), previous=999.5), 1001.0)  # burst at 7:14:57
+
+    def test_no_burst_while_the_site_is_asking_to_slow_down(self):
+        self.assertAlmostEqual(self.next_check(self.at(7, 15, 0), previous=999.0, interval=8), 1007.0)
 
 
 class BackgroundWorkerTests(unittest.TestCase):

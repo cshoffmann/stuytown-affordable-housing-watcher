@@ -150,6 +150,14 @@ class ProfileTests(unittest.TestCase):
         for value in ("jane.example.com", "867-5309", "1009", "lots"):
             self.assertNotIn(value, message)
 
+    def test_values_the_sites_form_would_refuse_are_named_not_shown(self):
+        self.assertEqual(auto_apply.profile_warnings(EXAMPLE_PROFILE), [])
+        warnings = auto_apply.profile_warnings({**EXAMPLE_PROFILE, "first_name": "Maximiliana-Josephine",
+                                                "last_name": "Muñoz"})
+        self.assertEqual(warnings, ["first_name is longer than the form allows (20 characters)",
+                                    "last_name has characters the form refuses (letters with accents etc.)"])
+        self.assertNotIn("Muñoz", " ".join(warnings))
+
     def test_phone_numbers_get_the_us_country_code(self):
         self.assertEqual(auto_apply.phone_digits("212-555-0123"), "12125550123")
         self.assertEqual(auto_apply.phone_digits("+1 (212) 555-0123"), "12125550123")

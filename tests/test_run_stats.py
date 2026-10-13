@@ -110,6 +110,15 @@ class UnitTimingTests(unittest.TestCase):
         self.assertEqual(entry["auto_apply"]["submit_seconds_after_first_seen"], 2.85)
         self.assertEqual(entry["auto_apply"]["still_listed_seconds_after_submit"], 26.75)
 
+    def test_when_a_unit_was_posted_to_within_a_check(self):
+        stats = run_stats.RunStats()
+        stats.observe_changes(check_units.Changes(new=[UNIT_5A]), at("2026-10-12T11:15:00.050Z"),
+                              previous=at("2026-10-12T11:14:59.800Z"))
+        entry = stats.summary()["units"][UNIT_5A["unitSpk"]]
+        self.assertEqual(entry["not_listed_at_utc"], "2026-10-12T11:14:59.800Z")
+        self.assertEqual(entry["posted_within_seconds"], 0.25)
+        self.assertEqual(entry["seen_seconds_after_quarter_hour"], 0.05)
+
     def test_a_unit_still_listed_at_the_end_is_marked_so(self):
         stats = run_stats.RunStats()
         stats.observe_changes(check_units.Changes(new=[UNIT_5A]), at("2026-10-10T11:02:00Z"))

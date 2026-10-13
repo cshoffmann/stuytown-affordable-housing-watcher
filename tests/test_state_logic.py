@@ -314,6 +314,15 @@ class FetchTests(unittest.TestCase):
             self.assertEqual(client.fetch_all(), [UNIT_5A])
         self.assertEqual(len(FakeApiHandler.connections), 1)
 
+    def test_a_renewed_connection_is_a_new_one(self):
+        self.serve([{"count": 1, "unitModels": [UNIT_5A], "totalCount": 1}])
+        client = check_units.ListingsClient()
+        self.addCleanup(client.close)
+        client.fetch_all()
+        client.renew()
+        client.fetch_all()
+        self.assertEqual(len(FakeApiHandler.connections), 2)
+
     def test_each_response_is_kept_for_the_run_stats(self):
         self.serve([{"count": 1, "unitModels": [UNIT_5A], "totalCount": 1}], headers={"Cache-Control": "no-cache"})
         client = check_units.ListingsClient()
