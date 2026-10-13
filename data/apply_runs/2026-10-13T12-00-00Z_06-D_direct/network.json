@@ -1,0 +1,23 @@
+[
+  {
+    "t": 0.0,
+    "method": "POST",
+    "type": "direct",
+    "url": "https://pd-dlcore.beamliving.com/affordable-housing/create-application",
+    "request_headers": {
+      "accept": "application/json, text/plain, */*",
+      "content-type": "application/json",
+      "origin": "https://affordable-housing.stuytown.com",
+      "referer": "https://affordable-housing.stuytown.com/",
+      "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.8010.12 Safari/537.36",
+      "sec-ch-ua": "\"HeadlessChrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\"",
+      "sec-ch-ua-mobile": "?0",
+      "sec-ch-ua-platform": "\"Linux\"",
+      "Content-Type": "application/json",
+      "Accept": "application/json, text/plain, */*",
+      "Subscription-Key": "<36 chars>"
+    },
+    "request_body": "{\"unitSpk\":\"P~NYST31~B~605~U~06-D\",\"firstName\":\"<first_name>\",\"lastName\":\"<last_name>\",\"cellPhone\":\"<cell_phone>\",\"householdSize\":\"<household_size>\",\"email\":\"<email>\",\"totalAnnualEarnings\":\"<annual_income>\",\"buildingAddress\":\"605 East 14th Street\",\"workPhone\":\"<cell_phone>\",\"address\":{\"apartment\":\"<apartment_no>\",\"building\":\"<building>\",\"streetName\":\"<street_name>\",\"city\":\"<city>\",\"state\":\"<state>\",\"zip\":\"<zip>\"},\"version\":1}",
+    "failed": "RemoteDisconnected: Remote end closed connection without response"
+  }
+]

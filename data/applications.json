@@ -170,5 +170,60 @@
     ],
     "rent": 2234.25,
     "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~545~U~0M-D"
+  },
+  "P~NYST31~B~605~U~06-D": {
+    "address": "605 East 14th Street",
+    "apartment": "06-D",
+    "attempts": [
+      {
+        "at_utc": "2026-10-13T12:00:02Z",
+        "detail": "StuyTown's application API accepted it",
+        "fields_filled": [
+          "first_name",
+          "last_name",
+          "email",
+          "cell_phone",
+          "work_phone",
+          "building",
+          "street_name",
+          "apartment_no",
+          "city",
+          "state",
+          "zip",
+          "household_size",
+          "annual_income"
+        ],
+        "form_url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~605~U~06-D",
+        "problems": [],
+        "recording": "data/apply_runs/2026-10-13T12-00-00Z_06-D_apply",
+        "seconds": 2.8,
+        "status": "submitted",
+        "timeline": {
+          "answer_utc": "2026-10-13T12:00:02.709Z",
+          "direct_tried": {
+            "answer_utc": null,
+            "api_seconds": null,
+            "connection_was_warm": null,
+            "detail": "RemoteDisconnected: Remote end closed connection without response",
+            "form_via": "direct (API)",
+            "queue_wait_seconds": 0.0,
+            "server_submitted_utc": null,
+            "started_utc": "2026-10-13T12:00:00.077Z",
+            "status": "lost",
+            "submit_pressed_utc": "2026-10-13T12:00:00.077Z"
+          },
+          "finished_utc": "2026-10-13T12:00:02.868Z",
+          "form_found_utc": "2026-10-13T12:00:00.888Z",
+          "form_via": "unit page",
+          "queue_wait_seconds": 0.002,
+          "queued_utc": "2026-10-13T12:00:00.076Z",
+          "server_submitted_utc": "2026-10-13T12:00:02.2962545Z",
+          "started_utc": "2026-10-13T12:00:00.079Z",
+          "submit_pressed_utc": "2026-10-13T12:00:01.093Z"
+        }
+      }
+    ],
+    "rent": 2124.69,
+    "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~605~U~06-D"
   }
 }

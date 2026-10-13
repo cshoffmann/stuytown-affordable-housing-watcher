@@ -1,0 +1,1072 @@
+{
+  "started_utc": "2026-10-13T12:00:00Z",
+  "seconds": 2.785,
+  "outcome": {
+    "status": "submitted",
+    "detail": "StuyTown's application API accepted it",
+    "seconds": 2.75,
+    "form_url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~605~U~06-D",
+    "fields_filled": [
+      "first_name",
+      "last_name",
+      "email",
+      "cell_phone",
+      "work_phone",
+      "building",
+      "street_name",
+      "apartment_no",
+      "city",
+      "state",
+      "zip",
+      "household_size",
+      "annual_income"
+    ],
+    "problems": [],
+    "site_messages": [],
+    "form_fields": [
+      "First Name *",
+      "Last Name *",
+      "Email *",
+      "Cell Phone * +",
+      "Work Phone +",
+      "Building *",
+      "Street name *",
+      "Apartment No.",
+      "City *",
+      "State",
+      "Zip *",
+      "Household Size * i",
+      "Household Gross Annual Income, $ * $"
+    ],
+    "timeline": {
+      "form_via": "unit page",
+      "form_found_utc": "2026-10-13T12:00:00.888Z",
+      "submit_pressed_utc": "2026-10-13T12:00:01.093Z",
+      "answer_utc": "2026-10-13T12:00:02.709Z",
+      "server_submitted_utc": "2026-10-13T12:00:02.2962545Z"
+    }
+  },
+  "steps": [
+    {
+      "t": 0.045,
+      "step": "opening the unit page",
+      "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~605~U~06-D"
+    },
+    {
+      "t": 0.675,
+      "step": "APPLY NOW button visible",
+      "text": "APPLY NOW",
+      "page_url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~605~U~06-D"
+    },
+    {
+      "t": 0.75,
+      "step": "pressed APPLY NOW"
+    },
+    {
+      "t": 0.809,
+      "step": "form found",
+      "page_url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~605~U~06-D",
+      "frames": [
+        "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~605~U~06-D",
+        "about:blank"
+      ],
+      "inside_form_element": true
+    },
+    {
+      "t": 1.011,
+      "step": "filled page 1 of the form",
+      "filled": [
+        "first_name",
+        "last_name",
+        "email",
+        "cell_phone",
+        "work_phone",
+        "building",
+        "street_name",
+        "apartment_no",
+        "city",
+        "state",
+        "zip",
+        "household_size",
+        "annual_income"
+      ],
+      "problems": [],
+      "fill_details": [
+        {
+          "label": "First Name *",
+          "key": "first_name",
+          "took": true,
+          "how": "fill"
+        },
+        {
+          "label": "Last Name *",
+          "key": "last_name",
+          "took": true,
+          "how": "fill"
+        },
+        {
+          "label": "Email *",
+          "key": "email",
+          "took": true,
+          "how": "fill"
+        },
+        {
+          "label": "Cell Phone * +",
+          "key": "cell_phone",
+          "took": true,
+          "how": "fill",
+          "shape": "# ### ### ####"
+        },
+        {
+          "label": "Work Phone +",
+          "key": "work_phone",
+          "took": true,
+          "how": "fill",
+          "shape": "# ### ### ####"
+        },
+        {
+          "label": "Building *",
+          "key": "building",
+          "took": true,
+          "how": "fill",
+          "shape": "###"
+        },
+        {
+          "label": "Street name *",
+          "key": "street_name",
+          "took": true,
+          "how": "fill"
+        },
+        {
+          "label": "Apartment No.",
+          "key": "apartment_no",
+          "took": true,
+          "how": "fill",
+          "shape": "#A"
+        },
+        {
+          "label": "City *",
+          "key": "city",
+          "took": true,
+          "how": "fill"
+        },
+        {
+          "label": "State",
+          "key": "state",
+          "took": true,
+          "how": "fill",
+          "shape": "AA"
+        },
+        {
+          "label": "Zip *",
+          "key": "zip",
+          "took": true,
+          "how": "fill",
+          "shape": "#####"
+        },
+        {
+          "label": "Household Size * i",
+          "key": "household_size",
+          "took": true,
+          "how": "fill",
+          "shape": "#"
+        },
+        {
+          "label": "Household Gross Annual Income, $ * $",
+          "key": "annual_income",
+          "took": true,
+          "how": "fill",
+          "shape": "######"
+        }
+      ],
+      "fields_after": [
+        {
+          "label": "First Name *",
+          "required": true,
+          "empty": false
+        },
+        {
+          "label": "Last Name *",
+          "required": true,
+          "empty": false
+        },
+        {
+          "label": "Email *",
+          "required": true,
+          "empty": false
+        },
+        {
+          "label": "Cell Phone * +",
+          "required": true,
+          "empty": false
+        },
+        {
+          "label": "Work Phone +",
+          "required": false,
+          "empty": false
+        },
+        {
+          "label": "Building *",
+          "required": true,
+          "empty": false
+        },
+        {
+          "label": "Street name *",
+          "required": true,
+          "empty": false
+        },
+        {
+          "label": "Apartment No.",
+          "required": false,
+          "empty": false
+        },
+        {
+          "label": "City *",
+          "required": true,
+          "empty": false
+        },
+        {
+          "label": "State",
+          "required": false,
+          "empty": false
+        },
+        {
+          "label": "Zip *",
+          "required": true,
+          "empty": false
+        },
+        {
+          "label": "Household Size * i",
+          "required": true,
+          "empty": false
+        },
+        {
+          "label": "Household Gross Annual Income, $ * $",
+          "required": true,
+          "empty": false
+        }
+      ],
+      "submit_button": "SUBMIT",
+      "next_button": null
+    },
+    {
+      "t": 1.014,
+      "step": "pressing SUBMIT"
+    },
+    {
+      "t": 1.112,
+      "step": "pressed SUBMIT"
+    },
+    {
+      "t": 1.307,
+      "step": "screenshot of the filled form taken"
+    },
+    {
+      "t": 2.631,
+      "step": "outcome: submitted",
+      "page_url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~605~U~06-D",
+      "site_messages": []
+    }
+  ],
+  "notes": {
+    "unit": {
+      "unit_id": "P~NYST31~B~605~U~06-D",
+      "apartment": "06-D",
+      "address": "605 East 14th Street",
+      "bedrooms": 1,
+      "bathrooms": 1,
+      "price": 2124.69,
+      "income_requirement": 72846.51,
+      "available_date": "2026-11-28T00:00:00Z",
+      "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~605~U~06-D"
+    },
+    "kind": "application",
+    "form_fields": [
+      {
+        "index": 0,
+        "label": "First Name *",
+        "tag": "input",
+        "type": "text",
+        "required": true,
+        "empty": false,
+        "html": {
+          "name": "firstNameField",
+          "id": null,
+          "autocomplete": null,
+          "inputmode": null,
+          "placeholder": null,
+          "maxlength": null,
+          "pattern": null,
+          "class": "bQ_kx",
+          "required_attr": false,
+          "aria_required": null,
+          "options": null
+        }
+      },
+      {
+        "index": 1,
+        "label": "Last Name *",
+        "tag": "input",
+        "type": "text",
+        "required": true,
+        "empty": false,
+        "html": {
+          "name": "lastNameField",
+          "id": null,
+          "autocomplete": null,
+          "inputmode": null,
+          "placeholder": null,
+          "maxlength": null,
+          "pattern": null,
+          "class": "bQ_kx",
+          "required_attr": false,
+          "aria_required": null,
+          "options": null
+        }
+      },
+      {
+        "index": 2,
+        "label": "Email *",
+        "tag": "input",
+        "type": "text",
+        "required": true,
+        "empty": false,
+        "html": {
+          "name": "emailField",
+          "id": null,
+          "autocomplete": null,
+          "inputmode": null,
+          "placeholder": null,
+          "maxlength": 100,
+          "pattern": null,
+          "class": "bQ_kx",
+          "required_attr": false,
+          "aria_required": null,
+          "options": null
+        }
+      },
+      {
+        "index": 3,
+        "label": "Cell Phone * +",
+        "tag": "input",
+        "type": "tel",
+        "required": true,
+        "empty": false,
+        "html": {
+          "name": "cellPhoneField",
+          "id": null,
+          "autocomplete": null,
+          "inputmode": null,
+          "placeholder": null,
+          "maxlength": null,
+          "pattern": null,
+          "class": "bR_kx bR_kL bR_kM",
+          "required_attr": false,
+          "aria_required": null,
+          "options": null
+        }
+      },
+      {
+        "index": 4,
+        "label": "Work Phone +",
+        "tag": "input",
+        "type": "tel",
+        "required": false,
+        "empty": false,
+        "html": {
+          "name": "workPhoneField",
+          "id": null,
+          "autocomplete": null,
+          "inputmode": null,
+          "placeholder": null,
+          "maxlength": null,
+          "pattern": null,
+          "class": "bR_kx bR_kL bR_kM",
+          "required_attr": false,
+          "aria_required": null,
+          "options": null
+        }
+      },
+      {
+        "index": 5,
+        "label": "Building *",
+        "tag": "input",
+        "type": "text",
+        "required": true,
+        "empty": false,
+        "html": {
+          "name": "buildingField",
+          "id": null,
+          "autocomplete": null,
+          "inputmode": null,
+          "placeholder": null,
+          "maxlength": null,
+          "pattern": null,
+          "class": "bQ_kx",
+          "required_attr": false,
+          "aria_required": null,
+          "options": null
+        }
+      },
+      {
+        "index": 6,
+        "label": "Street name *",
+        "tag": "input",
+        "type": "text",
+        "required": true,
+        "empty": false,
+        "html": {
+          "name": "streetField",
+          "id": null,
+          "autocomplete": null,
+          "inputmode": null,
+          "placeholder": null,
+          "maxlength": null,
+          "pattern": null,
+          "class": "bQ_kx",
+          "required_attr": false,
+          "aria_required": null,
+          "options": null
+        }
+      },
+      {
+        "index": 7,
+        "label": "Apartment No.",
+        "tag": "input",
+        "type": "text",
+        "required": false,
+        "empty": false,
+        "html": {
+          "name": "apartmentField",
+          "id": null,
+          "autocomplete": null,
+          "inputmode": null,
+          "placeholder": null,
+          "maxlength": null,
+          "pattern": null,
+          "class": "bQ_kx",
+          "required_attr": false,
+          "aria_required": null,
+          "options": null
+        }
+      },
+      {
+        "index": 8,
+        "label": "City *",
+        "tag": "input",
+        "type": "text",
+        "required": true,
+        "empty": false,
+        "html": {
+          "name": "cityField",
+          "id": null,
+          "autocomplete": null,
+          "inputmode": null,
+          "placeholder": null,
+          "maxlength": null,
+          "pattern": null,
+          "class": "bQ_kx",
+          "required_attr": false,
+          "aria_required": null,
+          "options": null
+        }
+      },
+      {
+        "index": 9,
+        "label": "State",
+        "tag": "input",
+        "type": "text",
+        "required": false,
+        "empty": false,
+        "html": {
+          "name": "stateField",
+          "id": null,
+          "autocomplete": null,
+          "inputmode": null,
+          "placeholder": null,
+          "maxlength": null,
+          "pattern": null,
+          "class": "bQ_kx",
+          "required_attr": false,
+          "aria_required": null,
+          "options": null
+        }
+      },
+      {
+        "index": 10,
+        "label": "Zip *",
+        "tag": "input",
+        "type": "text",
+        "required": true,
+        "empty": false,
+        "html": {
+          "name": "zipField",
+          "id": null,
+          "autocomplete": null,
+          "inputmode": null,
+          "placeholder": null,
+          "maxlength": null,
+          "pattern": null,
+          "class": "bQ_kx",
+          "required_attr": false,
+          "aria_required": null,
+          "options": null
+        }
+      },
+      {
+        "index": 11,
+        "label": "Household Size * i",
+        "tag": "input",
+        "type": "text",
+        "required": true,
+        "empty": false,
+        "html": {
+          "name": "householdSizeField",
+          "id": null,
+          "autocomplete": null,
+          "inputmode": null,
+          "placeholder": null,
+          "maxlength": null,
+          "pattern": null,
+          "class": "bR_kx",
+          "required_attr": false,
+          "aria_required": null,
+          "options": null
+        }
+      },
+      {
+        "index": 12,
+        "label": "Household Gross Annual Income, $ * $",
+        "tag": "input",
+        "type": "text",
+        "required": true,
+        "empty": false,
+        "html": {
+          "name": "householdIncomeField",
+          "id": null,
+          "autocomplete": null,
+          "inputmode": null,
+          "placeholder": "0.00",
+          "maxlength": null,
+          "pattern": null,
+          "class": "bR_kx bR_kL bR_kM",
+          "required_attr": false,
+          "aria_required": null,
+          "options": null
+        }
+      }
+    ],
+    "captcha": false,
+    "text_after_submit_new": [
+      "We\u2019ve sent a link with the detailed Application Form to your email. Please complete the form within 24 hours and we will process your application."
+    ],
+    "form_buttons": [
+      {
+        "tag": "button",
+        "type": null,
+        "text": "BACK TO APARTMENT",
+        "href": null,
+        "disabled": false,
+        "class": "K_j"
+      },
+      {
+        "tag": "a",
+        "type": null,
+        "text": "",
+        "href": "/",
+        "disabled": false,
+        "class": "bz_f9"
+      },
+      {
+        "tag": "a",
+        "type": null,
+        "text": "ELIGIBILITY",
+        "href": "/eligibility/",
+        "disabled": false,
+        "class": null
+      },
+      {
+        "tag": "a",
+        "type": null,
+        "text": "FAQS",
+        "href": "/faqs/",
+        "disabled": false,
+        "class": null
+      },
+      {
+        "tag": "a",
+        "type": null,
+        "text": "AVAILABILITY",
+        "href": "/apartments/",
+        "disabled": false,
+        "class": null
+      },
+      {
+        "tag": "a",
+        "type": null,
+        "text": "Back",
+        "href": "/apartments",
+        "disabled": false,
+        "class": "bl_h2"
+      },
+      {
+        "tag": "button",
+        "type": null,
+        "text": "FLOORPLAN",
+        "href": null,
+        "disabled": false,
+        "class": "bl_bd"
+      },
+      {
+        "tag": "button",
+        "type": null,
+        "text": "GALLERY",
+        "href": null,
+        "disabled": false,
+        "class": "bl_bd bl_h3"
+      },
+      {
+        "tag": "button",
+        "type": null,
+        "text": "APPLY NOW",
+        "href": null,
+        "disabled": false,
+        "class": "bl_cr"
+      },
+      {
+        "tag": "button",
+        "type": null,
+        "text": "close junior information",
+        "href": null,
+        "disabled": false,
+        "class": "t_cl"
+      },
+      {
+        "tag": "button",
+        "type": null,
+        "text": "close junior information",
+        "href": null,
+        "disabled": false,
+        "class": "t_b6"
+      },
+      {
+        "tag": "a",
+        "type": null,
+        "text": "APARTMENTS",
+        "href": "/apartments/",
+        "disabled": false,
+        "class": "bx_b t_ck"
+      },
+      {
+        "tag": "a",
+        "type": null,
+        "text": "212.253.3680",
+        "href": "tel:+12122533680",
+        "disabled": false,
+        "class": null
+      },
+      {
+        "tag": "a",
+        "type": null,
+        "text": "stuytownlottery@stuytown.com",
+        "href": "mailto:stuytownlottery@stuytown.com",
+        "disabled": false,
+        "class": null
+      },
+      {
+        "tag": "a",
+        "type": null,
+        "text": "Sign Up for Future Lottery Opportunities",
+        "href": "https://beamliving.us19.list-manage.com/subscribe?u=0a88f9e997dbee32a8616087c&id=0066cf53d8",
+        "disabled": false,
+        "class": null
+      },
+      {
+        "tag": "a",
+        "type": null,
+        "text": "Terms of Use",
+        "href": "https://www.beamliving.com/terms-of-use",
+        "disabled": false,
+        "class": null
+      },
+      {
+        "tag": "a",
+        "type": null,
+        "text": "Reasonable Accommodation Info",
+        "href": "https://www.beamliving.com/accommodations",
+        "disabled": false,
+        "class": null
+      },
+      {
+        "tag": "a",
+        "type": null,
+        "text": "Privacy Policy",
+        "href": "https://www.beamliving.com/privacy",
+        "disabled": false,
+        "class": null
+      },
+      {
+        "tag": "a",
+        "type": null,
+        "text": "NYS Housing and Anti-Discrimination Notice",
+        "href": "https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ugcfiua2/nys-housing-doc.png",
+        "disabled": false,
+        "class": null
+      },
+      {
+        "tag": "a",
+        "type": null,
+        "text": "Web Accessibility Certification",
+        "href": "https://www.stuytown.com/web-accessibility-certification/",
+        "disabled": false,
+        "class": null
+      },
+      {
+        "tag": "button",
+        "type": null,
+        "text": "COOKIE PREFERENCES",
+        "href": null,
+        "disabled": false,
+        "class": "X_gj"
+      }
+    ],
+    "page_facts": {
+      "frameworks": {
+        "next": false,
+        "nuxt": false,
+        "react": true,
+        "angular": false,
+        "vue": false,
+        "jquery": false,
+        "gatsby": false,
+        "svelte": false
+      },
+      "generator": null,
+      "timing_ms": {
+        "response_start": 112,
+        "dom_content_loaded": 573,
+        "load": 632,
+        "page_kb": 401,
+        "since_navigation": 2622
+      },
+      "resources_by_type": {
+        "link": {
+          "count": 3,
+          "kb": 44,
+          "slowest_ms": 140
+        },
+        "script": {
+          "count": 5,
+          "kb": 381,
+          "slowest_ms": 321
+        },
+        "css": {
+          "count": 6,
+          "kb": 6,
+          "slowest_ms": 32
+        },
+        "img": {
+          "count": 14,
+          "kb": 0,
+          "slowest_ms": 24
+        },
+        "fetch": {
+          "count": 1,
+          "kb": 0,
+          "slowest_ms": 110
+        },
+        "xmlhttprequest": {
+          "count": 2,
+          "kb": 14,
+          "slowest_ms": 1457
+        }
+      },
+      "slowest_resources": [
+        {
+          "url": "https://pd-dlcore.beamliving.com/affordable-housing/create-application",
+          "type": "xmlhttprequest",
+          "ms": 1457,
+          "started_ms": 1054
+        },
+        {
+          "url": "https://affordable-housing.stuytown.com/sb/common-js.js.v639262698149509707",
+          "type": "script",
+          "ms": 321,
+          "started_ms": 117
+        },
+        {
+          "url": "https://affordable-housing.stuytown.com/sb/vendor-css.css.v639262698149509707",
+          "type": "link",
+          "ms": 140,
+          "started_ms": 117
+        },
+        {
+          "url": "https://units.stuytown.com/api/ah-units/P~NYST31~B~605~U~06-D",
+          "type": "fetch",
+          "ms": 110,
+          "started_ms": 557
+        },
+        {
+          "url": "https://affordable-housing.stuytown.com/media/kiwdfaqb/108.svg",
+          "type": "xmlhttprequest",
+          "ms": 97,
+          "started_ms": 676
+        },
+        {
+          "url": "https://affordable-housing.stuytown.com/static/css/853.01172867.chunk.css",
+          "type": "link",
+          "ms": 86,
+          "started_ms": 525
+        },
+        {
+          "url": "https://affordable-housing.stuytown.com/static/js/853.23207547.chunk.js",
+          "type": "script",
+          "ms": 86,
+          "started_ms": 526
+        },
+        {
+          "url": "https://affordable-housing.stuytown.com/sb/aHUnit-js.js.v639262698149509707",
+          "type": "script",
+          "ms": 84,
+          "started_ms": 117
+        }
+      ],
+      "service_worker": false,
+      "local_storage_keys": [],
+      "session_storage_keys": [],
+      "cookies_visible_to_scripts": []
+    }
+  },
+  "console": [
+    {
+      "t": 0.175,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.609,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.609,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.612,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.615,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.615,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.616,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.618,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.622,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.688,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.691,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.696,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.737,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.737,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.738,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.738,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.738,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.81,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.811,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 1.109,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 1.151,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 1.18,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 2.564,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 2.696,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 2.709,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    }
+  ],
+  "navigations": [
+    {
+      "t": 0.167,
+      "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~605~U~06-D"
+    }
+  ],
+  "websockets": [],
+  "cookies": [
+    {
+      "name": "INGRESSCOOKIE",
+      "domain": "affordable-housing.stuytown.com",
+      "path": "/",
+      "http_only": true,
+      "secure": true,
+      "same_site": "Lax",
+      "expires_in_days": null,
+      "value_length": 59
+    },
+    {
+      "name": "__cf_bm",
+      "domain": ".fonts.net",
+      "path": "/",
+      "http_only": true,
+      "secure": true,
+      "same_site": "None",
+      "expires_in_days": 0.0,
+      "value_length": 199
+    }
+  ],
+  "files": [
+    "3_form_filled.html",
+    "4_after_submit.html",
+    "network.json"
+  ],
+  "analysis": {
+    "submit_request": {
+      "method": "POST",
+      "url": "https://pd-dlcore.beamliving.com/affordable-housing/create-application",
+      "type": "xhr",
+      "seconds_after_pressing": 0.092,
+      "content_type": "application/json",
+      "header_names": [
+        "accept",
+        "content-type",
+        "origin",
+        "referer",
+        "sec-ch-ua",
+        "sec-ch-ua-mobile",
+        "sec-ch-ua-platform",
+        "subscription-key",
+        "user-agent"
+      ],
+      "body_keys": [
+        "unitSpk",
+        "firstName",
+        "lastName",
+        "cellPhone",
+        "householdSize",
+        "email",
+        "totalAnnualEarnings",
+        "buildingAddress",
+        "workPhone",
+        "address",
+        "address.apartment",
+        "address.building",
+        "address.streetName",
+        "address.city",
+        "address.state",
+        "address.zip",
+        "version"
+      ],
+      "token_like": [],
+      "status": 200,
+      "answered_after_seconds": 1.456,
+      "response_content_type": "application/json; charset=utf-8",
+      "response_excerpt": "{\"token\":\"<secret>\",\"unitSpk\":\"P~NYST31~B~605~U~06-D\",\"submittedOn\":\"2026-10-13T12:00:02.2962545Z\",\"totalAnnualEarnings\":\"<annual_income>\",\"applyingAddress\":\"605 East 14th Street, Apt 06-D\",\"status\":\"Created\",\"contacts\":[{\"id\":1800,\"firstName\":\"<first_name>\",\"lastName\":\"<last_name>\",\"email\":\"<email>\",\"role\":\"MainApplicant\",\"cellPhone\":\"<cell_phone>\",\"workPhone\":\"<cell_phone>\",\"relationshipToApplicant\":\"Self\",\"address\":{\"id\":3021,\"apartment\":\"<apartment_no>\",\"building\":\"<building>\",\"streetName\":\"<street_name>\",\"city\":\"<city>\",\"state\":\"<state>\",\"zip\":\"<zip>\"},\"otherIncomes\":[],\"assets\":[]}]}",
+      "failed": null
+    },
+    "requests_after_submit": [
+      "GET - https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/feqpwzse/building.png?rmode=max&width=136&height=133",
+      "POST 200 https://pd-dlcore.beamliving.com/affordable-housing/create-application",
+      "GET - https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/feqpwzse/building.png?rmode=max&width=136&height=133",
+      "GET - https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/feqpwzse/building.png?rmode=max&width=136&height=133",
+      "GET - https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/icqfrr1y/building.png?rmode=max&width=136&height=133",
+      "GET - https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/icqfrr1y/building.png?rmode=max&width=136&height=133",
+      "GET - https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/icqfrr1y/building.png?rmode=max&width=136&height=133"
+    ],
+    "script_hosts": {
+      "affordable-housing.stuytown.com": 3,
+      "global.ketchcdn.com": 1,
+      "www.googletagmanager.com": 1
+    },
+    "anti_bot": {
+      "cloudflare_bot_check": [
+        "cookies: __cf_bm (set by .fonts.net)"
+      ]
+    },
+    "cdn": {
+      "azure_front_door": [
+        "requests",
+        "pages",
+        "headers"
+      ]
+    }
+  }
+}
