@@ -173,7 +173,8 @@ open questions:
 | --- | --- |
 | When are units posted? | Always on a quarter hour: 7:15, 7:30, 8:00 and 8:15 on every morning recorded (2026-10-06 to 10-12), seen by the first check at or after it |
 | How fast did we apply? | Unit seen → SUBMIT in **1.0–1.2 s**. About 0.75 s of that was loading the unit page (its HTML alone took 0.3 s); the form filled in 0.15 s, plus a 0.12 s screenshot before SUBMIT |
-| How fast are the others? | Each cheap unit had its 3 applications within ~40 s, and we were first on only one of the two, so others are within about a second |
+| How fast are the others? | Each cheap unit had its 3 applications within ~40 s. **We were first on 08-B** (7:15, request out 1.2 s after the unit appeared) but not on 02-A (8:00, out 1.1 s after): someone got in under 1.1 s |
+| What decides the order? | On 08-B the site's server took 5.9 s to process our application (`submittedOn` 11:15:06.76) and we were still first. So the order seems to follow when requests *arrive*, not when the server finishes them: sending sooner is what counts |
 | Anti-bot protection? | **None.** No CAPTCHA, no token in the request, no challenge. The site accepted a browser that announces itself as `HeadlessChrome`. (A `__cf_bm` cookie came from the font service, not StuyTown; the analysis now says which site set each cookie) |
 | What does SUBMIT send? | One JSON `POST` to `pd-dlcore.beamliving.com/affordable-housing/create-application` with a `Subscription-Key` header. The address, key, success and error messages and field limits are all in the unit page's own settings (`"applyForm"`) |
 | What does the site answer? | `{"token", "status": "Created", "submittedOn", ...}`. At 7:15 the answer took **5.9 s** (busy server); at 8:00 it took 0.6 s |
@@ -236,8 +237,8 @@ stats will show it.
 - Whether `version` is the unit's version or always 1. The first capture
   from a unit whose version isn't 1 settles it; until then direct submit
   only runs for units where both readings agree.
-- Whether the site's server orders applications by when they arrive or by
-  when it finishes processing them (`submittedOn` against our send time).
+- More rankings like 08-B's, to confirm the order follows arrival (one
+  morning says so). Your email from StuyTown says which number you were.
 
 ## Threads, and why not asyncio
 
