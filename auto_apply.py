@@ -528,6 +528,12 @@ class Applier:
             thread.start()
             self._threads.append(thread)
         self.direct.refresh_config(_a_known_unit())
+        known = _last_listed_unit()
+        if self.direct.why_not() and known is not None:
+            # Before 7:00 nothing is listed, but the last unit seen may still
+            # have its page and form: a recording of it (SUBMIT held back,
+            # nothing sent) can prove the format before the first posting.
+            self._jobs.put((1, 0.0, next(self._order), "record", known))
         maintain = threading.Thread(target=self._maintain, name="applier-direct", daemon=True)
         maintain.start()
         self._threads.append(maintain)
@@ -809,6 +815,20 @@ def _a_known_unit() -> str:
         return next(u["unit_id"] for e in reversed(events) for u in e.get("units", []) if u.get("unit_id"))
     except (OSError, ValueError, StopIteration, KeyError, TypeError):
         return ""
+
+
+def _last_listed_unit() -> dict | None:
+    """The most recently posted unit in the events log, as the API listed it."""
+    try:
+        with open(check_units.EVENTS_FILE, encoding="utf-8") as f:
+            events = json.load(f)
+        for event in reversed(events):
+            for listed in event.get("units", []) if event.get("event") == "new" else []:
+                if isinstance(listed.get("data"), dict) and listed["data"].get("unitSpk"):
+                    return listed["data"]
+    except (OSError, ValueError, TypeError, AttributeError):
+        pass
+    return None
 
 
 def _keys_sent(body: dict) -> list:
@@ -1966,7 +1986,9 @@ def _selftest(profile: dict) -> int:
     MAX_RENT = MAX_RENT or 2850  # the fake unit always qualifies: its rent is set to your limit
     APPLICATIONS_FILE = f"{SELFTEST_RUNS_DIR}/applications.json"  # never the real log
     direct_submit.API_FORMAT_FILE = f"{SELFTEST_RUNS_DIR}/apply_api.json"
-    for leftover in (APPLICATIONS_FILE, direct_submit.API_FORMAT_FILE):
+    check_units.EVENTS_FILE = f"{SELFTEST_RUNS_DIR}/events.json"  # not the real units
+    check_units.STATE_FILE = f"{SELFTEST_RUNS_DIR}/last_seen.json"
+    for leftover in (APPLICATIONS_FILE, direct_submit.API_FORMAT_FILE, check_units.EVENTS_FILE):
         if os.path.exists(leftover):
             os.remove(leftover)
     building = {"address": "FAKE FORM, NOT A REAL UNIT"}

@@ -740,6 +740,8 @@ class EndToEndTests(unittest.TestCase):
             (direct_submit, "API_FORMAT_FILE", f"{self.tmp}/apply_api.json"),
             (auto_apply, "PRIVATE_DIR", f"{self.tmp}/private"), (auto_apply, "MAX_RENT", 3000),
             (auto_apply, "run_form", timed_run_form),
+            (check_units, "EVENTS_FILE", f"{self.tmp}/events.json"),
+            (check_units, "STATE_FILE", f"{self.tmp}/last_seen.json"),
         ]:
             patcher = mock.patch.object(target, name, value)
             patcher.start()
@@ -750,7 +752,8 @@ class EndToEndTests(unittest.TestCase):
         self.notifier, self.logger = background.Worker("notifier"), background.Worker("logger")
         self.applier = auto_apply.Applier(EXAMPLE_PROFILE, self.notifier, self.logger, workers=2)
         self.logger.yield_to = self.applier.busy
-        self.applier.start()
+        if self._testMethodName != "test_before_7_the_last_units_page_proves_the_format":
+            self.applier.start()
         self.addCleanup(self.applier.stop, 30)
 
     def listed(self, *units):
@@ -837,6 +840,18 @@ class EndToEndTests(unittest.TestCase):
                 for value in ("jane", "jane.doe@example.com", "2125550123", "212 555 0123", "95,000", "95000",
                               "example street", "10009", "fake-token"):
                     self.assertNotIn(value, text, f"{value!r} in {folder.name}/{file.name}")
+
+    def test_before_7_the_last_units_page_proves_the_format(self):
+        yesterday = self.listed(unit("7Z", 2600, version=3))[0]
+        Path(f"{self.tmp}/events.json").write_text(json.dumps([{"event": "new", "units": [
+            {"unit_id": yesterday["unitSpk"], "data": yesterday}]}]), encoding="utf-8")
+        self.applier.start()  # nothing listed yet
+        deadline = time.monotonic() + 30
+        while self.applier.direct.why_not() and time.monotonic() < deadline:
+            time.sleep(0.1)
+        self.assertIsNone(self.applier.direct.why_not())
+        self.assertEqual(auto_apply.SelftestSiteHandler.applications, [])  # nothing was sent
+        self.assertEqual(self.applier.direct.format["rules"]["version"], "the unit's")
 
     def test_a_direct_request_that_fails_is_handed_to_the_browser(self):
         self.applier.dispatch(self.listed(unit("9F", 4380.54, version=2)))  # a recording proves the format
