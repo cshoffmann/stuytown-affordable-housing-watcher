@@ -38,6 +38,13 @@ import check_units
 import run_stats
 
 POLL_INTERVAL_SECONDS = 2  # every check is one small request; cheap units have been gone in 15-45s
+# StuyTown posts units on the quarter hour (7:15, 7:30, 8:00, 8:15 in every
+# morning recorded so far, to the second). Around each quarter hour the
+# checks are much closer together, with one landing exactly on it.
+BURST_POLL_SECONDS = 0.25
+BURST_BEFORE_SECONDS = 3
+BURST_AFTER_SECONDS = 15
+POSTING_EVERY_MINUTES = 15
 SLOWEST_POLL_SECONDS = 30  # back-off ceiling when the site asks us to slow down (its own Retry-After wins, up to 120)
 HICCUP_POLL_SECONDS = 8  # back-off ceiling for plain errors (timeouts, server errors): retried quickly
 STATUS_EVERY_SECONDS = 60  # one "still checking" log line a minute, instead of one per check
@@ -128,6 +135,7 @@ class Watcher:
         self.stats = run_stats.RunStats()
         self.checks = self.failures = 0
         self._unsent = []  # change summaries since the last commit
+        self._last_check_utc = None  # when the last good check's request went out
         self._last_status = self._last_commit = time.monotonic()
         self._last_error = None
 
@@ -142,15 +150,23 @@ class Watcher:
         )
         if changes:
             self._unsent.append(f"{now_et():%H:%M} {changes.summary()}")
-            self.stats.observe_changes(changes, now, qualifies)
+            self.stats.observe_changes(changes, now, qualifies, previous=self._last_check_utc)
+        self._last_check_utc = now
         return changes
 
     def run_until(self, end: datetime) -> None:
-        print(f"Checking every {self.pace.normal:g}s until {end:%H:%M} ET -- {check_units.LISTINGS_URL}")
+        print(f"Checking every {self.pace.normal:g}s (every {BURST_POLL_SECONDS:g}s around each quarter hour) "
+              f"until {end:%H:%M} ET -- {check_units.LISTINGS_URL}")
         client = check_units.ListingsClient()
         next_check = time.monotonic()
+        in_burst = False
         while now_et() < end:
+            bursting = burst_slot(now_et()) is not None and self.pace.interval <= self.pace.normal
+            if bursting and not in_burst:
+                client.renew()  # a fresh connection for the burst
+            in_burst = bursting
             self.checks += 1
+            sent = datetime.now(timezone.utc)  # a unit in this answer was listed by this moment
             try:
                 units = client.fetch_all()
             except check_units.ListingsUnavailable as e:
@@ -169,13 +185,11 @@ class Watcher:
                 if self.pace.interval != before:
                     self.stats.observe_pace(self.pace.interval, "good checks again")
                 try:
-                    self.check(units)
+                    self.check(units, now=sent)
                 except Exception as e:
                     print(f"[{now_et():%H:%M:%S} ET] Check failed: {e}")
             self._housekeeping()
-            # A steady beat measured start-to-start; a slow answer doesn't
-            # push every later check back.
-            next_check += self.pace.interval
+            next_check = self._next_check(next_check)
             delay = next_check - time.monotonic()
             if delay > 0:
                 time.sleep(delay)
@@ -183,6 +197,22 @@ class Watcher:
                 next_check = time.monotonic()
         client.close()
         print(f"Done: {self.checks} checks, {self.failures} failed.")
+
+    def _next_check(self, previous: float) -> float:
+        """When the next check starts (time.monotonic()). A steady beat
+        measured start-to-start, so a slow answer doesn't push every later
+        check back -- but around each quarter hour, a check every
+        BURST_POLL_SECONDS lined up on the quarter hour itself. Never faster
+        while the site is asking us to slow down."""
+        now, mono = now_et(), time.monotonic()
+        if self.pace.interval > self.pace.normal:
+            return previous + self.pace.interval
+        slot = burst_slot(now)
+        if slot is not None:
+            beats = (now - slot).total_seconds() // BURST_POLL_SECONDS + 1
+            return mono + (slot + timedelta(seconds=beats * BURST_POLL_SECONDS) - now).total_seconds()
+        upcoming = next_burst_start(now)
+        return min(previous + self.pace.interval, mono + (upcoming - now).total_seconds())
 
     def _failed(self, error: Exception, retry_after: float | None = None, pushed_back: bool = False) -> None:
         self.failures += 1
@@ -226,6 +256,24 @@ class Watcher:
             self.logger.submit(self.stats.write, self.applier, check_units.load_state())
         self.commit_soon(final=True)
         self.logger.drain(timeout)
+
+
+def _quarter_hour(now: datetime) -> datetime:
+    return now.replace(minute=now.minute - now.minute % POSTING_EVERY_MINUTES, second=0, microsecond=0)
+
+
+def burst_slot(now: datetime) -> datetime | None:
+    """The quarter hour whose burst of checks `now` is in, or None."""
+    base = _quarter_hour(now)
+    for slot in (base, base + timedelta(minutes=POSTING_EVERY_MINUTES)):
+        if slot - timedelta(seconds=BURST_BEFORE_SECONDS) <= now < slot + timedelta(seconds=BURST_AFTER_SECONDS):
+            return slot
+    return None
+
+
+def next_burst_start(now: datetime) -> datetime:
+    upcoming = _quarter_hour(now) + timedelta(minutes=POSTING_EVERY_MINUTES)
+    return upcoming - timedelta(seconds=BURST_BEFORE_SECONDS)
 
 
 def commit_and_push(message: str) -> None:

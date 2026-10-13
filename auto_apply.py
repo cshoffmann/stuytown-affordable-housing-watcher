@@ -192,6 +192,25 @@ def profile_problems(profile: dict) -> list:
     return problems
 
 
+# The form's own limits (its settings on 2026-10-12): longer values, or
+# non-ASCII ones where it says "Is ASCII", are refused by the site.
+FIELD_LIMITS = {"first_name": (20, True), "last_name": (25, True), "building": (7, False),
+                "street_name": (32, False), "apartment_no": (6, False), "city": (30, False), "state": (2, True),
+                "zip": (10, True), "household_size": (2, False)}
+
+
+def profile_warnings(profile: dict) -> list:
+    """Values the site's form would refuse -- by key name only, never the values."""
+    warnings = []
+    for key, (longest, ascii_only) in FIELD_LIMITS.items():
+        text = str(profile.get(key) if profile.get(key) is not None else "").strip()
+        if len(text) > longest:
+            warnings.append(f"{key} is longer than the form allows ({longest} characters)")
+        elif ascii_only and not text.isascii():
+            warnings.append(f"{key} has characters the form refuses (letters with accents etc.)")
+    return warnings
+
+
 def phone_digits(value) -> str | None:
     """'212-555-0123' / '+1 (212) 555-0123' -> '12125550123' (US numbers
     only: the form's phone boxes start with '+', so the country code matters)."""
@@ -262,8 +281,11 @@ def startup_check() -> None:
     if not ENABLED:
         print("Auto-apply: off (set the AUTO_APPLY_MODE repository variable to on to turn it on)")
         return
-    if _profile_for_run():
+    profile = _profile_for_run()
+    if profile:
         print(f"Auto-apply: ON for units at or under ${MAX_RENT:,.0f}/mo (applicant profile loaded)")
+        for warning in profile_warnings(profile):
+            print(f"   WARNING: {warning} -- the site would refuse the application")
 
 
 # ------------------------------------------------- which units to apply to
