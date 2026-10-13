@@ -29,6 +29,7 @@ import apply_recorder  # noqa: E402
 import auto_apply  # noqa: E402
 import background  # noqa: E402
 import check_units  # noqa: E402
+import direct_submit  # noqa: E402
 import watch_loop  # noqa: E402
 
 FAKE_UNITS = json.loads((REPO_ROOT / "tests" / "fixtures" / "fake_units.json").read_text(encoding="utf-8"))
@@ -214,7 +215,7 @@ class ApplierDispatchTests(unittest.TestCase):
         self.status = "submitted"
         for target, name, value in [
             (auto_apply, "APPLICATIONS_FILE", str(self.dir / "applications.json")),
-            (auto_apply, "FORM_URL_FILE", str(self.dir / "apply_form_url.json")),
+            (direct_submit, "API_FORMAT_FILE", str(self.dir / "apply_api.json")),
             (auto_apply, "PRIVATE_DIR", str(self.dir / "private")),
             (auto_apply, "MAX_RENT", 3000),
             (auto_apply, "apply_to_unit", self.fake_apply),
@@ -228,7 +229,7 @@ class ApplierDispatchTests(unittest.TestCase):
         self.addCleanup(patcher.stop)
         self.applier = auto_apply.Applier(EXAMPLE_PROFILE)  # inline notifier and logger; not started
 
-    def fake_apply(self, context, listed_unit, profile, record_only=False, runs_dir=None, direct_url=None):
+    def fake_apply(self, context, listed_unit, profile, record_only=False, runs_dir=None, site=None):
         if record_only:
             self.recorded.append(check_units.apartment(listed_unit))
             return auto_apply.Attempt("recorded", "test"), None
@@ -361,20 +362,74 @@ class BrowserRestartTests(unittest.TestCase):
         self.assertEqual(applier._jobs.qsize(), 1)  # still there for the restarted browser
 
 
-class FormAddressTests(unittest.TestCase):
-    def test_the_form_address_is_learned_only_when_it_carries_the_unit_id(self):
-        listed = unit("1A", 2500)  # unitSpk P~TEST~U~1A
-        learned = auto_apply.form_url_template(listed, "https://x.test/apply?unitSpk=P~TEST~U~1A&step=1")
-        self.assertEqual(learned, {"template": "https://x.test/apply?unitSpk={unitSpk}&step=1", "spelling": "raw"})
-        quoted = auto_apply.form_url_template(listed, "https://x.test/apply/P%7ETEST%7EU%7E1A")
-        self.assertEqual(quoted["spelling"], "quoted")
-        self.assertIsNone(auto_apply.form_url_template(listed, "https://x.test/apply"))
+class DirectSubmitFormatTests(unittest.TestCase):
+    """Learning the site's request from one it built, and rebuilding it."""
 
-    def test_only_a_checked_address_is_used(self):
-        learned = {"template": "https://x.test/apply?unitSpk={unitSpk}", "spelling": "raw"}
-        self.assertIsNone(auto_apply.direct_form_url(learned, unit("2B")))
-        self.assertEqual(auto_apply.direct_form_url({**learned, "verified": True}, unit("2B")),
-                         "https://x.test/apply?unitSpk=P~TEST~U~2B")
+    PAGE = (APPLY_SITE / "unit.html").read_text(encoding="utf-8").replace("{{ORIGIN}}", "https://api.test") \
+        .replace("{{SITE_VERSION}}", "639262698149509707")
+    CAPTURED = {  # what the (fake) site's form sends for the example profile
+        "unitSpk": "P~TEST~U~1A", "firstName": "Jane", "lastName": "Doe", "cellPhone": "12125550123",
+        "householdSize": "1", "email": "jane.doe@example.com", "totalAnnualEarnings": "95000",
+        "buildingAddress": "287 Avenue C", "workPhone": "",
+        "address": {"apartment": "4B", "building": "123", "streetName": "Example Street", "city": "New York",
+                    "state": "NY", "zip": "10009"},
+        "version": 3}
+
+    def setUp(self):
+        self.config = direct_submit.parse_site_config(self.PAGE)
+        self.unit = unit("1A", 2500, version=3)
+
+    def test_the_sites_settings_are_read_from_its_page(self):
+        self.assertEqual(self.config["api_url"], "https://api.test/affordable-housing/create-application")
+        self.assertEqual((self.config["header_name"], self.config["header_value"]), ("Subscription-Key", "fake-key-0000"))
+        self.assertEqual(self.config["site_version"], "639262698149509707")
+        self.assertTrue(self.config["success_message"].startswith("We\u2019ve sent a link"))
+        self.assertEqual(self.config["field_limits"]["firstNameField"]["maxLength"], 20)
+        self.assertIsNone(direct_submit.parse_site_config("<html>no settings</html>"))
+
+    def test_the_format_is_learned_and_rebuilds_the_request_exactly_for_another_unit(self):
+        fmt = direct_submit.learn_format(self.CAPTURED, EXAMPLE_PROFILE, self.unit, self.config)
+        self.assertEqual(fmt["rules"], {"cellPhone": "digits", "workPhone": "constant:", "householdSize": "text",
+                                        "totalAnnualEarnings": "whole", "buildingAddress": "capitalized",
+                                        "version": "the unit's"})
+        self.assertNotIn("Jane", json.dumps(fmt))  # how values are written, never the values
+        self.assertEqual(direct_submit.build_body(self.unit, EXAMPLE_PROFILE, fmt), self.CAPTURED)
+        other = direct_submit.build_body(unit("2B", 2600, version=5), EXAMPLE_PROFILE, fmt)
+        self.assertEqual((other["unitSpk"], other["version"]), ("P~TEST~U~2B", 5))
+        self.assertEqual(list(other), list(self.CAPTURED))  # the same keys, in the same order
+
+    def test_anything_unexplained_means_no_direct_submit(self):
+        for change in ({"middleName": ""}, {"firstName": "Janet"}, {"cellPhone": "212-555-01-23"},
+                       {"unitSpk": "P~OTHER"}):
+            self.assertIsNone(direct_submit.learn_format({**self.CAPTURED, **change}, EXAMPLE_PROFILE, self.unit,
+                                                         self.config), change)
+
+    def test_a_version_that_cant_be_told_apart_is_only_used_while_both_readings_agree(self):
+        fmt = direct_submit.learn_format({**self.CAPTURED, "version": 1}, EXAMPLE_PROFILE,
+                                         unit("1A", 2500, version=1), self.config)
+        self.assertEqual(fmt["rules"]["version"], "the unit's, or always 1")
+        self.assertEqual(direct_submit.build_body(unit("2B", version=1), EXAMPLE_PROFILE, fmt)["version"], 1)
+        self.assertIsNone(direct_submit.build_body(unit("2B", version=4), EXAMPLE_PROFILE, fmt))
+        settled = direct_submit.merge_formats({**fmt, "rules": {**fmt["rules"], "version": "always 1"}}, fmt)
+        self.assertEqual(settled["rules"]["version"], "always 1")
+
+    def test_the_apis_answers(self):
+        created = json.dumps({"token": "x", "status": "Created", "submittedOn": "2026-10-12T12:00:01.6153186Z"})
+        self.assertEqual(direct_submit.interpret(200, created),
+                         ("submitted", "StuyTown's application API accepted it", "2026-10-12T12:00:01.6153186Z"))
+        self.assertEqual(direct_submit.interpret(200, "{}")[0], "unconfirmed")
+        self.assertEqual(direct_submit.interpret(409, '{"message": "already has an open application"}')[0], "rejected")
+        self.assertEqual(direct_submit.interpret(400, "submitted by 3 other applicants")[0], "rejected")
+        self.assertEqual(direct_submit.interpret(400, '{"message": "validation"}')[0], "refused")
+        self.assertEqual(direct_submit.interpret(503, "")[0], "unknown")
+
+    def test_the_headers_carry_the_current_key_and_this_units_page(self):
+        fmt = {"headers": {"accept": "*/*", "subscription-key": "old", "referer": "https://x/units?unitSpk=P~A"},
+               "verified_from": "P~A"}
+        headers = direct_submit.request_headers(fmt, self.config, unit("2B"))
+        self.assertEqual(headers["Subscription-Key"], "fake-key-0000")
+        self.assertNotIn("subscription-key", headers)
+        self.assertEqual(headers["referer"], "https://x/units?unitSpk=P~TEST~U~2B")
 
 
 class PushoverAttachmentTests(unittest.TestCase):
@@ -403,14 +458,19 @@ class FormFillingTests(unittest.TestCase):
     """The real form-filling code, in a real browser, on the fake copy of
     StuyTown's unit page and form."""
 
-    EXPECTED = {
-        "firstName": "Jane", "lastName": "Doe", "email": "jane.doe@example.com",
-        "cellPhone": "+1 212 555 0123",  # the US country code, not "+212..."
-        "workPhone": "+",  # optional, left empty
-        "building": "123", "streetName": "Example Street", "apartmentNo": "4B",
-        "city": "New York", "state": "NY", "zip": "10009",
-        "householdSize": "1", "income": "95,000.00",
+    EXPECTED = {  # the request the fake form sends, built from what was typed into its boxes
+        "unitSpk": "TEST", "firstName": "Jane", "lastName": "Doe",
+        "cellPhone": "12125550123",  # typed with the US country code, not as "+212..."
+        "householdSize": "1", "email": "jane.doe@example.com", "totalAnnualEarnings": "95000",
+        "buildingAddress": "Fake Form, Not A Real Unit",
+        "workPhone": "",  # optional, left empty
+        "address": {"apartment": "4B", "building": "123", "streetName": "Example Street", "city": "New York",
+                    "state": "NY", "zip": "10009"},
+        "version": 1,
     }
+
+    def setUp(self):
+        auto_apply.SelftestSiteHandler.applications = []
 
     @classmethod
     def setUpClass(cls):
@@ -435,32 +495,58 @@ class FormFillingTests(unittest.TestCase):
         url = f"http://127.0.0.1:{self.server.server_port}/unit.html?unitSpk=TEST{site_options}"
         started = time.monotonic()
         values = None if record_only else auto_apply.form_values(profile)
-        attempt = auto_apply.run_form(page, url, values, submit=submit, apartment="TEST")
+        attempt = auto_apply.run_form(page, url, values, submit=submit, apartment="TEST", record=record_only)
         self.seconds = time.monotonic() - started
         return attempt, context.pages[-1].evaluate("() => window.submitted || null")
 
-    def test_submit_fills_every_field_and_the_site_confirms(self):
+    def test_submit_fills_every_field_and_the_sites_api_answer_decides(self):
         attempt, submitted = self.apply()
         self.assertEqual(attempt.status, "submitted", attempt.detail)
+        self.assertEqual(attempt.detail, "StuyTown's application API accepted it")
         self.assertEqual(submitted, self.EXPECTED)
         self.assertEqual(attempt.problems, [])
-        self.assertTrue(attempt.filled_screenshot)  # taken before SUBMIT -- and SUBMIT still worked
+        self.assertTrue(attempt.filled_screenshot)  # taken right after SUBMIT
         self.assertTrue(attempt.result_screenshot)
-        self.assertTrue(attempt.form_url.endswith("/apply.html?unitSpk=TEST"))
+        self.assertTrue(attempt.form_url.endswith("/unit.html?unitSpk=TEST"))  # a dialog on the unit page
+        self.assertTrue(attempt.timeline["server_submitted_utc"])
+        self.assertEqual(attempt.captured["body"], self.EXPECTED)  # for checking direct submit's format
+        self.assertNotIn("Jane", repr(attempt))  # the captured request is never printed
         self.assertLess(self.seconds, 15)
+
+    def test_a_second_application_to_the_same_apartment_is_refused_by_the_site(self):
+        self.apply()
+        attempt, _ = self.apply()
+        self.assertEqual(attempt.status, "rejected", attempt.detail)
+        self.assertIn("open application", attempt.detail)
+
+    def test_a_failing_api_is_unconfirmed_never_retried(self):
+        auto_apply.SelftestSiteHandler.fail_next = 1
+        attempt, _ = self.apply()
+        self.assertEqual(attempt.status, "unconfirmed", attempt.detail)
+
+    def test_a_recording_captures_the_sites_request_and_sends_nothing(self):
+        context = self.browser.new_context(viewport={"width": 1280, "height": 900}, service_workers="block")
+        self.addCleanup(context.close)
+        url = f"http://127.0.0.1:{self.server.server_port}/unit.html?unitSpk=TEST"
+        attempt = auto_apply.run_form(context.new_page(), url, auto_apply.form_values(EXAMPLE_PROFILE),
+                                      submit=False, capture=True, record=True, apartment="TEST")
+        self.assertEqual(attempt.status, "recorded", attempt.detail)
+        self.assertEqual(attempt.captured["body"], self.EXPECTED)
+        self.assertTrue(attempt.captured["url"].endswith("/affordable-housing/create-application"))
+        self.assertEqual(auto_apply.SelftestSiteHandler.applications, [])  # nothing reached the site
 
     def test_it_reads_labels_that_arent_wired_to_their_boxes(self):
         attempt, _ = self.apply(submit=False)
         self.assertEqual(attempt.form_fields, [
             "First Name *", "Last Name *", "Email *", "Cell Phone *", "Work Phone", "Building *",
-            "Street name *", "Apartment No.", "City *", "State", "Zip *", "Household Size * (i)",
+            "Street name *", "Apartment No.", "City *", "State", "Zip *", "Household Size * i",
             "Household Gross Annual Income, $ * $",  # not just the "$" beside the box
         ])
 
     def test_a_money_box_that_fills_from_the_cents_still_gets_the_right_amount(self):
         attempt, submitted = self.apply(site_options="&income=cents")
         self.assertEqual(attempt.status, "submitted", attempt.detail)
-        self.assertEqual(submitted["income"], "95,000.00")
+        self.assertEqual(submitted["totalAnnualEarnings"], "95000")
 
     def test_how_each_box_took_its_value_is_recorded_without_the_value(self):
         recorder = apply_recorder.RunRecorder(None, apply_recorder.Redactor(EXAMPLE_PROFILE))
@@ -494,16 +580,18 @@ class FormFillingTests(unittest.TestCase):
         self.assertIsNone(submitted)
 
     def test_a_submit_click_that_misses_is_noticed_and_retried(self):
-        # The original bug: a plain full-page screenshot right before SUBMIT
-        # makes the click land beside the button.
+        # The original bug: a full-page screenshot right before SUBMIT made the
+        # click land beside the button. Here the page swallows the first click.
         context = self.browser.new_context(viewport={"width": 1280, "height": 900})
         self.addCleanup(context.close)
         page = context.new_page()
-        page.goto(f"http://127.0.0.1:{self.server.server_port}/apply.html?unitSpk=TEST")
-        scope = page.locator("form").first
+        page.goto(f"http://127.0.0.1:{self.server.server_port}/unit.html?unitSpk=TEST")
+        auto_apply._wait_for_apply_button(page, 5000).click()
+        _, scope = auto_apply._find_form(context, 5000)
         auto_apply._fill_visible_fields(scope, auto_apply.form_values(EXAMPLE_PROFILE), {})
         button = auto_apply._visible_button(scope, auto_apply.SUBMIT_BUTTON)
-        page.screenshot(full_page=True)
+        page.evaluate("""() => window.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); },
+                                                     {capture: true, once: true})""")
         recorder = apply_recorder.RunRecorder(None, apply_recorder.Redactor(None))
         self.assertTrue(auto_apply._press(button, page, recorder))
         page.wait_for_timeout(500)
@@ -536,7 +624,7 @@ class FormFillingTests(unittest.TestCase):
         attempt, submitted = self.apply({**EXAMPLE_PROFILE, "work_phone": "",
                                          "extra_fields": {"Work Phone": "+1 646 555 0199"}})
         self.assertEqual(attempt.status, "submitted", attempt.detail)
-        self.assertEqual(submitted["workPhone"], "+1 646 555 0199")
+        self.assertEqual(submitted["workPhone"], "16465550199")
 
 
 class RedactorTests(unittest.TestCase):
@@ -611,17 +699,22 @@ class RedactorTests(unittest.TestCase):
 
 @unittest.skipUnless(_browser_available(), "Playwright + Chromium not installed")
 class EndToEndTests(unittest.TestCase):
-    """The real applier -- two warm browser workers, the queue, background
-    alerts and logging -- against the fake site standing in for StuyTown."""
+    """The real applier -- two warm browser workers, direct submit, the
+    queue, background alerts and logging -- against the fake site standing
+    in for StuyTown."""
 
-    def test_two_cheap_units_at_once_are_applied_to_in_parallel_then_the_learned_address_is_used(self):
-        server = auto_apply._serve_selftest_site()
-        self.addCleanup(server.server_close)
-        self.addCleanup(server.shutdown)
+    def setUp(self):
+        self.server = auto_apply._serve_selftest_site()
+        self.addCleanup(self.server.server_close)
+        self.addCleanup(self.server.shutdown)
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
-        site = f"http://127.0.0.1:{server.server_port}"
-        alerts, windows = [], []
+        self.tmp = tmp.name
+        site = f"http://127.0.0.1:{self.server.server_port}"
+        self.alerts, self.windows = [], []
+        auto_apply.SelftestSiteHandler.applications = []
+        auto_apply.SelftestSiteHandler.fail_next = 0
+        auto_apply.SelftestSiteHandler.units = {}
         real_run_form = auto_apply.run_form
 
         def timed_run_form(*args, **kwargs):
@@ -629,81 +722,104 @@ class EndToEndTests(unittest.TestCase):
             try:
                 return real_run_form(*args, **kwargs)
             finally:
-                windows.append((threading.current_thread().name, started, time.monotonic()))
+                self.windows.append((threading.current_thread().name, started, time.monotonic()))
 
-        with mock.patch.object(check_units, "UNIT_PAGE_URL", f"{site}/unit.html"), \
-                mock.patch.object(check_units, "LISTINGS_URL", f"{site}/unit.html"), \
-                mock.patch.object(check_units, "notify", lambda **a: alerts.append(a) or True), \
-                mock.patch.object(apply_recorder, "RUNS_DIR", f"{tmp.name}/apply_runs"), \
-                mock.patch.object(auto_apply, "APPLICATIONS_FILE", f"{tmp.name}/applications.json"), \
-                mock.patch.object(auto_apply, "FORM_URL_FILE", f"{tmp.name}/apply_form_url.json"), \
-                mock.patch.object(auto_apply, "PRIVATE_DIR", f"{tmp.name}/private"), \
-                mock.patch.object(auto_apply, "MAX_RENT", 3000), \
-                mock.patch.object(auto_apply, "run_form", timed_run_form), mock.patch("builtins.print"):
-            notifier, logger = background.Worker("notifier"), background.Worker("logger")
-            applier = auto_apply.Applier(EXAMPLE_PROFILE, notifier, logger, workers=2)
-            logger.yield_to = applier.busy
-            applier.start()
-            try:
-                # Two cheap units and an expensive one appear in the same check.
-                applier.dispatch([unit("1A", 2850), unit("2B", 2900), unit("9F", 4380.54)])
-                self.assertTrue(applier.wait_idle(60))
-                deadline = time.monotonic() + 30  # the recording of 9F runs once both are done
-                while not applier.form_url.get("verified") and time.monotonic() < deadline:
-                    time.sleep(0.1)
-                self.assertTrue(applier.form_url.get("verified"), applier.form_url)
-                # The next cheap unit goes straight to the form.
-                applier.dispatch([unit("3C", 2500)])
-                self.assertTrue(applier.wait_idle(60))
-            finally:
-                applier.stop(30)
-            notifier.drain(30)
-            logger.drain(30)
+        for target, name, value in [
+            (check_units, "UNIT_PAGE_URL", f"{site}/unit.html"), (check_units, "LISTINGS_URL", f"{site}/unit.html"),
+            (check_units, "notify", lambda **a: self.alerts.append(a) or True),
+            (apply_recorder, "RUNS_DIR", f"{self.tmp}/apply_runs"),
+            (auto_apply, "APPLICATIONS_FILE", f"{self.tmp}/applications.json"),
+            (direct_submit, "API_FORMAT_FILE", f"{self.tmp}/apply_api.json"),
+            (auto_apply, "PRIVATE_DIR", f"{self.tmp}/private"), (auto_apply, "MAX_RENT", 3000),
+            (auto_apply, "run_form", timed_run_form),
+        ]:
+            patcher = mock.patch.object(target, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        patcher = mock.patch("builtins.print")
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.notifier, self.logger = background.Worker("notifier"), background.Worker("logger")
+        self.applier = auto_apply.Applier(EXAMPLE_PROFILE, self.notifier, self.logger, workers=2)
+        self.logger.yield_to = self.applier.busy
+        self.applier.start()
+        self.addCleanup(self.applier.stop, 30)
 
-        applications = [w for w in windows if w[0].startswith("applier")][:2]
+    def listed(self, *units):
+        for u in units:
+            auto_apply.SelftestSiteHandler.units[u["unitSpk"]] = u
+        return list(units)
+
+    def finish(self):
+        self.applier.stop(30)
+        self.notifier.drain(30)
+        self.logger.drain(30)
+        return json.loads(Path(f"{self.tmp}/applications.json").read_text(encoding="utf-8"))
+
+    def runs(self):
+        return {r.name.split("_", 1)[1]: r for r in Path(f"{self.tmp}/apply_runs").iterdir()}
+
+    def test_two_at_once_in_parallel_by_browser_then_the_learned_request_goes_direct(self):
+        # Two cheap units and an expensive one appear in the same check.
+        self.applier.dispatch(self.listed(unit("1A", 2850), unit("2B", 2900, version=4), unit("9F", 4380.54)))
+        self.assertTrue(self.applier.wait_idle(60))
+        self.assertIsNone(self.applier.direct.why_not())  # learned from the browsers' own requests
+        # The next cheap unit goes straight to the API.
+        started = time.monotonic()
+        self.applier.dispatch(self.listed(unit("3C", 2500, version=7)))
+        self.assertTrue(self.applier.wait_idle(30))
+        direct_seconds = time.monotonic() - started
+        observed = self.applier.observations()
+        log = self.finish()
+
+        applications = [w for w in self.windows if w[0].startswith("applier")][:2]
         self.assertEqual({w[0] for w in applications}, {"applier-0", "applier-1"})  # one browser each
         (_, start_a, end_a), (_, start_b, end_b) = applications
         self.assertLess(max(start_a, start_b), min(end_a, end_b))  # at the same time
+        self.assertLess(direct_seconds, 2)
 
-        self.assertEqual(sorted(a["title"] for a in alerts), [
+        self.assertEqual(sorted(a["title"] for a in self.alerts), [
             "Applied: Apt 1A, 287 Avenue C", "Applied: Apt 2B, 287 Avenue C", "Applied: Apt 3C, 287 Avenue C"])
-        self.assertTrue(all(a["priority"] == 0 and a["attachment"][1][:2] == b"\xff\xd8" for a in alerts))
-        log = json.loads(Path(f"{tmp.name}/applications.json").read_text(encoding="utf-8"))
+        self.assertTrue(all(a["priority"] == 0 for a in self.alerts))
         self.assertEqual(sorted(log), ["P~TEST~U~1A", "P~TEST~U~2B", "P~TEST~U~3C"])
         self.assertTrue(all(r["attempts"][-1]["status"] == "submitted" for r in log.values()))
-        timeline = log["P~TEST~U~3C"]["attempts"][-1]["timeline"]
-        self.assertEqual(timeline["form_via"], "direct address")
-        stages = ["queued_utc", "started_utc", "form_found_utc", "submit_pressed_utc", "answer_utc", "finished_utc"]
-        self.assertEqual([timeline[s] for s in stages], sorted(timeline[s] for s in stages))  # in order
-        self.assertGreaterEqual(timeline["queue_wait_seconds"], 0)
-        observed = applier.observations()
+        direct = log["P~TEST~U~3C"]["attempts"][-1]["timeline"]
+        self.assertEqual(direct["form_via"], "direct (API)")
+        stages = ["queued_utc", "started_utc", "submit_pressed_utc", "answer_utc", "finished_utc"]
+        self.assertEqual([direct[s] for s in stages], sorted(direct[s] for s in stages))  # in order
+        self.assertTrue(direct["server_submitted_utc"])
+        browser = log["P~TEST~U~1A"]["attempts"][-1]["timeline"]
+        self.assertEqual(browser["form_via"], "unit page")
+        self.assertLess(browser["form_found_utc"], browser["submit_pressed_utc"])
         self.assertEqual(len(observed["browser_ready_seconds"]), 2)
-        self.assertTrue(observed["form_url"]["verified"])
-        self.assertGreaterEqual(observed["idle_listings_page"]["loads"], 1)
-        learned = json.loads(Path(f"{tmp.name}/apply_form_url.json").read_text(encoding="utf-8"))
-        self.assertTrue(learned["template"].endswith("/apply.html?unitSpk={unitSpk}"))
+        self.assertTrue(observed["direct_submit"]["ready"])
 
-        runs = {r.name.split("_", 1)[1]: r for r in Path(f"{tmp.name}/apply_runs").iterdir()}
-        self.assertEqual(sorted(runs), ["1A_apply", "2B_apply", "3C_apply", "9F_record"])
-        direct = [s["step"] for s in json.loads((runs["3C_apply"] / "report.json").read_text())["steps"]]
-        self.assertIn("opening the form directly", direct)
-        self.assertNotIn("opening the unit page", direct)
-        self.assertIn("2_form_empty.jpg", [f.name for f in runs["9F_record"].iterdir()])
-        submit_request = [n for n in json.loads((runs["1A_apply"] / "network.json").read_text())
-                          if n["method"] == "POST"]
-        self.assertEqual(json.loads(submit_request[0]["request_body"])["firstName"], "<first_name>")
+        # What the site received: exactly the three applications, the direct
+        # one identical in form to the ones the site's own form built.
+        received = [a["body"] for a in auto_apply.SelftestSiteHandler.applications]
+        self.assertEqual(sorted(b["unitSpk"] for b in received), ["P~TEST~U~1A", "P~TEST~U~2B", "P~TEST~U~3C"])
+        by_unit = {b["unitSpk"]: b for b in received}
+        self.assertEqual({**by_unit["P~TEST~U~3C"], "unitSpk": "x", "version": 0},
+                         {**by_unit["P~TEST~U~2B"], "unitSpk": "x", "version": 0})
+        self.assertEqual(by_unit["P~TEST~U~3C"]["version"], 7)
+        saved = json.loads(Path(f"{self.tmp}/apply_api.json").read_text(encoding="utf-8"))
+        self.assertEqual(saved["rules"]["version"], "the unit's")
+        self.assertNotIn("Jane", json.dumps(saved))
+
+        runs = self.runs()
+        self.assertEqual(sorted(runs), ["1A_apply", "2B_apply", "3C_direct", "9F_record"])
         report = json.loads((runs["1A_apply"] / "report.json").read_text())
         sent = report["analysis"]["submit_request"]
         self.assertEqual((sent["method"], sent["status"]), ("POST", 200))
-        self.assertIn("/api/applications?unitSpk=", sent["url"])
+        self.assertTrue(sent["url"].endswith("/affordable-housing/create-application"))
         self.assertIn("firstName", sent["body_keys"])
-        self.assertIn("content-type", sent["header_names"])
         self.assertEqual(report["analysis"]["anti_bot"], {})
         self.assertTrue(report["notes"]["text_after_submit_new"])  # the site's own confirmation wording
-        self.assertIn("page_facts", report["notes"])
         recorded = json.loads((runs["9F_record"] / "report.json").read_text())
         self.assertEqual(recorded["notes"]["form_facts"]["forms_on_page"], 1)
-        self.assertIn("resources_by_type", recorded["notes"]["page_facts"])
+        self.assertIn("direct_submit_check", recorded["notes"])
+        self.assertIn("2_form_empty.jpg", [f.name for f in runs["9F_record"].iterdir()])
+        self.assertNotIn("P~TEST~U~9F", by_unit)  # the recording's SUBMIT never reached the site
         # Nothing personal in anything that gets committed.
         for folder in runs.values():
             for file in folder.iterdir():
@@ -711,8 +827,43 @@ class EndToEndTests(unittest.TestCase):
                     continue
                 text = file.read_text(encoding="utf-8").casefold()
                 for value in ("jane", "jane.doe@example.com", "2125550123", "212 555 0123", "95,000", "95000",
-                              "example street", "10009"):
+                              "example street", "10009", "fake-token"):
                     self.assertNotIn(value, text, f"{value!r} in {folder.name}/{file.name}")
+
+    def test_a_direct_request_that_fails_is_handed_to_the_browser(self):
+        self.applier.dispatch(self.listed(unit("9F", 4380.54, version=2)))  # a recording proves the format
+        deadline = time.monotonic() + 30
+        while self.applier.direct.why_not() and time.monotonic() < deadline:
+            time.sleep(0.1)
+        self.assertIsNone(self.applier.direct.why_not())
+        auto_apply.SelftestSiteHandler.fail_next = 1  # the direct request gets a 503
+        self.applier.dispatch(self.listed(unit("1A", 2500)))
+        self.assertTrue(self.applier.wait_idle(60))
+        log = self.finish()
+        attempt = log["P~TEST~U~1A"]["attempts"][-1]
+        self.assertEqual(attempt["status"], "submitted", attempt["detail"])
+        self.assertEqual(attempt["timeline"]["form_via"], "unit page")
+        self.assertEqual(attempt["timeline"]["direct_tried"]["status"], "unknown")
+        self.assertEqual(len(auto_apply.SelftestSiteHandler.applications), 2)  # the failed one, then the browser's
+        self.assertEqual(len(self.alerts), 1)  # one result message, not two
+
+    def test_the_site_refuses_a_second_application_and_a_new_code_version_stops_direct_submit(self):
+        self.applier.dispatch(self.listed(unit("9F", 4380.54, version=2)))
+        deadline = time.monotonic() + 30
+        while self.applier.direct.why_not() and time.monotonic() < deadline:
+            time.sleep(0.1)
+        prepared = self.applier.direct.prepare(self.listed(unit("1A", 2500))[0])
+        self.assertEqual(self.applier.direct.submit(prepared)["status"], 200)  # e.g. applied by hand earlier
+        self.applier.dispatch([unit("1A", 2500)])
+        self.assertTrue(self.applier.wait_idle(30))
+        auto_apply.SelftestSiteHandler.site_version = "1002"  # StuyTown deploys new code
+        self.addCleanup(setattr, auto_apply.SelftestSiteHandler, "site_version", "1001")
+        self.applier.direct.refresh_config("P~TEST~U~1A")
+        self.assertIn("code changed", self.applier.direct.why_not())
+        log = self.finish()
+        attempt = log["P~TEST~U~1A"]["attempts"][-1]
+        self.assertEqual(attempt["status"], "rejected")
+        self.assertIn("open application", attempt["detail"])
 
 
 if __name__ == "__main__":
