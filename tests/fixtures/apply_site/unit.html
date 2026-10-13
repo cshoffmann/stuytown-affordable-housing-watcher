@@ -1,12 +1,32 @@
 <!doctype html>
-<!-- FAKE copy of a StuyTown affordable unit page (as recorded 2026-10-08),
-     for auto_apply.py's tests and --selftest. Like the real one, it's drawn
-     by JavaScript after the page loads, the APPLY NOW button sits at the very
-     bottom, and the header menu and footer have look-alike links that must
-     be left alone. -->
+<!-- FAKE copy of a StuyTown affordable unit page and its application form
+     (as recorded 2026-10-12), for auto_apply.py's tests and --selftest.
+     Nothing real is sent: the form posts to the fake API on the same test
+     server (auto_apply.SelftestSiteHandler).
+
+     Like the real one:
+       - the page carries the form's settings in its HTML ("applyForm": the
+         API address, its key, the messages, the field limits), and its code
+         is a versioned script (/sb/aHUnit-js.js.v<version>)
+       - it's drawn by JavaScript after loading the unit from the units API;
+         APPLY NOW sits at the very bottom, and the header menu and footer
+         have look-alike links that must be left alone
+       - APPLY NOW opens the form in a dialog on the same page
+       - SUBMIT sends one JSON request to the application API with the
+         Subscription-Key header; the API answers {"token", "status": "Created",
+         "submittedOn", ...}, and the dialog then shows the success message
+     Deliberately awkward, like real forms often are:
+       - labels aren't connected to their boxes (no <label for=...>), and
+         "required" is only the * in the label
+       - the phone boxes start with "+" and reformat as you type, so a number
+         typed without its country code would come out wrong
+       - the income box is a "$ 0.00" money box that reformats; with
+         ?income=cents in the URL it fills from the cents up (typing 95000
+         shows 950.00), like some money boxes do
+     With ?reject=1 in the URL the form refuses every submit, with an error. -->
 <html lang="en">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
-<title>FAKE - Apartment TEST</title>
+<title>FAKE - Apartment</title>
 <style>
   body{font-family:sans-serif;margin:0;background:#eee}
   header{background:#333;color:#fff;padding:1em} header nav{display:none}
@@ -15,7 +35,16 @@
   footer{background:#000;color:#fff;padding:2em 1em}
   footer a{color:#fff;display:block;margin:.5em 0}
   .spacer{height:900px}
-</style></head>
+  [role=dialog]{position:fixed;inset:0;overflow:auto;background:#fff;padding:2em}
+  .field{margin-top:1em;max-width:640px} .field .label{font-size:.8em;font-weight:bold}
+  .field input{width:100%;padding:.8em;box-sizing:border-box;border:1px solid #6a9fd8}
+  .money{display:flex;align-items:center;border:1px solid #6a9fd8} .money input{border:0}
+  .error-text{color:#b00;font-size:.8em}
+  button[type=submit]{width:100%;max-width:640px;padding:1em;margin-top:1.5em;background:#3b82d6;color:#fff;border:0}
+</style>
+<script>window.__SITE__ = {"blocks":[],"applyForm":{"apiUrl":"{{ORIGIN}}/affordable-housing/create-application","apiUrlHeaderName":"Subscription-Key","apiUrlHeaderValue":"fake-key-0000","submitButtonLabel":"SUBMIT","successMessage":"We’ve sent a link with the detailed Application Form to your email. Please complete the form within 24 hours and we will process your application.","errorMessage":"Uh Oh! We found that you have an open application for this apartment. Note that you will not be allowed to submit more than one application per the apartment.","unavailableUnitErrorMessage":"Uh Oh! Unfortunately your application cannot be processed. Application have already been submitted by 3 other applicants.","firstNameField":{"minLength":1,"maxLength":20,"label":"First Name","validation":["Required","Is ASCII"]},"lastNameField":{"minLength":1,"maxLength":25,"label":"Last Name","validation":["Required","Is ASCII"]},"buildingField":{"minLength":1,"maxLength":7,"label":"Building","validation":["Required"]},"apartmentField":{"minLength":1,"maxLength":6,"label":"Apartment No.","validation":[]},"householdSizeField":{"minLength":0,"maxLength":2,"label":"Household Size","validation":["Required"]}}};</script>
+<script src="/sb/aHUnit-js.js.v{{SITE_VERSION}}"></script>
+</head>
 <body>
 <header>stuytown | PETER COOPER VILLAGE
   <nav><a href="#">How to Apply</a><a href="#">Eligibility</a></nav></header>
@@ -23,20 +52,130 @@
 <footer>212.253.3680 - stuytownlottery@example.com
   <a href="#">Sign Up for Future Lottery Opportunities</a><a href="#">Terms of Use</a></footer>
 <script>
-  setTimeout(() => {
+  const settings = window.__SITE__.applyForm;
+  const options = new URLSearchParams(location.search);
+  const spk = options.get('unitSpk') || 'TEST';
+  const centsFirst = options.get('income') === 'cents';
+  const capitalized = text => text.split(/\s+/).filter(Boolean)
+    .map(w => w[0].toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+
+  fetch('/api/ah-units/' + encodeURIComponent(spk)).then(r => r.json()).then(unit => {
+    const address = capitalized(unit.building.address);
     document.getElementById('app').innerHTML = `
-      <h1>&lsaquo; Apartment TEST</h1>
+      <h1>&lsaquo; Apartment ${unit.name}</h1>
       <p>FLOORPLAN | GALLERY</p>
-      <p>1 BED | 1 BATH | 745 SQFT.</p>
-      <p>$2850.00 / 12 month &nbsp; $2850.00 / 24 month</p>
-      <p>FAKE BUILDING, NOT A REAL UNIT<br>Available November 1</p>
-      <h3>FINISH</h3><p>Platinum</p>
+      <p>${unit.bedrooms} BED | ${unit.bathrooms} BATH</p>
+      <p>$${unit.price} / 12 month</p>
+      <p>${unit.building.address}<br>Available November 1</p>
       <div class="spacer">The photo gallery and floorplan pictured is an example.</div>
       <button class="apply" type="button">APPLY NOW</button>`;
-    document.querySelector('.apply').addEventListener('click', () => {
-      location.href = 'apply.html' + location.search;
+    document.querySelector('.apply').addEventListener('click', () => openForm(unit, address));
+  });
+
+  function openForm(unit, address) {
+    const dialog = document.createElement('div');
+    dialog.setAttribute('role', 'dialog');
+    dialog.innerHTML = `
+      <a href="#" class="back">&larr; BACK TO APARTMENT</a>
+      <h2>Hi, you're applying to ${address}, Apt ${unit.name}</h2>
+      <p>The minimum income required to lease this unit is $${unit.incomeRequirement}.</p>
+      <form action="#">
+        <div class="field"><div class="label">First Name *</div><div><input name="firstNameField"></div></div>
+        <div class="field"><div class="label">Last Name *</div><div><input name="lastNameField"></div></div>
+        <div class="field"><div class="label">Email *</div><div><input name="emailField" maxlength="100"></div></div>
+        <div class="field"><div class="label">Cell Phone *</div><div><input name="cellPhoneField" class="phone" type="tel" value="+"></div></div>
+        <div class="field"><div class="label">Work Phone</div><div><input name="workPhoneField" class="phone" type="tel" value="+"></div></div>
+        <div class="field"><div class="label">Building *</div><div><input name="buildingField"></div></div>
+        <div class="field"><div class="label">Street name *</div><div><input name="streetField"></div></div>
+        <div class="field"><div class="label">Apartment No.</div><div><input name="apartmentField"></div></div>
+        <div class="field"><div class="label">City *</div><div><input name="cityField"></div></div>
+        <div class="field"><div class="label">State</div><div><input name="stateField"></div></div>
+        <div class="field"><div class="label">Zip *</div><div><input name="zipField"></div></div>
+        <div class="field"><div class="label">Household Size * <span title="Everyone who will live in the apartment">i</span></div>
+          <div><input name="householdSizeField"></div></div>
+        <div class="field"><div class="label">Household Gross Annual Income, $ *</div>
+          <div class="money"><span>$</span><input name="householdIncomeField" placeholder="0.00"></div></div>
+        <p><b>Upon submitting this form you will receive an email that will include a link to a more detailed
+          application. Please complete the form within 24 hours to remain eligible for this application process.</b></p>
+        <button type="submit">SUBMIT</button>
+      </form>`;
+    document.body.appendChild(dialog);
+    const form = dialog.querySelector('form');
+    const box = name => form.elements[name];
+
+    // Phone boxes: always "+" then digits, grouped like "+1 212 555 0123".
+    for (const phone of form.querySelectorAll('.phone')) {
+      phone.addEventListener('input', () => {
+        const d = phone.value.replace(/\D/g, '').slice(0, 11);
+        phone.value = d.startsWith('1') && d.length > 1
+          ? ('+1 ' + [d.slice(1, 4), d.slice(4, 7), d.slice(7)].filter(Boolean).join(' ')) : '+' + d;
+      });
+    }
+    // Money box.
+    const income = box('householdIncomeField');
+    income.addEventListener('input', () => {
+      if (centsFirst) {
+        const d = income.value.replace(/\D/g, '').replace(/^0+/, '');
+        income.value = d ? (Number(d) / 100).toLocaleString('en-US', {minimumFractionDigits: 2}) : '';
+      } else {
+        income.value = income.value.replace(/[^\d.,]/g, '');
+      }
     });
-  }, 400);
+    income.addEventListener('blur', () => {
+      const n = Number(income.value.replace(/,/g, ''));
+      if (!centsFirst && income.value) income.value = n.toLocaleString('en-US', {minimumFractionDigits: 2});
+    });
+
+    const complain = text => form.insertAdjacentHTML('beforeend', `<div class="error-text" role="alert">${text}</div>`);
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      form.querySelectorAll('.error-text').forEach(e => e.remove());
+      let ok = true;
+      for (const field of form.querySelectorAll('.field')) {
+        const input = field.querySelector('input');
+        const empty = !input.value.replace(/[\s+$,.0]/g, '');
+        if (field.querySelector('.label').textContent.includes('*') && empty) {
+          ok = false;
+          field.insertAdjacentHTML('beforeend', '<div class="error-text">This field is required</div>');
+        }
+      }
+      if (ok && options.get('reject')) {
+        ok = false;
+        complain('Something went wrong. Please try again later.');
+      }
+      if (!ok) return;
+      // What the real form sends: digits-only phones, the income without its formatting.
+      const digits = v => v.replace(/\D/g, '');
+      const body = {
+        unitSpk: spk,
+        firstName: box('firstNameField').value.trim(), lastName: box('lastNameField').value.trim(),
+        cellPhone: digits(box('cellPhoneField').value), householdSize: box('householdSizeField').value.trim(),
+        email: box('emailField').value.trim(), totalAnnualEarnings: String(Number(income.value.replace(/,/g, ''))),
+        buildingAddress: address, workPhone: digits(box('workPhoneField').value),
+        address: {apartment: box('apartmentField').value.trim(), building: box('buildingField').value.trim(),
+                  streetName: box('streetField').value.trim(), city: box('cityField').value.trim(),
+                  state: box('stateField').value.trim(), zip: box('zipField').value.trim()},
+        version: unit.version,
+      };
+      window.sent = body;
+      const request = new XMLHttpRequest();
+      request.open('POST', settings.apiUrl);
+      request.setRequestHeader('Content-Type', 'application/json');
+      request.setRequestHeader('Accept', 'application/json, text/plain, */*');
+      request.setRequestHeader(settings.apiUrlHeaderName, settings.apiUrlHeaderValue);
+      request.onload = () => {
+        if (request.status >= 200 && request.status < 300) {
+          window.submitted = body;
+          form.hidden = true;
+          dialog.insertAdjacentHTML('beforeend', `<p>${settings.successMessage}</p>`);
+        } else {
+          complain(request.status === 409 ? settings.errorMessage : settings.unavailableUnitErrorMessage);
+        }
+      };
+      request.onerror = () => complain('Something went wrong. Please try again later.');
+      request.send(JSON.stringify(body));
+    });
+  }
 </script>
 </body>
 </html>
