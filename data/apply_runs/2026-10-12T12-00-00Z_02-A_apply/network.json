@@ -383,13 +383,13 @@
       "content-type": "application/json",
       "origin": "https://affordable-housing.stuytown.com",
       "referer": "https://affordable-housing.stuytown.com/",
-      "subscription-key": "312f7785-864c-43ba-aca8-1f8259183a22",
+      "subscription-key": "<36 chars>",
       "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.8010.12 Safari/537.36",
       "sec-ch-ua": "\"HeadlessChrome\";v=\"153\", \"Not_A Brand\";v=\"8\", \"Chromium\";v=\"153\"",
       "sec-ch-ua-mobile": "?0",
       "sec-ch-ua-platform": "\"Linux\""
     },
-    "request_body": "{\"unitSpk\":\"P~NYST31~B~445~U~02-A\",\"firstName\":\"<first_name>\",\"lastName\":\"<last_name>\",\"cellPhone\":\"<cell_phone>\",\"householdSize\":\"2\",\"email\":\"<email>\",\"totalAnnualEarnings\":\"<annual_income>\",\"buildingAddress\":\"445 East 14th Street\",\"workPhone\":\"<cell_phone>\",\"address\":{\"apartment\":\"5B\",\"building\":\"<building>\",\"streetName\":\"<street_name>\",\"city\":\"<city>\",\"state\":\"NY\",\"zip\":\"<zip>\"},\"version\":1}",
+    "request_body": "{\"unitSpk\":\"P~NYST31~B~445~U~02-A\",\"firstName\":\"<redacted>\",\"lastName\":\"<redacted>\",\"cellPhone\":\"<redacted>\",\"householdSize\":\"<redacted>\",\"email\":\"<redacted>\",\"totalAnnualEarnings\":\"<redacted>\",\"buildingAddress\":\"445 East 14th Street\",\"workPhone\":\"<redacted>\",\"address\":{\"apartment\":\"<redacted>\",\"building\":\"<redacted>\",\"streetName\":\"<redacted>\",\"city\":\"<redacted>\",\"state\":\"<redacted>\",\"zip\":\"<redacted>\"},\"version\":1}",
     "answered_t": 1.729,
     "status": 200,
     "response_headers": {
@@ -400,7 +400,7 @@
       "content-type": "application/json; charset=utf-8",
       "x-azure-ref": "20261012T120001Z-1746cb4dd6c27rx4hC1SN1d9x00000000250000000003b3a"
     },
-    "response_body": "{\"token\":\"61QS2uWwT9GxF3rhogM2b9lCHhPY783tAcei8ndQRMPbfV05gh5XWLLJwPNds1N9i31xoEQdzo5ANrvrwXDQ\",\"unitSpk\":\"P~NYST31~B~445~U~02-A\",\"submittedOn\":\"2026-10-12T12:00:01.6153186Z\",\"totalAnnualEarnings\":157000,\"applyingAddress\":\"445 East 14th Street, Apt 02-A\",\"status\":\"Created\",\"contacts\":[{\"id\":1784,\"firstName\":\"<first_name>\",\"lastName\":\"<last_name>\",\"email\":\"<email>\",\"role\":\"MainApplicant\",\"cellPhone\":\"<cell_phone>\",\"workPhone\":\"<cell_phone>\",\"relationshipToApplicant\":\"Self\",\"address\":{\"id\":2990,\"apartment\":\"5B\",\"building\":\"<building>\",\"streetName\":\"<street_name>\",\"city\":\"<city>\",\"state\":\"NY\",\"zip\":\"<zip>\"},\"otherIncomes\":[],\"assets\":[]}]}"
+    "response_body": "{\"token\":\"<secret>\",\"unitSpk\":\"P~NYST31~B~445~U~02-A\",\"submittedOn\":\"2026-10-12T12:00:01.6153186Z\",\"totalAnnualEarnings\":\"<redacted>\",\"applyingAddress\":\"445 East 14th Street, Apt 02-A\",\"status\":\"Created\",\"contacts\":[{\"id\":1784,\"firstName\":\"<redacted>\",\"lastName\":\"<redacted>\",\"email\":\"<redacted>\",\"role\":\"MainApplicant\",\"cellPhone\":\"<redacted>\",\"workPhone\":\"<redacted>\",\"relationshipToApplicant\":\"Self\",\"address\":{\"id\":2990,\"apartment\":\"<redacted>\",\"building\":\"<redacted>\",\"streetName\":\"<redacted>\",\"city\":\"<redacted>\",\"state\":\"<redacted>\",\"zip\":\"<redacted>\"},\"otherIncomes\":[],\"assets\":[]}]}"
   },
   {
     "t": 1.729,

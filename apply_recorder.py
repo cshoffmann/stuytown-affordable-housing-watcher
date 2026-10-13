@@ -40,6 +40,18 @@ MAX_REQUESTS = 400
 MAX_SOCKET_FRAMES_KEPT = 3  # per WebSocket: the first few messages, shortened
 # Headers that carry login state; never worth keeping.
 DROPPED_HEADERS = {"cookie", "set-cookie", "authorization", "proxy-authorization"}
+# Headers kept by name, with their value replaced by its length (API keys).
+SECRET_HEADER = re.compile(r"key|token|secret|signature|session|auth", re.I)
+# JSON keys whose values are secrets anywhere (the application's "token" is
+# what its detailed-application link is made from).
+SECRET_JSON_KEY = re.compile(r"token|secret|password|passcode|\bssn\b|signature|^auth", re.I)
+# JSON keys whose values are yours in the application request and the site's
+# answer to it, whatever they look like ("5B", "NY", 2, a number with no
+# quotes): replaced by key, never matched as text.
+PERSONAL_JSON_KEYS = {"firstname", "lastname", "fullname", "name", "email", "cellphone", "workphone", "phone",
+                      "homephone", "householdsize", "totalannualearnings", "income", "annualincome", "apartment",
+                      "building", "streetname", "street", "city", "state", "zip", "zipcode", "postalcode",
+                      "dateofbirth", "dob"}
 BODY_TYPES = ("document", "xhr", "fetch")  # whose responses are worth reading
 PHONE_KEYS = ("cell_phone", "work_phone")
 
@@ -52,7 +64,9 @@ class Redactor:
 
     def __init__(self, profile: dict | None):
         patterns = []
+        self.values = []  # (key, value) -- to name what a JSON value was, see structured()
         for key, value in _leaves(profile or {}):
+            self.values.append((key, value))
             patterns += [(pattern, f"<{key}>") for pattern in _patterns_for(key, value)]
         # Longest first, so "jane.doe@example.com" goes before "Jane".
         patterns.sort(key=lambda item: -len(item[0]))
@@ -72,6 +86,88 @@ class Redactor:
         if isinstance(value, list):
             return [self.deep(v) for v in value]
         return self(value) if isinstance(value, str) else value
+
+    def structured(self, value, personal: bool = False, key=None):
+        """Redact a parsed JSON body by its keys as well as its text: secret
+        keys (a token) always, and -- in the application request and its
+        answer (personal=True) -- every personal key, so short or unquoted
+        values ("5B", 2, an income as a bare number) can't slip through."""
+        if isinstance(value, dict):
+            return {k: self.structured(v, personal, k) for k, v in value.items()}
+        if isinstance(value, list):
+            return [self.structured(v, personal, key) for v in value]
+        if key is not None and value is not None and not isinstance(value, bool) and value != "":
+            name = str(key).lower()
+            if SECRET_JSON_KEY.search(name):
+                return "<secret>"
+            if personal and name in PERSONAL_JSON_KEYS:
+                return self.name_of(value)
+        if isinstance(value, (int, float)) and not isinstance(value, bool) and abs(value) >= 100:
+            named = self.name_of(value)  # an income sent as a bare number, outside the application too
+            if named != "<redacted>":
+                return named
+        return self(value) if isinstance(value, str) else value
+
+    def name_of(self, value) -> str:
+        """'<annual_income>' for a value of the profile, else '<redacted>'."""
+        for key, mine in self.values:
+            if _same(value, mine):
+                return f"<{key}>"
+        return "<redacted>"
+
+    def scrub_pairs(self, text: str, personal: bool = False) -> str:
+        """For JSON text that can't be parsed (cut short): the same key rules,
+        by pattern, on "key": value pairs -- quoted or escaped inside a string."""
+        for quote, pattern in _PAIRS:
+            def replace(match, q=quote):
+                key, name = match.group("key"), match.group("key").lower()
+                if SECRET_JSON_KEY.search(name):
+                    return f"{q}{key}{q}:{q}<secret>{q}"
+                if personal and name in PERSONAL_JSON_KEYS:
+                    value = match.group("value").replace("\\", "").strip('"')
+                    return f"{q}{key}{q}:{q}{self.name_of(value)}{q}"
+                return match.group(0)
+
+            text = pattern.sub(replace, text)
+        return text
+
+
+# "key": value -- and the same when the JSON sits escaped inside another
+# JSON string (\"key\": \"value\"), which is matched first.
+_PAIRS = (
+    ('\\"', re.compile(r'\\"(?P<key>[A-Za-z_]\w*)\\"\s*:\s*(?P<value>\\"[^"\\]*\\"|-?\d+(?:\.\d+)?)')),
+    ('"', re.compile(r'(?<!\\)"(?P<key>[A-Za-z_]\w*)"\s*:\s*(?P<value>"(?:[^"\\]|\\.)*"|-?\d+(?:\.\d+)?)')),
+)
+
+
+_INPUT_TAG = re.compile(r"<input\b[^>]*>", re.I)
+_VALUE_ATTR = re.compile(r'\svalue="[^"]*"', re.I)
+_UNTYPED = re.compile(r'\stype="(hidden|submit|button|checkbox|radio|image|reset)"', re.I)
+
+
+def blank_input_values(html: str) -> str:
+    """A page as saved: what's typed in its boxes is never kept, however
+    short ("5B", "NY", "2" can't be matched as text without mangling the
+    rest). Hidden fields and buttons keep their values."""
+    def blank(match):
+        tag = match.group(0)
+        return tag if _UNTYPED.search(tag) else _VALUE_ATTR.sub(' value="(typed)"', tag)
+
+    return _INPUT_TAG.sub(blank, html)
+
+
+def _same(value, mine) -> bool:
+    """Is this JSON value the profile value (allowing for number formatting)?"""
+    text, wanted = str(value).strip(), str(mine).strip()
+    if text.casefold() == wanted.casefold():
+        return True
+    digits, wanted_digits = re.sub(r"\D", "", text), re.sub(r"\D", "", wanted)
+    if len(wanted_digits) >= 10 and digits[-10:] == wanted_digits[-10:]:
+        return True  # a phone number, formatted either way
+    try:
+        return float(text.replace(",", "").replace("$", "")) == float(wanted.replace(",", "").replace("$", ""))
+    except ValueError:
+        return False
 
 
 def _leaves(value, key=None):
@@ -100,7 +196,9 @@ def _patterns_for(key: str, value) -> list:
             amount = None
         if amount:
             spellings = {f"{amount:,.2f}", f"{amount:,.0f}", f"{amount:.2f}", f"{amount:.0f}", f"{amount * 100:.0f}"}
-            return [r"(?<![\d,.])" + re.escape(s) + r"(?![\d,]|\.\d)" for s in spellings]
+            # Not inside a longer number -- but a comma or "}" right after it
+            # (JSON: "income":95000,) is fine.
+            return [r"(?<![\d.])(?<!\d,)" + re.escape(s) + r"(?!\d|[.,]\d)" for s in spellings]
     if len(text) < 3:
         return []  # "NY", "1", "4B": not identifying, and would mangle everything else
     start = r"(?<![0-9a-z])" if text[0].isalnum() else ""
@@ -273,11 +371,12 @@ class Recording:
             self.folder.mkdir(parents=True, exist_ok=True)
             report = {**self.report, "files": sorted([f"{n}.html" for n in self.pages]
                                                      + [f"{n}.jpg" for n in self.images] + ["network.json"])}
-            report["analysis"] = self._analysis()
+            network = [self._redact_entry(e) for e in self.network]
+            report["analysis"] = self._analysis(network)  # worked out from the redacted data only
             self._write("report.json", json.dumps(self.redact.deep(report), indent=2))
-            self._write("network.json", json.dumps([self._redact_entry(e) for e in self.network], indent=2))
+            self._write("network.json", json.dumps(network, indent=2))
             for name, content in self.pages.items():
-                self._write(f"{name}.html", self.redact(content)[:MAX_HTML_BYTES])
+                self._write(f"{name}.html", blank_input_values(self.redact(content))[:MAX_HTML_BYTES])
             for name, jpeg in self.images.items():
                 (self.folder / f"{name}.jpg").write_bytes(jpeg)
             return self.folder
@@ -288,13 +387,13 @@ class Recording:
     def _write(self, name: str, text: str) -> None:
         (self.folder / name).write_text(text, encoding="utf-8")
 
-    def _analysis(self) -> dict:
-        """What Phase 2 most needs from a trip, worked out from the raw data
-        (and redacted like the rest)."""
+    def _analysis(self, network: list) -> dict:
+        """What Phase 2 most needs from a trip, worked out from the redacted
+        network data."""
         try:
             steps = self.report.get("steps") or []
             pressed = next((s["t"] for s in steps if s.get("step") == "pressing SUBMIT"), None)
-            requests = [e for e in self.network if "method" in e]
+            requests = [e for e in network if "method" in e]
             after = [e for e in requests if pressed is not None and e["t"] >= pressed]
             sent = next((e for e in after if e["method"] != "GET"), None)
             scripts = Counter(urllib.parse.urlsplit(e["url"]).netloc for e in requests if e.get("type") == "script")
@@ -340,12 +439,17 @@ class Recording:
         sources = {
             "requests": "\n".join(e["url"] for e in requests),
             "pages": "\n".join(self.pages.values()),
-            "cookies": "\n".join(c.get("name", "") for c in self.report.get("cookies") or []),
+            "cookies": "\n".join(f"{c.get('name', '')} (set by {c.get('domain')})"
+                                 for c in self.report.get("cookies") or []),
             "headers": "\n".join(f"{k}: {v}" for e in requests for k, v in (e.get("response_headers") or {}).items()),
         }
         found = {}
         for vendor, pattern in vendors.items():
-            where = [name for name, text in sources.items() if pattern.search(text)]
+            # Where it was seen; for cookies, which one and which site set it
+            # (a third party's, e.g. a font service's, says nothing about this site).
+            where = [name if name != "cookies" else "cookies: " + ", ".join(
+                line for line in text.splitlines() if pattern.search(line))
+                for name, text in sources.items() if pattern.search(text)]
             if where:
                 found[vendor] = where
         return found
@@ -357,23 +461,33 @@ class Recording:
         for key in ("request_headers", "response_headers"):
             if key in item:
                 item[key] = self._headers(item[key])
+        # A request that sends something (the application) and the site's
+        # answer to it: every personal JSON key is redacted by key.
+        personal = entry.get("method", "GET") != "GET"
         if "request_body" in item:
             content_type = (entry.get("request_headers") or {}).get("content-type", "")
-            item["request_body"] = self._redact_body(item["request_body"], content_type)
+            item["request_body"] = self._redact_body(item["request_body"], content_type, personal)
         if "response_body" in item:
-            item["response_body"] = self.redact(item["response_body"])[:MAX_BODY_CHARS]
+            item["response_body"] = self._redact_body(item["response_body"], "", personal)
         return item
 
     def _headers(self, headers: dict) -> dict:
-        return {k: self.redact(v) for k, v in headers.items() if k.lower() not in DROPPED_HEADERS}
+        return {k: (f"<{len(v)} chars>" if SECRET_HEADER.search(k) else self.redact(v))
+                for k, v in headers.items() if k.lower() not in DROPPED_HEADERS}
 
     def _redact_url(self, url: str) -> str:
         return self.redact(urllib.parse.unquote_plus(url))
 
-    def _redact_body(self, body: str, content_type: str) -> str:
+    def _redact_body(self, body: str, content_type: str, personal: bool = False) -> str:
         if "x-www-form-urlencoded" in content_type:
             body = urllib.parse.unquote_plus(body)
-        return self.redact(body)[:MAX_BODY_CHARS]
+        try:
+            parsed = json.loads(body)
+        except ValueError:
+            return self.redact(self.redact.scrub_pairs(body, personal))[:MAX_BODY_CHARS]
+        if not isinstance(parsed, (dict, list)):
+            return self.redact(body)[:MAX_BODY_CHARS]
+        return json.dumps(self.redact.structured(parsed, personal), separators=(",", ":"))[:MAX_BODY_CHARS]
 
 
 # Anti-bot, CAPTCHA and waiting-room services, by what they leave behind.
