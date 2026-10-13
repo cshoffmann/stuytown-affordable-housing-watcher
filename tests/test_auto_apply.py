@@ -742,6 +742,7 @@ class EndToEndTests(unittest.TestCase):
             (auto_apply, "run_form", timed_run_form),
             (check_units, "EVENTS_FILE", f"{self.tmp}/events.json"),
             (check_units, "STATE_FILE", f"{self.tmp}/last_seen.json"),
+            (apply_recorder, "SITE_VERSIONS_FILE", f"{self.tmp}/site_versions.json"),
         ]:
             patcher = mock.patch.object(target, name, value)
             patcher.start()
@@ -829,7 +830,13 @@ class EndToEndTests(unittest.TestCase):
         recorded = json.loads((runs["9F_record"] / "report.json").read_text())
         self.assertEqual(recorded["notes"]["form_facts"]["forms_on_page"], 1)
         self.assertIn("direct_submit_check", recorded["notes"])
-        self.assertIn("2_form_empty.jpg", [f.name for f in runs["9F_record"].iterdir()])
+        # The pages are kept once per version of the site's code, and whenever something goes wrong.
+        kept = [name for name, folder in runs.items() if any(f.suffix == ".html" for f in folder.iterdir())]
+        self.assertEqual(len(kept), 1, kept)
+        self.assertTrue(json.loads((runs[kept[0]] / "report.json").read_text())["pages_kept"].startswith(
+            "kept: the first time"))
+        self.assertTrue(recorded["pages_kept"].startswith("not kept") or kept == ["9F_record"])
+        self.assertIn("1001", json.loads(Path(f"{self.tmp}/site_versions.json").read_text()))
         self.assertNotIn("P~TEST~U~9F", by_unit)  # the recording's SUBMIT never reached the site
         # Nothing personal in anything that gets committed.
         for folder in runs.values():

@@ -22,6 +22,12 @@ pages that don't contain your details (the unit page, the empty form).
     *.html         the page at each stage
     *.jpg          screenshots without your details
 
+The pages (~400 KB each, nearly all of it the same site code) and the
+screenshot are only kept when they can tell something new: when the trip
+didn't go as it should, or the first time a version of the site's code is
+seen (data/site_versions.json says where). Everything else -- steps,
+fields, the network data, the analysis -- is always kept.
+
 Cookies are recorded by name and settings only, never their values.
 """
 
@@ -34,6 +40,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 RUNS_DIR = "data/apply_runs"
+SITE_VERSIONS_FILE = "data/site_versions.json"  # each version of the site's code, and where its pages were kept
+SITE_VERSION = re.compile(r"/sb/aHUnit-js\.js\.v(\d+)")
+# Outcomes that need no pages to understand: everything went as it should.
+ROUTINE_OUTCOMES = ("submitted", "recorded")
 MAX_HTML_BYTES = 1_500_000
 MAX_BODY_CHARS = 50_000
 MAX_REQUESTS = 400
@@ -369,15 +379,17 @@ class Recording:
             return None
         try:
             self.folder.mkdir(parents=True, exist_ok=True)
-            report = {**self.report, "files": sorted([f"{n}.html" for n in self.pages]
-                                                     + [f"{n}.jpg" for n in self.images] + ["network.json"])}
+            keep, why = self._keep_pages()
+            pages, images = (self.pages, self.images) if keep else ({}, {})
+            report = {**self.report, "pages_kept": why,
+                      "files": sorted([f"{n}.html" for n in pages] + [f"{n}.jpg" for n in images] + ["network.json"])}
             network = [self._redact_entry(e) for e in self.network]
             report["analysis"] = self._analysis(network)  # worked out from the redacted data only
             self._write("report.json", json.dumps(self.redact.deep(report), indent=2))
             self._write("network.json", json.dumps(network, indent=2))
-            for name, content in self.pages.items():
+            for name, content in pages.items():
                 self._write(f"{name}.html", blank_input_values(self.redact(content))[:MAX_HTML_BYTES])
-            for name, jpeg in self.images.items():
+            for name, jpeg in images.items():
                 (self.folder / f"{name}.jpg").write_bytes(jpeg)
             return self.folder
         except Exception as e:
@@ -386,6 +398,26 @@ class Recording:
 
     def _write(self, name: str, text: str) -> None:
         (self.folder / name).write_text(text, encoding="utf-8")
+
+    def _keep_pages(self) -> tuple:
+        """(keep the pages and screenshot?, why) -- see the module notes."""
+        if not self.pages and not self.images:
+            return False, "none were taken"
+        status = (self.report.get("outcome") or {}).get("status")
+        notes = self.report.get("notes") or {}
+        check = str(notes.get("direct_submit_check") or "")
+        version = next((m.group(1) for page in self.pages.values() for m in [SITE_VERSION.search(page)] if m), None)
+        known = _load_json(SITE_VERSIONS_FILE, {})
+        if version and version not in known:
+            known[version] = {"first_seen_utc": self.report.get("started_utc"), "pages_in": str(self.folder)}
+            _save_json(SITE_VERSIONS_FILE, known)
+            return True, f"kept: the first time the site's code v{version} was seen"
+        if status not in ROUTINE_OUTCOMES:
+            return True, f"kept: the outcome was {status}"
+        if "unexpected" in check or "couldn't rebuild" in check:
+            return True, "kept: the site's request had something unexpected in it"
+        where = (known.get(version) or {}).get("pages_in") if version else None
+        return False, "not kept: nothing went wrong" + (f", and {where} has this code's pages" if where else "")
 
     def _analysis(self, network: list) -> dict:
         """What Phase 2 most needs from a trip, worked out from the redacted
@@ -608,6 +640,23 @@ class SiteWatch:
             "websockets": dict(self.sockets),
             "errors": dict(self.errors),
         }
+
+
+def _load_json(path: str, default):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return default
+
+
+def _save_json(path: str, value) -> None:
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    tmp = f"{path}.tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(value, f, indent=2, sort_keys=True)
+        f.write("\n")
+    Path(tmp).replace(path)
 
 
 def _safe(read):

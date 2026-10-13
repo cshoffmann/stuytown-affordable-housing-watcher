@@ -36,6 +36,7 @@ import auto_apply
 import background
 import check_units
 import run_stats
+import summary
 
 POLL_INTERVAL_SECONDS = 2  # every check is one small request; cheap units have been gone in 15-45s
 # StuyTown posts units on the quarter hour (7:15, 7:30, 8:00, 8:15 in every
@@ -253,9 +254,21 @@ class Watcher:
             self.applier.stop(timeout=60)
         self.notifier.drain(timeout)
         if self.checks:
-            self.logger.submit(self.stats.write, self.applier, check_units.load_state())
+            self.logger.submit(self._wrap_up)
         self.commit_soon(final=True)
         self.logger.drain(timeout)
+        self.notifier.drain(timeout)  # the "needs a look" alert, if any
+
+    def _wrap_up(self) -> None:
+        """The morning's stats, the summary page (also shown on the GitHub
+        Actions run's page), and ONE alert -- only if something needs a look."""
+        self.stats.write(self.applier, check_units.load_state())
+        text = summary.write(auto_apply.MAX_RENT)
+        summary.github_step_summary(text)
+        found = summary.issues(self.stats.last_summary)
+        if found:
+            print("Needs a look:\n" + "\n".join(f"   - {line}" for line in found))
+            self.notifier.submit(background.notify_with_retries, check_units.notify, summary.attention_alert(found))
 
 
 def _quarter_hour(now: datetime) -> datetime:
