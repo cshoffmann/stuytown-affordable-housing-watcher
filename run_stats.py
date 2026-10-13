@@ -26,7 +26,7 @@ import json
 import os
 import statistics
 from collections import Counter, defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 
 RUN_STATS_DIR = "data/run_stats"
@@ -42,7 +42,11 @@ MAX_VALUES_PER_HEADER = 8
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+    return _ms(datetime.now(timezone.utc))
+
+
+def _ms(when: datetime) -> str:
+    return when.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
 
 class RunStats:
@@ -107,12 +111,16 @@ class RunStats:
     def observe_pace(self, interval: float, reason: str) -> None:
         self.pace.append({"at_utc": _utc_now(), "interval_s": interval, "reason": reason[:120]})
 
-    def observe_changes(self, changes, now: datetime, qualifies=None) -> None:
+    def observe_changes(self, changes, now: datetime, qualifies=None, previous: datetime | None = None) -> None:
         """New and removed units of one check made at `now` (to the
-        millisecond: SUBMIT is measured against it)."""
+        millisecond: SUBMIT is measured against it). previous: the check
+        before it -- a new unit was posted in between."""
         import check_units
 
-        stamp = now.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+        stamp = _ms(now)
+        quarter = now.astimezone(timezone.utc).replace(minute=now.minute - now.minute % 15, second=0, microsecond=0)
+        if (now - quarter).total_seconds() > 450:  # nearer the next quarter hour
+            quarter = quarter + timedelta(minutes=15)
         for unit in changes.new:
             uid = check_units.unit_id(unit)
             self.units[uid] = {
@@ -122,6 +130,10 @@ class RunStats:
                 "income_requirement": unit.get("incomeRequirement"),
                 "qualifies_for_auto_apply": bool(qualifies(unit)) if qualifies else None,
                 "first_seen_utc": stamp,
+                # Posted after the previous check and by this one: when StuyTown posts, to within a check.
+                "not_listed_at_utc": _ms(previous) if previous else None,
+                "posted_within_seconds": round((now - previous).total_seconds(), 3) if previous else None,
+                "seen_seconds_after_quarter_hour": round((now - quarter).total_seconds(), 3),
             }
         for record in changes.removed:
             uid = check_units.unit_id(record["data"])
@@ -154,7 +166,11 @@ class RunStats:
                 timeline = last.get("timeline") or {}
                 entry = self.units[uid]
                 entry["auto_apply"] = {"status": last.get("status"), "seconds": last.get("seconds"),
-                                       "timeline": timeline}
+                                       "via": timeline.get("form_via"), "timeline": timeline}
+                received = timeline.get("server_submitted_utc")
+                if received and entry.get("first_seen_utc"):  # the site's own clock: what ranks applications
+                    entry["auto_apply"]["site_received_seconds_after_first_seen"] = _seconds(
+                        entry["first_seen_utc"], received[:23] + "Z")
                 pressed = timeline.get("submit_pressed_utc")
                 if pressed and entry.get("first_seen_utc"):
                     entry["auto_apply"]["submit_seconds_after_first_seen"] = _seconds(entry["first_seen_utc"], pressed)

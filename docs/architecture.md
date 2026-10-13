@@ -1,4 +1,4 @@
-# Architecture: before and after Phase 1
+# Architecture: before Phase 1, Phase 1, and Phase 2
 
 The goal hasn't changed: **apply to every unit at or under `AUTO_APPLY_MAX_RENT`
 as soon as it appears.** The watcher's own logs show why speed decides it:
@@ -109,7 +109,7 @@ sequenceDiagram
 | **High:** detection waits up to 10 s | Every 10 s, a new connection each time, 20 s timeout | Every 2 s over one kept-open connection, 4 s timeout. It backs off only if the site asks (429/403, honoring Retry-After) and returns to 2 s gradually; plain errors are retried quickly and forgotten on the first good answer |
 | **High:** everything is serial | Applying, recordings, screenshots and git all paused checking; units applied to one at a time | The checker never pauses. 2 applier workers apply in parallel. All logging and alerts happen in the background. Recordings of over-limit forms run only when no application is |
 | **Medium:** each application starts cold | Chromium launched per check; the site loaded from nothing | Each worker opens Chromium at 6:59, loads the site once and keeps it warm (reloads every 4 min when idle) |
-| **Medium:** three page steps before the form | Unit page → APPLY NOW → form, every time | The form's address is learned from the first APPLY NOW. A recording then checks that opening it directly shows the right apartment, and from then on applications go straight to the form. Any failure falls back to the unit page |
+| **Medium:** three page steps before the form | Unit page → APPLY NOW → form, every time | The form's address is learned from the first APPLY NOW, so applications can skip the unit page. *(Removed in Phase 2: the live site showed the form is a dialog on the unit page, so there is no address to skip to. Direct submit replaces it.)* |
 | **Medium:** waits poll on a timer | APPLY NOW and the form checked every 250 ms | APPLY NOW is caught on the frame the page draws it (`wait_for_function`, `polling="raf"`); the form search runs every 50 ms |
 
 **Removed:** the listings-page screenshot after every new unit (a second
@@ -162,6 +162,83 @@ over-limit forms), after the site has answered, or by the background logger.
 | Did the site ever push back? | `run_stats` → `listings_api.statuses` and `failures`, and `pace` for every slow-down |
 | Does the site poll for new units itself, or hold a live connection? | `run_stats` → `applier.idle_listings_page`: the requests the idle listings page made on its own, per minute, and its WebSockets. A cheaper or faster endpoint would show up here |
 | Is the warm browser worth it, and how fast does the form page load? | `run_stats` → `applier.browser_ready_seconds`; `report.json` → `notes.page_facts` (load times, the slowest requests, the framework) |
+
+## Phase 2: what the first live mornings showed, and what changed
+
+Two applications went out on 2026-10-12, and one was the first of its
+unit's three. The recordings and the morning's stats answered most of the
+open questions:
+
+| Question | What the data showed |
+| --- | --- |
+| When are units posted? | Always on a quarter hour: 7:15, 7:30, 8:00 and 8:15 on every morning recorded (2026-10-06 to 10-12), seen by the first check at or after it |
+| How fast did we apply? | Unit seen → SUBMIT in **1.0–1.2 s**. About 0.75 s of that was loading the unit page (its HTML alone took 0.3 s); the form filled in 0.15 s, plus a 0.12 s screenshot before SUBMIT |
+| How fast are the others? | Each cheap unit had its 3 applications within ~40 s. **We were first on 08-B** (7:15, request out 1.2 s after the unit appeared) but not on 02-A (8:00, out 1.1 s after): someone got in under 1.1 s |
+| What decides the order? | On 08-B the site's server took 5.9 s to process our application (`submittedOn` 11:15:06.76) and we were still first. So the order seems to follow when requests *arrive*, not when the server finishes them: sending sooner is what counts |
+| Anti-bot protection? | **None.** No CAPTCHA, no token in the request, no challenge. The site accepted a browser that announces itself as `HeadlessChrome`. (A `__cf_bm` cookie came from the font service, not StuyTown; the analysis now says which site set each cookie) |
+| What does SUBMIT send? | One JSON `POST` to `pd-dlcore.beamliving.com/affordable-housing/create-application` with a `Subscription-Key` header. The address, key, success and error messages and field limits are all in the unit page's own settings (`"applyForm"`) |
+| What does the site answer? | `{"token", "status": "Created", "submittedOn", ...}`. At 7:15 the answer took **5.9 s** (busy server); at 8:00 it took 0.6 s |
+| Why "unconfirmed" both times? | The success text uses a curly apostrophe (`We’ve sent a link…`), which the confirmation pattern didn't allow, so both waited the full 30 s |
+| The listings API? | Median 45 ms, p99 0.26 s, 5,400 requests and every one a 200. Azure Front Door with no caching (`x-cache: CONFIG_NOCACHE`), no ETag and no rate-limit headers. The server closes a kept-open connection after about 120 requests. Its clock matches ours |
+| Does the site poll on its own? | No: the idle listings page made no requests and held no live connection |
+| Privacy | Two leaks in the committed recordings: the income, sent back as a bare number, and the application's token. Both are fixed, and redaction now goes by JSON key as well as by text |
+
+```mermaid
+flowchart LR
+    subgraph checker["Checker"]
+        P["Every 2 s, and every 0.25 s from :57 to :15<br/>around each quarter hour"] --> D["Compare + save"]
+    end
+    D -- "1: listings first" --> R{"Request format proven<br/>for the site's current code?"}
+    R -- "yes" --> X["Direct submit<br/>own thread, warm connection<br/>≈ 0.05 s after the unit is seen"]
+    R -- "no" --> B["Browser worker<br/>unit page → APPLY NOW → fill → SUBMIT<br/>≈ 1 s"]
+    X -- "refused / answer lost" --> B
+    B -- "the site's own request" --> L["Learn + check the format<br/>(rule names only)"]
+    REC["Recording of an over-limit unit:<br/>filled, SUBMIT pressed,<br/>every request held back"] --> L
+    L --> R
+    X --> N["Result → notifier, logger"]
+    B --> N
+```
+
+**Direct submit's safety rules** (`direct_submit.py`):
+
+1. The format is only ever learned from a request the site's **own form**
+   built: a real browser application, or a recording whose SUBMIT is held
+   back inside the browser (page routes stop every non-GET request, and
+   service workers are blocked so nothing can go around them).
+2. It's saved as **rule names**: the phone format, the income format,
+   where the building address and `version` come from. Rebuilding the
+   captured request from the profile with those rules must reproduce it
+   exactly. Anything it can't explain, such as a new field, leaves the
+   browser in charge.
+3. It's tied to the **version of the site's code** (`aHUnit-js.js.v…`),
+   re-read from a unit page every 30 minutes. A deploy switches direct
+   submit off until a capture proves the format again.
+4. A **refused or lost** direct request is handed to the browser. The site
+   itself refuses a second application to an apartment, so a request that
+   did go through can't be duplicated. That case is reported as
+   "unconfirmed, most likely went through".
+
+**Other Phase 2 changes:**
+- The browser path takes its result from the API's answer, including
+  `submittedOn`, the time on the site's clock, which is what ranks applicants.
+- Its screenshot is taken after SUBMIT instead of before.
+- The listings connection is renewed just before each burst of checks.
+- The run stats record when each unit was posted, to within a check.
+
+**Expected now:** about 0.1–0.3 s from posting to the request reaching the
+API, compared with about 1.1 s on 2026-10-12 and about 8.7 s before Phase 1.
+On busy mornings the server's own processing (5.9 s at 7:15) can matter
+more than any of this, and `site_received_seconds_after_first_seen` in the
+stats will show it.
+
+**Still to learn from the next live mornings:**
+- What the API answers for "already applied" and "unit full", so that
+  `interpret()` can name them from the status code too.
+- Whether `version` is the unit's version or always 1. The first capture
+  from a unit whose version isn't 1 settles it; until then direct submit
+  only runs for units where both readings agree.
+- More rankings like 08-B's, to confirm the order follows arrival (one
+  morning says so). Your email from StuyTown says which number you were.
 
 ## Threads, and why not asyncio
 
