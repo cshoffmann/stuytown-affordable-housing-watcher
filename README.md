@@ -1,9 +1,12 @@
 # StuyTown / PCV Affordable Housing Watcher
 
 Checks the real StuyTown/PCV affordable housing listings **every 2 seconds**
-from 7:00 to 10:00am ET, every day. When a unit at or under your rent limit
-appears, it **applies for you** within seconds: browsers kept open since 6:59
-fill in and submit StuyTown's application form. It also sends an
+from 7:00 to 10:00am ET, every day, and **every 0.25 seconds around each
+quarter hour**, when StuyTown posts units. When a unit at or under your rent
+limit appears, it **applies for you**: straight to StuyTown's application
+API once the site's own form has shown it exactly what to send (about 0.05 s
+after the unit appears), otherwise through a browser kept open since 6:59
+(about 1 s). It also sends an
 Emergency-priority Pushover alert (bypasses silent mode / Do Not Disturb),
 then a message with the result. Each unit closes after 3 applications, and
 the cheap ones have been gone in 15–45 seconds, so speed is the whole game.
@@ -50,7 +53,8 @@ Two independent triggers start the same workflow
    **6:13am New York time** and calls GitHub's API to start the workflow
    (the same as tapping **Run workflow**), so the run starts within seconds
    and shows as **"via manual request"** in the Actions tab. The job sets up,
-   opens the auto-apply browsers at 6:59, checks every 2 seconds from 7:00
+   opens the auto-apply browsers at 6:59, checks every 2 seconds (0.25 s
+   around each quarter hour) from 7:00
    until 10:00, then exits. You'll see one ~4-hour run per day. Setup is under
    [Google Cloud Scheduler](#google-cloud-scheduler-the-613am-start) below.
 2. **GitHub's own schedule — the backup.** The workflow's `schedule` fires at
@@ -153,48 +157,69 @@ income meets the unit's minimum), the watcher applies for you. **Applying
 always comes first**: nothing else can delay it.
 
 1. **At 6:59** two applier workers each open Chromium and load the StuyTown
-   site, so no application ever waits for a browser to start.
+   site, and the site's form settings are read (see *Direct submit*).
 2. **The check that first sees the unit** hands it to the applier before
-   any alert or log is queued; the checker carries on checking every 2 s. If
-   two cheap units appear together, each worker takes one and they're
-   applied to at the same time, cheapest first.
-3. A worker opens the unit's form. Once the form's address has been learned
-   and checked (see below), it goes **straight to the form**. Until then, or
-   if that ever fails, it opens the unit's page and presses **APPLY NOW**
-   (drawn by the page's JavaScript at the very bottom; look-alike links in
-   the site's menu and footer are ignored).
-4. It fills every field from your applicant profile (see the table below),
-   then **reads each box back** to check it took the value.
-5. It **takes a screenshot of the filled-in form**.
-6. If everything StuyTown requires is filled in correctly, it presses
-   **SUBMIT**, checks the click really reached the button, and waits for the
-   site's answer.
-7. In the background: **one** normal-priority message with the result
-   ("Applied", with the filled-in form attached, or a separate "Auto-apply
-   failed / unconfirmed" message with the page it ended on). The recording
-   (see *What gets recorded*) and `data/applications.json` are written by the
-   background logger, which waits until no application is running.
+   any alert or log is queued; the checker carries on checking.
+3. **Direct submit, when it's ready:** the application request goes
+   straight to StuyTown's application API on a thread of its own, over a
+   connection opened before the quarter hour. That's the same request the
+   site's SUBMIT button sends, built from your profile.
+4. **Otherwise, a browser** opens the unit's page, presses **APPLY NOW**
+   (drawn at the very bottom; look-alike links in the menu and footer are
+   ignored), fills every field from your profile, **reads each box back**,
+   and, only if everything required is right, presses **SUBMIT**. The
+   screenshot of the filled form is taken right after. If two cheap units
+   appear together, each browser takes one.
+5. **The site's answer decides the result:** its API's reply to the
+   application ("Created", or why not), the moment it arrives.
+6. In the background: **one** normal-priority message with the result
+   ("Applied", or a separate "Auto-apply failed / unconfirmed" message). The
+   recording and `data/applications.json` are written by the background
+   logger, which waits until no application is running.
 
-**Learning the form's address.** The first time APPLY NOW leads to the form,
-its address is remembered (`data/apply_form_url.json`) if it contains the
-unit's ID. When an over-limit unit's form is recorded, the watcher also
-checks that opening that address directly shows the form for that
-apartment. Only then do applications skip the unit page, about a second
-faster. The check is repeated whenever the address changes.
+### Direct submit (`direct_submit.py`)
+
+On 2026-10-12 the browser took about 1.1 s from a unit appearing to
+SUBMIT; 0.75 s of that was loading the unit page. The site's SUBMIT is a
+single JSON request to its application API, and the API's address, its key
+and the site's messages are written into every unit page. Direct submit
+sends that request itself, but **only while it's proven to be exactly what
+the site's form would send**:
+
+- **Learning without sending.** When an over-limit unit's form is
+  recorded, the form is filled from your profile and SUBMIT is pressed with
+  **every outgoing request held back inside the browser**, so nothing is
+  sent. The request the site's form built is kept in memory. Every real
+  browser application is used the same way.
+- From that request it learns *how* each value is written: the phone
+  format, the income format, where the building address and `version` come
+  from. Only these rule names are saved, in `data/apply_api.json`, never
+  your details. Rebuilding the captured request from your profile with
+  them must give exactly the same request, or direct submit stays off.
+- **Tied to the site's code.** The format is only used with the same
+  version of the site's JavaScript it was proven on. When StuyTown deploys
+  new code, the browser applies until the next capture proves it again.
+- **Safe fallback.** If the API refuses a direct request, or its answer is
+  lost, the browser applies instead. StuyTown refuses a second application
+  to the same apartment ("you have an open application"), so nothing can
+  be sent twice by mistake. If that happens after a lost answer, you're
+  told it most likely went through.
+
+To turn direct submit off, set `DIRECT_SUBMIT = False` in `auto_apply.py`.
 
 **Speed matters.** Units under $3,000 have been gone **15–45 seconds** after
-they appeared (all 3 applications taken); the $4,000+ ones stayed 35–50
-minutes. Phase 1 takes posting → SUBMIT from about 8.7 s to about 2–3 s.
-On the fake copy of the site, the applier submits about 1 s after being
-handed a unit.
+they appeared (all 3 applications taken), and on 2026-10-12 the other
+applicants were within about a second. Posting → SUBMIT was about 8.7 s
+before Phase 1 and 1.0–1.2 s on 2026-10-12 (browser). With direct submit
+and the quarter-hour checks it should be about 0.1–0.3 s.
 
 **After it submits:** StuyTown emails you a link to the *detailed*
 application, which has to be completed **within 24 hours** to stay eligible.
 That part is still yours, and the "Applied" message reminds you.
 
-### The form it fills (as recorded 2026-10-08)
+### The form it fills (as recorded 2026-10-12)
 
-It's one page. Each field is found by its label text (`FORM_FIELDS` in
+It's one dialog on the unit page. Each field is found by its label text (`FORM_FIELDS` in
 `auto_apply.py`), so the site's code can change without breaking anything as
 long as the labels stay the same:
 
@@ -216,7 +241,13 @@ long as the labels stay the same:
 
 If the site ever adds a field, put it in the profile's `extra_fields`, keyed
 by its label, e.g. `"extra_fields": {"Date of Birth": "01/31/1990"}`. No code
-change is needed.
+change is needed (the browser applies until the new request is proven for
+direct submit).
+
+The site's own limits, from its settings: first name up to 20 characters
+and last name up to 25 (both plain ASCII: no accents), building up to 7,
+street up to 32, apartment up to 6, city up to 30, state 2 letters. The
+watcher warns at startup (by key name) if a profile value breaks one.
 
 ### What makes it reliable
 
@@ -233,17 +264,15 @@ change is needed.
   - a required box is empty or wrong, or
   - any field StuyTown requires wasn't found at all, which would mean a label
     changed.
-- **SUBMIT is checked to have been pressed.** A full-page screenshot can leave
-  the page so that the next click lands *beside* the button. It scrolls back
-  after every screenshot, and confirms the click reached SUBMIT. If it
-  didn't, it clicks again; a missed click sends nothing.
+- **SUBMIT is checked to have been pressed.** It confirms the click reached
+  the button. If it didn't, it clicks again; a missed click sends nothing.
 - **Knows how it ended:**
 
   | Result | What happened | Tried again? |
   | --- | --- | --- |
-  | submitted | Confirmation text appeared | Not that day |
-  | unconfirmed | SUBMIT pressed, no confirmation within 30s | Not that day: it may have gone through |
-  | rejected | The site showed errors and kept the form | Not that day |
+  | submitted | The API answered "Created" (or the site's success message appeared) | Not that day |
+  | unconfirmed | Sent, but no clear answer: no reply within 30 s, a server error, or a lost answer | Not that day: it may have gone through |
+  | rejected | The site said no: you already have an open application, the unit already has its 3, or a form error | Not that day |
   | incomplete | Something required couldn't be filled; nothing sent | Not that day |
   | blocked | A CAPTCHA you'd have to click; nothing sent | Not that day |
   | failed | It crashed, timed out, or couldn't press SUBMIT; nothing sent | Once more that day, on a later check |
@@ -272,28 +301,37 @@ Every trip through the form is saved to
 results. **Your details are replaced with their key names** before anything
 is written: "Jane" becomes `<first_name>`, and "+1 212 555 0123" becomes
 `<cell_phone>`. That covers any letter case, any phone format, the income as
-`95000`, `95,000.00` or in cents, and URL-encoded text.
+`95000`, `95,000.00` or in cents, and URL-encoded text. In the application
+request and the site's answer to it, every personal field is also replaced
+**by its key**, whatever its value looks like (`"5B"`, `2`, an income sent
+as a bare number), and secrets such as the application's `token` (which
+the detailed-application link is made from) become `<secret>` in any JSON.
+API keys in headers are kept as a length, and what was typed into a box is
+never kept in a saved page.
 
 | File | What's in it |
 | --- | --- |
 | `report.json` | Each step with its timing and page address. Every form field with its label and how the site built it (`name`, `id`, `autocomplete`, `inputmode`, `maxlength`, `class` …, never its value). How each box took its value (a plain fill, typed key by key, which spelling) and, for phone/income/zip-type boxes, the *shape* it ended up in (`+# ### ### ####`). The buttons. What was filled and what wasn't. Whether the form named the right apartment. Console errors. **The text the page gained after SUBMIT** (the site's real confirmation or complaint). Page navigations, live (WebSocket) connections, and cookies by name and settings (never values). How the page is built and loaded (framework, load times, slowest requests). On recordings: how the form is sent (`action`, `method`, hidden fields by name and length, CAPTCHA widgets). The outcome, with a timeline |
 | `report.json` → `analysis` | Worked out when it's written: **the request SUBMIT sent**, summarized (method, address, header names, the body's field names, which ones look like tokens, the answer and how fast it came), every request in the seconds after SUBMIT, where the scripts come from, the CDN, and any sign of an anti-bot, CAPTCHA or waiting-room service |
-| `network.json` | Every request the browser made, including **the request SUBMIT sends and the site's answer**, with bodies for pages and API calls. Cookie headers are dropped |
+| `network.json` | Every request the browser made, including **the request SUBMIT sends and the site's answer**, with bodies for pages and API calls. Cookie headers are dropped. A direct submit's folder (`..._direct/`) holds just its request and answer |
 | `1_unit_page.html` … `4_after_submit.html` | The page's HTML at each stage |
 
 Each application in `data/applications.json` also gets a **timeline**: when
-the checker queued it, when a browser took it, when the form was found and
-how (`direct address` or `unit page`), when SUBMIT was pressed, when the
-page first changed, when the answer came, all in UTC to the millisecond.
+the checker queued it, when it started, how it went (`direct (API)` or
+`unit page`), when the form was found, when SUBMIT was pressed or the
+request sent, when the answer came, and **when the site's own clock received
+it** (`server_submitted_utc`, what ranks the 1-2-3), all in UTC to the
+millisecond.
 
 **One stats file per morning**, `data/run_stats/<date>.json`, covers what a
 single recording can't: how the listings API answers being checked every 2
 seconds (response times, statuses, whether the kept-open connection holds,
 caching headers such as `Age` or `ETag`, any rate-limit headers, how far its
-clock is from ours), every slow-down and why, every unit with how long it
-really stayed listed and how many seconds after it first appeared SUBMIT was
-pressed, and what the idle listings page did on its own (does the site poll
-for new units itself?). It's about the site and the listings: nothing of
+clock is from ours), every slow-down and why, every unit with **when it was
+posted** (between the last check without it and the first with it) and how
+long it really stayed listed, how many seconds after it appeared SUBMIT was
+pressed and the site received it, whether direct submit was ready, and what
+the idle listings page did on its own. It's about the site and the listings: nothing of
 yours is in it. `docs/architecture.md` has a table of which file answers
 which question.
 
@@ -303,11 +341,12 @@ the run).
 
 **There's real data even on mornings nothing qualifies.** While auto-apply is
 on, it also opens the form of up to **2 units over your limit** each morning
-and records it, without filling or sending anything, and only while no
-application is running. These go to
+and records it, only while no application is running. These go to
 `data/apply_runs/<time>_<apartment>_record/`, including a screenshot of the
-empty form, which contains nothing of yours. This is also when the form's
-address gets checked.
+empty form, which contains nothing of yours. The form is then filled and
+SUBMIT pressed with every outgoing request held back in the browser
+(nothing is sent), which is how direct submit learns and re-checks the
+site's request.
 
 ### Settings: repository variables, not code
 
@@ -449,6 +488,8 @@ there. (Run it outside 7–10am, or it waits for the morning run to finish.)
 - `auto_apply.py`: the `Applier`, which applies to units at or under your
   rent limit (see *Auto-apply*). `applicant_profile.example.json` shows every
   profile key.
+- `direct_submit.py`: reads the site's form settings, learns and checks the
+  application request, and sends it straight to the API.
 - `background.py`: the notifier and logger workers, and alert retries.
 - `apply_recorder.py`: records each trip through the form, with your details
   redacted, and works out the `analysis` (the SUBMIT request, anti-bot
@@ -461,7 +502,8 @@ there. (Run it outside 7–10am, or it waits for the morning run to finish.)
 - `data/events.json`: history of every new / updated / removed unit.
 - `data/applications.json`: which units auto-apply tried, and how it went
   (no personal details).
-- `data/apply_form_url.json`: the learned address of the application form.
+- `data/apply_api.json`: the proven direct-submit format (rule names and
+  the site's code version; none of your details).
 - `data/apply_runs/`: the form recordings.
 - `data/run_stats/`: one stats file per morning (no personal details).
 - `tests/`: automated tests, the phone simulation, the test alert, and the

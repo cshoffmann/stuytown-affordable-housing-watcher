@@ -1,7 +1,8 @@
 """
-Auto-apply: when a listed unit's monthly rent is at or under your limit, open
-the unit's application form, fill it in from your saved applicant profile,
-screenshot it, press SUBMIT -- then report the result.
+Auto-apply: when a listed unit's monthly rent is at or under your limit,
+apply for it from your saved applicant profile -- straight to StuyTown's
+application API once the request is proven (direct_submit.py), otherwise
+by filling in and submitting the form in a browser -- then report the result.
 
 The Applier runs next to the watcher's checker (watch_loop.py), which hands
 it every check's listings FIRST, before any alert or log is even queued:
@@ -14,10 +15,11 @@ it every check's listings FIRST, before any alert or log is even queued:
   - The result alert, the applications log and the form recording are handed
     to background workers (background.py). They never delay an application,
     and their failures never reach it.
-  - Once APPLY NOW has led to the form, the form's address is learned. After
-    a recording has confirmed that opening it directly shows the right
-    apartment, applications go straight to the form, skipping the unit
-    page. If that ever fails, the unit page is used as before.
+  - Direct submit: once a request the site's own form built has proven the
+    format (a browser application, or a recording that presses SUBMIT with
+    every request held back), a qualifying unit's application is sent
+    straight to the API, ~0.05 s after the checker sees it. Anything
+    unproven, refused or lost goes to a browser instead.
 
 Two repository variables control it:
 
@@ -30,7 +32,8 @@ Your details come from APPLICANT_PROFILE -- the whole JSON document, stored as
 ONE GitHub secret -- or, on your own computer, the gitignored
 applicant_profile.json. applicant_profile.example.json shows every key.
 
-The form (affordable-housing.stuytown.com, as recorded 2026-10-08) is one page:
+The form (affordable-housing.stuytown.com, as recorded 2026-10-12) is a dialog
+that APPLY NOW opens on the unit page:
 
     First Name *   Last Name *   Email *   Cell Phone *   Work Phone
     Building *  Street name *  Apartment No.  City *  State  Zip *
@@ -42,9 +45,10 @@ which has to be completed within 24 hours.
 Every trip through the form is recorded by apply_recorder.py into
 data/apply_runs/ -- steps and timings, the form's fields, the page HTML, the
 network traffic including what SUBMIT sends and what comes back -- with your
-details redacted. While on, it also records (without filling anything) the
-form of up to MAX_FORM_RECORDINGS_PER_RUN units over your limit each
-morning, whenever no application is running.
+details redacted. While on, it also records the form of up to
+MAX_FORM_RECORDINGS_PER_RUN units over your limit each morning, whenever no
+application is running -- filled in, with SUBMIT pressed and every outgoing
+request held back in the browser, so nothing is sent.
 
 The repo (and its Actions logs) are public, so nothing personal is ever
 printed, committed or logged: in GitHub Actions every profile value is masked
