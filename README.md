@@ -190,7 +190,9 @@ the site's form would send**:
   recorded, the form is filled from your profile and SUBMIT is pressed with
   **every outgoing request held back inside the browser**, so nothing is
   sent. The request the site's form built is kept in memory. Every real
-  browser application is used the same way.
+  browser application is used the same way. At 6:59, if the format isn't
+  proven yet, the same is tried on the last unit posted, in case its page
+  still opens the form, so direct submit can be ready before 7:15.
 - From that request it learns *how* each value is written: the phone
   format, the income format, where the building address and `version` come
   from. Only these rule names are saved, in `data/apply_api.json`, never
