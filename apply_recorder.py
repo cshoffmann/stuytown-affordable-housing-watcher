@@ -43,8 +43,22 @@ DROPPED_HEADERS = {"cookie", "set-cookie", "authorization", "proxy-authorization
 # Headers kept by name, with their value replaced by its length (API keys).
 SECRET_HEADER = re.compile(r"key|token|secret|signature|session|auth", re.I)
 # JSON keys whose values are secrets anywhere (the application's "token" is
-# what its detailed-application link is made from).
-SECRET_JSON_KEY = re.compile(r"token|secret|password|passcode|\bssn\b|signature|^auth", re.I)
+# what its detailed-application link is made from), and API keys.
+SECRET_JSON_KEY = re.compile(r"token|secret|password|passcode|\bssn\b|signature|^auth|api_?key|"
+                             r"subscription_?key|header_?value|access_?key|private_?key", re.I)
+# Keys and tokens that aren't yours but still don't belong in a public repo:
+# the site's pages carry its own browser keys (a Google Maps API key, the
+# application API's subscription key), which secret scanners flag.
+THIRD_PARTY_KEYS = [
+    (re.compile(r"AIza[0-9A-Za-z_-]{35}"), "<google-api-key>"),
+    (re.compile(r"\bgh[pousr]_[A-Za-z0-9]{36,}"), "<github-token>"),
+    (re.compile(r"\bgithub_pat_[A-Za-z0-9_]{40,}"), "<github-token>"),
+    (re.compile(r"\bAKIA[0-9A-Z]{16}\b"), "<aws-key>"),
+    (re.compile(r"\bxox[abposr]-[A-Za-z0-9-]{10,}"), "<slack-token>"),
+    # "apiUrlHeaderValue": "...", "googleMapAPIKey": "...", "subscriptionKey": "..." -- plain or JSON-escaped
+    (re.compile(r'(\\?"(?:apiUrlHeaderValue|[A-Za-z]*(?:Api|API|api)Key|[A-Za-z]*[Ss]ubscriptionKey)\\?"\s*:\s*\\?")'
+                r'[^"\\]+(\\?")'), r"\1<site-key>\2"),
+]
 # JSON keys whose values are yours in the application request and the site's
 # answer to it, whatever they look like ("5B", "NY", 2, a number with no
 # quotes): replaced by key, never matched as text.
@@ -77,7 +91,7 @@ class Redactor:
             return text
         for pattern, name in self.patterns:
             text = pattern.sub(name, text)
-        return text
+        return scrub_keys(text)
 
     def deep(self, value):
         """Redact every string inside a JSON-like structure."""
@@ -154,6 +168,13 @@ def blank_input_values(html: str) -> str:
         return tag if _UNTYPED.search(tag) else _VALUE_ATTR.sub(' value="(typed)"', tag)
 
     return _INPUT_TAG.sub(blank, html)
+
+
+def scrub_keys(text: str) -> str:
+    """Replace API keys and tokens (see THIRD_PARTY_KEYS) in any saved text."""
+    for pattern, replacement in THIRD_PARTY_KEYS:
+        text = pattern.sub(replacement, text)
+    return text
 
 
 def _same(value, mine) -> bool:
