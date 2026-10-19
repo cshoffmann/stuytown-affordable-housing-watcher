@@ -1,0 +1,108 @@
+<svg width="1325" height="664" viewBox="0 0 1325 664" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_99_1345)">
+<path d="M1183.9 176.5V367.7L1144.6 368V442.5H1270.4V323.8V176.5H1183.9Z" fill="white"/>
+<path d="M1144.6 442.5V535.2L1324.6 535.8V443.2L1144.6 442.5Z" fill="white"/>
+<path d="M247.2 102.5V274.3H344.7V196.8H508.8V269.7H515.9V102.5H247.2Z" fill="white"/>
+<path d="M7 187.5L6.30005 275.5H147.5H263V187.5H7Z" fill="white"/>
+<path d="M1066.5 656.5L1144.6 535.2V367L897.6 367.7L898.6 655.6L1066.5 656.5Z" fill="white"/>
+<path opacity="0.8" d="M1066 655.9H901.7L900.5 529.1H967.6L968.1 583H1050.4L1085.6 532.3V443.6C1085.6 443.5 1144.5 443.7 1144.6 443.7V535.2L1066 655.9Z" fill="white" fill-opacity="0.8" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path opacity="0.8" d="M960.9 368V468C960.9 468.1 960.9 468.1 960.8 468.1H901.7C901.6 468.1 901.6 468.1 901.6 468V368C901.6 367.9 901.6 367.9 901.7 367.9H960.8C960.9 367.9 960.9 367.9 960.9 368Z" fill="white" fill-opacity="0.8" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<text fill="#09283B" xml:space="preserve" style="white-space: pre" font-family="Lato" font-size="18" font-weight="bold" letter-spacing="0em"><tspan x="1005.17" y="479.218">Kitchen </tspan></text>
+<path d="M900.4 367V652.3" stroke="#67747B"/>
+<path d="M896.6 367.3V654.6" stroke="#C1C9CE" stroke-opacity="0.15" stroke-width="7"/>
+<path d="M1144.6 367V535.3" stroke="#67747B"/>
+<path d="M1148.9 367.3V527" stroke="#C1C9CE" stroke-opacity="0.15" stroke-width="7"/>
+<path d="M975.5 470.101V527.001C975.5 528.101 974.6 529.001 973.5 529.001H903C901.9 529.001 901 528.101 901 527.001V470.101C901 469.001 901.9 468.101 903 468.101H973.5C974.6 468.101 975.5 469.001 975.5 470.101Z" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M917.7 492.401C923.168 492.401 927.6 487.968 927.6 482.501C927.6 477.033 923.168 472.601 917.7 472.601C912.232 472.601 907.8 477.033 907.8 482.501C907.8 487.968 912.232 492.401 917.7 492.401Z" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M951.4 524.1C956.868 524.1 961.3 519.667 961.3 514.2C961.3 508.732 956.868 504.3 951.4 504.3C945.932 504.3 941.5 508.732 941.5 514.2C941.5 519.667 945.932 524.1 951.4 524.1Z" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M951.4 492.401C956.868 492.401 961.3 487.968 961.3 482.501C961.3 477.033 956.868 472.601 951.4 472.601C945.932 472.601 941.5 477.033 941.5 482.501C941.5 487.968 945.932 492.401 951.4 492.401Z" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M917.7 524.1C923.168 524.1 927.6 519.667 927.6 514.2C927.6 508.732 923.168 504.3 917.7 504.3C912.232 504.3 907.8 508.732 907.8 514.2C907.8 519.667 912.232 524.1 917.7 524.1Z" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M967.5 529.1V467.7" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M935.4 528.401V468.101" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M901 498.4H967.5" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M1144.6 370.6V441.1C1144.6 442.5 1143.4 443.7 1142 443.7H1086.7C1085.3 443.7 1084.1 442.5 1084.1 441.1V370.6C1084.1 369.2 1085.3 368 1086.7 368H1142C1143.5 368 1144.6 369.2 1144.6 370.6Z" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M1090.7 443.6H1078.1C1077.3 443.7 1076.5 443 1076.4 442.2V369.3C1076.5 368.5 1077.2 367.8 1078.1 367.9H1090.7" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M1076.6 438.6H1072.1C1071.6 438.6 1071.2 438 1071.2 437.2V434.5C1071.2 433.7 1071.6 433.1 1072.1 433.1H1076.6" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M1106.5 571.8L1090.3 595.3L1073.5 583.8C1069.3 580.9 1067.6 576 1069.9 572.8L1082.5 554.4C1084.7 551.2 1089.9 551 1094 553.8L1110.8 565.3L1098.9 582.7" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M508.8 269.7H898.1V655.6H508.8V269.7Z" fill="white"/>
+<text fill="#09283B" xml:space="preserve" style="white-space: pre" font-family="Lato" font-size="18" font-weight="bold" letter-spacing="0em"><tspan x="663.629" y="465.29">Living Room </tspan></text>
+<text fill="#09283B" xml:space="preserve" style="white-space: pre" font-family="PT Serif" font-size="14" letter-spacing="0em"><tspan x="669.868" y="484.429">12&#x2019;0&#10;</tspan><tspan x="669.868" y="503.429"> </tspan></text>
+<text fill="#09283B" xml:space="preserve" style="white-space: pre" font-family="PT Serif" font-size="14" letter-spacing="0em"><tspan x="697.07" y="484.429">&#x201d; </tspan></text>
+<text fill="#09283B" xml:space="preserve" style="white-space: pre" font-family="PT Serif" font-size="14" letter-spacing="0em"><tspan x="703.327" y="484.429">x 18&#x2019;7&#x201d; </tspan></text>
+<path d="M898.8 67.2002H1183.9V367.7L898.1 368.8V270.9H515.9V67.4002L898.8 67.2002Z" fill="white"/>
+<text fill="#09283B" xml:space="preserve" style="white-space: pre" font-family="Lato" font-size="18" font-weight="bold" letter-spacing="0em"><tspan x="830.036" y="173.422">Dining Area </tspan></text>
+<text fill="#09283B" xml:space="preserve" style="white-space: pre" font-family="PT Serif" font-size="14" letter-spacing="0em"><tspan x="841.275" y="192.561">9&#x2019;6 </tspan></text>
+<text fill="#09283B" xml:space="preserve" style="white-space: pre" font-family="PT Serif" font-size="14" letter-spacing="0em"><tspan x="860.833" y="192.561">&#x201d; </tspan></text>
+<text fill="#09283B" xml:space="preserve" style="white-space: pre" font-family="PT Serif" font-size="14" letter-spacing="0em"><tspan x="867.091" y="192.561">x 9&#x2019;4&#x201d; </tspan></text>
+<path d="M5.30005 276.7L345 188.5H506.8V658H5.30005V276.7Z" fill="white"/>
+<path d="M342.3 275.5H274M147.5 187.5H274M506.4 187.5V658.4M248 21.5H6.5V275.5H274M274 187.5V275.5M274 187.5H373V275.5" stroke="#67747B"/>
+<path d="M503 650.9V279.8M503 279.8L11.2 279.5M503 279.8V187.5" stroke="#C1C9CE" stroke-opacity="0.15" stroke-width="7"/>
+<path d="M506.4 275.5H342.3" stroke="#67747B"/>
+<text fill="#09283B" xml:space="preserve" style="white-space: pre" font-family="Lato" font-size="18" font-weight="bold" letter-spacing="0em"><tspan x="299" y="234.966">Closet </tspan></text>
+<text fill="#09283B" xml:space="preserve" style="white-space: pre" font-family="Lato" font-size="18" font-weight="bold" letter-spacing="0em"><tspan x="197.358" y="457.397">Master Bedroom </tspan></text>
+<text fill="#09283B" xml:space="preserve" style="white-space: pre" font-family="PT Serif" font-size="14" letter-spacing="0em"><tspan x="220.762" y="477.203">15&#x2019;0&#10;</tspan><tspan x="220.762" y="496.203"> </tspan></text>
+<text fill="#09283B" xml:space="preserve" style="white-space: pre" font-family="PT Serif" font-size="14" letter-spacing="0em"><tspan x="247.963" y="477.203">&#x201d; </tspan></text>
+<text fill="#09283B" xml:space="preserve" style="white-space: pre" font-family="PT Serif" font-size="14" letter-spacing="0em"><tspan x="255.6" y="476.972">x 12&#x2019;0&#x201d; </tspan></text>
+<path d="M352.8 191.3H295V188H352.8V191.3Z" fill="#84939D"/>
+<path opacity="0.07" d="M307.6 189C307.6 170.8 322.4 156 340.7 156V188.8L307.6 189Z" fill="#84939D"/>
+<path d="M307.6 189.7C307.6 171.5 322.4 156.7 340.7 156.7" stroke="#84939D" stroke-linecap="round" stroke-dasharray="1 1"/>
+<path d="M514.2 66H1182.6V176H1270.4V323.8L1270.6 443.3L1324.8 443.2V535.8H1142L1064.2 657.5H6.3999L6.74766 187.5M248.5 21H6.5L6.74766 187.5M6.74766 187.5H147.5V275" stroke="#67747B"/>
+<path d="M249.5 106.5H517.5V70.2002H1179V176.5H1266.7V323.6V447.4L1320.5 447.5L1320.9 531.7L1140.4 531L1062.4 654H9.30005L9.87105 273M9.87105 273L10 189.5H145V273H9.87105Z" stroke="#C1C9CE" stroke-opacity="0.15" stroke-width="7"/>
+<path d="M438.7 657.5H300.6V663.4H438.7V657.5Z" fill="#AFAFAF" stroke="#67747B"/>
+<path d="M6.4 359H0.5V447.6H6.4V359Z" fill="#AFAFAF" stroke="#67747B"/>
+<path d="M785.1 657.5H596.6V663.4H785.1V657.5Z" fill="#AFAFAF" stroke="#67747B"/>
+<path d="M1028 657.5H932.3V663.4H1028V657.5Z" fill="#AFAFAF" stroke="#67747B"/>
+<path d="M248.5 102H514.2V65.5" stroke="#67747B"/>
+<path d="M1270 334.8H1266.1V403H1270V334.8Z" fill="#84939D"/>
+<path opacity="0.07" d="M1268.1 349.2C1246.6 349.2 1229.1 366.7 1229.1 388.2H1267.9L1268.1 349.2Z" fill="#84939D"/>
+<path d="M1268.1 349.2C1246.6 349.2 1229.1 366.7 1229.1 388.2" stroke="#84939D" stroke-linecap="round" stroke-dasharray="1 1"/>
+<text fill="#09283B" xml:space="preserve" style="white-space: pre" font-family="Lato" font-size="17.832" font-weight="bold" letter-spacing="0em"><tspan x="187" y="235.401">Closet </tspan></text>
+<text fill="#09283B" xml:space="preserve" style="white-space: pre" font-family="Lato" font-size="17.832" font-weight="bold" letter-spacing="0em"><tspan x="51.1592" y="234.902">Closet </tspan></text>
+<text fill="#09283B" xml:space="preserve" style="white-space: pre" font-family="Lato" font-size="18" font-weight="bold" letter-spacing="0em"><tspan x="1215.79" y="493.636">Closet </tspan></text>
+<path d="M1240.5 440.9H1175.1V443.2H1240.5V440.9Z" fill="#84939D"/>
+<path opacity="0.07" d="M1190.9 441.6C1190.9 423.4 1205.9 408.7 1224.4 408.7V441.5L1190.9 441.6Z" fill="#84939D"/>
+<path d="M1190.9 441.6C1190.9 423.4 1205.9 408.7 1224.4 408.7" stroke="#84939D" stroke-linecap="round" stroke-dasharray="1 1"/>
+<path opacity="0.1" d="M961.7 369H888.7V320.2L926.2 320V361H961.7V369Z" fill="#C1C9CE"/>
+<path opacity="0.1" d="M36 317.802L13 317.802V281.002L36 281V317.802Z" fill="#C1C9CE"/>
+<path opacity="0.1" d="M36 651L13 651V628.001L36 628V651Z" fill="#C1C9CE"/>
+<path opacity="0.1" d="M537 651L509 651V623.001L537 623V651Z" fill="#C1C9CE"/>
+<path opacity="0.1" d="M565 99L514 98.9999V74.0012L565 74V99Z" fill="#C1C9CE"/>
+<path opacity="0.1" d="M1175 95L1124 94.9999V70.0012L1175 70V95Z" fill="#C1C9CE"/>
+<path opacity="0.1" d="M1229.1 527.7H1149.4V489.1L1190.4 489V521.4H1229.1V527.7Z" fill="#C1C9CE"/>
+<path opacity="0.1" d="M1142.9 361.5H1046.6V369H1142.9V361.5Z" fill="#C1C9CE"/>
+<path d="M41 272H109.2V275.9H41V272Z" fill="#84939D"/>
+<path opacity="0.07" d="M55.8999 274C55.8999 295.5 73.3999 313 94.8999 313V274.2L55.8999 274Z" fill="#84939D"/>
+<path d="M55.8999 274C55.8999 295.5 73.3999 313 94.8999 313" stroke="#84939D" stroke-linecap="round" stroke-dasharray="1 1"/>
+<path d="M178 272H246.2V275.9H178V272Z" fill="#84939D"/>
+<path opacity="0.07" d="M192.9 274C192.9 295.5 210.4 313 231.9 313V274.2L192.9 274Z" fill="#84939D"/>
+<path d="M192.9 274C192.9 295.5 210.4 313 231.9 313" stroke="#84939D" stroke-linecap="round" stroke-dasharray="1 1"/>
+<path d="M408 272H476.2V275.9H408V272Z" fill="#84939D"/>
+<path opacity="0.07" d="M422.9 274C422.9 295.5 440.4 313 461.9 313V274.2L422.9 274Z" fill="#84939D"/>
+<path d="M422.9 274C422.9 295.5 440.4 313 461.9 313" stroke="#84939D" stroke-linecap="round" stroke-dasharray="1 1"/>
+<path d="M1273.7 442.5H1140.3" stroke="#67747B"/>
+<path d="M1264.1 446.7H1149.4" stroke="#C1C9CE" stroke-opacity="0.15" stroke-width="7"/>
+<path d="M271 189H152V272H271V189Z" stroke="#C1C9CE" stroke-opacity="0.15" stroke-width="7"/>
+<path d="M370 191H278V272H370V191Z" stroke="#C1C9CE" stroke-opacity="0.15" stroke-width="7"/>
+<path d="M7 21.5H248V186.5H7C7 124.992 7 83.0076 7 21.5Z" fill="white"/>
+<path d="M248 21V179.6" stroke="#67747B"/>
+<path d="M246 25V183H10" stroke="#C1C9CE" stroke-opacity="0.15" stroke-width="7"/>
+<text fill="#09283B" xml:space="preserve" style="white-space: pre" font-family="Lato" font-size="18" font-weight="bold" letter-spacing="0em"><tspan x="122.626" y="124.907">Bathroom </tspan></text>
+<path opacity="0.07" d="M248.9 135.5C230.7 135.5 216 150.5 216 169H248.8L248.9 135.5Z" fill="#84939D"/>
+<path d="M248.9 135.5C230.7 135.5 216 150.5 216 169" stroke="#84939D" stroke-linecap="round" stroke-dasharray="1 1"/>
+<path d="M250.5 125H248.2V180H250.5V125Z" fill="#84939D"/>
+<path d="M194.4 29.5H241C241.3 29.5 241.5 29.7 241.5 30V40.8C241.5 44.8 238.2 48.1 234.2 48.1H200.6C196.9 48.1 193.8 45.1 193.8 41.3V30C193.8 29.7 194.1 29.5 194.4 29.5Z" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M196.8 58.6C196.8 55.5 199.4 53 202.5 53H232.3C235.8 53 238.6 55.8 238.7 59.3" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M238.7 45.5996L238.5 74.9996C238.5 85.1996 230.2 93.4996 219.9 93.5996H215C204.9 93.5996 196.7 85.3996 196.7 75.2996V46.1996" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M87.1999 32.7V170.4C87.1999 172.2 85.7999 173.6 83.9999 173.6H20.5999C18.7999 173.6 17.3999 172.2 17.3999 170.4V32.7C17.3999 30.9 18.7999 29.5 20.5999 29.5H83.9999C85.7999 29.5 87.1999 30.9 87.1999 32.7Z" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M56.1 38.7002H73.6C76.3 38.7002 78.5 40.9002 78.5 43.6002V133.2C78.5 133.2 77.8 160.1 54.6 160.1C26.7 160.1 26.7 134.4 26.7 134.4V43.6002C26.7 40.9002 28.9 38.7002 31.6 38.7002H49.1" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M56.1 38.7002H73.6C76.3 38.7002 78.5 40.6002 78.5 42.9002V119.9C78.5 119.9 77.8 143 54.6 143C26.7 143 26.7 120.9 26.7 120.9V42.9002C26.7 40.6002 28.9 38.7002 31.6 38.7002H56.1Z" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path opacity="0.8" d="M185.2 29.5H104.3V81.8H185.2V29.5Z" fill="white" fill-opacity="0.8" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M168.6 29.5V52.2C168.6 59.5 164.5 65.5 159.4 65.5H130.1C125 65.5 120.9 59.5 120.9 52.2V29.5" stroke="#AFAFAF" stroke-miterlimit="10"/>
+<path d="M7.9 110H2V149H7.9V110Z" fill="#AFAFAF" stroke="#67747B"/>
+</g>
+<defs>
+<clipPath id="clip0_99_1345">
+<rect width="1325" height="664" fill="white"/>
+</clipPath>
+</defs>
+</svg>

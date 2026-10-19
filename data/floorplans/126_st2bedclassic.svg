@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Generator: Adobe Illustrator 23.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)-->
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  x="0px"
+  y="0px"
+  version="1.1"
+  viewBox="0 0 1325.2 560.5"
+>
+  <style type="text/css">
+    .st0 {
+      fill: #ffffff;
+    }
+    .st1 {
+      fill: #c3e8f4;
+    }
+    .st2 {
+      fill: none;
+      stroke: #67747b;
+    }
+    .st3 {
+      fill: none;
+      stroke: #c1c9ce;
+      stroke-width: 7;
+      stroke-opacity: 0.15;
+    }
+    .st4 {
+      fill: #09283b;
+    }
+    .st5 {
+      font-family: 'Lato';
+      font-weight: 700;
+    }
+    .st6 {
+      font-size: 18px;
+    }
+    .st8 {
+      font-family: 'Lato';
+      font-weight: 700;
+    }
+    .st9 {
+      font-size: 28px;
+    }
+    .st10 {
+      letter-spacing: 2;
+    }
+    .st11 {
+      fill: #84939d;
+    }
+    .st12 {
+      opacity: 7e-2;
+      fill: #84939d;
+      enable-background: new;
+    }
+    .st13 {
+      fill: none;
+      stroke: #84939d;
+      stroke-linecap: round;
+      stroke-dasharray: 1, 4;
+    }
+    .st14 {
+      fill: none;
+      stroke: #afafaf;
+      stroke-miterlimit: 10;
+    }
+    .st15 {
+      opacity: 0.8;
+      fill: #ffffff;
+      fill-opacity: 0.8;
+      stroke: #afafaf;
+      stroke-miterlimit: 10;
+      enable-background: new;
+    }
+    .st16 {
+      font-family: 'PTSerif-Regular';
+    }
+    .st17 {
+      font-size: 14px;
+    }
+    .st18 {
+      fill: #afafaf;
+      stroke: #67747b;
+    }
+    .st19 {
+      font-size: 17.6658px;
+    }
+    .st20 {
+      opacity: 0.1;
+      fill: #c1c9ce;
+      enable-background: new;
+    }
+  </style>
+  <polygon
+    points="1018.5,256.9 1018.5,300.3 1248.5,300.3 1248.2,371.2 1324.8,370.6
+	1324.7,257.1 "
+    class="st0"
+  />
+  <polygon points="1248.2,371.2 1248.7,495.4 1324.8,494.9 1324.8,370.6 " class="st0" />
+  <polygon points="564.5,489 564.5,560 685.5,559.6 685.9,489 " class="st0" />
+  <polygon
+    points="343.7,347.7 343.7,408.4 222.8,408.5 222.4,495.3 564.5,494.9 564.5,489
+	685.4,488.1 685.6,411.5 428.2,411.9 428.2,347.9 "
+    class="st0"
+  />
+  <polygon points="263.2,347.7 263.2,408.4 343.7,408.4 343.7,347.7 " class="st0" />
+  <title>
+    Asset 3
+  </title>
+  <g>
+    <g>
+      <g class="bathroom room" data-id="bathroom" data-type="room">
+        <polygon
+          points="6.4,408.5 222.8,408.5 222.9,550 6.4,550"
+          class="st1 fill-container"
+          data-name="Fill-container"
+        />
+        <line x1="222.4" x2="222.4" y1="408.4" y2="495.3" class="st2" />
+        <line x1="218.2" x2="218.2" y1="409.1" y2="487.1" class="st3" />
+        <line x1="214.6" x2="14.4" y1="412.5" y2="412.5" class="st3" />
+        <g>
+          <g>
+            <text class="st4 st5 st6" transform="matrix(1 0 0 1 109.3068 478.8333)">
+              Bathroom
+            </text>
+          </g>
+          <g>
+            <g>
+              <g>
+                <text
+                  class="st7 st8 st9 st10 room-trigger"
+                  data-name="Room-trigger"
+                  transform="matrix(1 0 0 1 87.3229 475.3333)"
+                >
+                  +
+                </text>
+              </g>
+            </g>
+          </g>
+        </g>
+        <g>
+          <rect width="2.3" height="55" x="220.2" y="422.1" class="st11" />
+          <g>
+            <path d="M220.9,466.1c-18.2,0-32.9-15-32.9-33.5h32.8L220.9,466.1z" class="st12" />
+            <path d="M220.9,466.1c-18.2,0-32.9-15-32.9-33.5" class="st13" />
+          </g>
+        </g>
+        <path
+          d="M207.4,544.5h-41.3c-0.3,0-0.5-0.2-0.5-0.5v-8.7c0-4,3.3-7.3,7.3-7.3c0,0,0,0,0,0h28.3c3.7,0,6.8,3,6.8,6.8
+				v9.3C207.9,544.3,207.7,544.5,207.4,544.5z"
+          class="st14"
+        />
+        <path d="M205.3,518.7c0,2.8-2.3,5-5.1,5h-26.5c-3.1,0-5.6-2.5-5.7-5.6" class="st14" />
+        <path d="M168,530.2l0.2-26.2c0-9.1,7.4-16.5,16.5-16.5h4.3c9,0,16.2,7.3,16.3,16.3v25.9" class="st14" />
+        <path
+          d="M15,541.3V416.6c0-1.8,1.4-3.2,3.2-3.2h57.1c1.8,0,3.2,1.4,3.2,3.2v124.7c0,1.8-1.4,3.2-3.2,3.2H18.2
+				C16.4,544.5,15,543.1,15,541.3z"
+          class="st14"
+        />
+        <path
+          d="M43.2,536.2H27.3c-2.5,0-4.5-2-4.5-4.5v-81.5c0,0,0.7-24.4,21.8-24.4c25.4,0,25.4,23.4,25.4,23.4v82.6
+				c0,2.5-2,4.5-4.5,4.5H49.6"
+          class="st14"
+        />
+        <path
+          d="M43.2,536.2H27.3c-2.5,0-4.5-1.7-4.5-3.8v-70c0,0,0.7-21,21.8-21c25.4,0,25.4,20.1,25.4,20.1v71
+				c0,2.1-2,3.8-4.5,3.8L43.2,536.2"
+          class="st14"
+        />
+        <rect width="66.5" height="41.3" x="88.7" y="503.3" class="st15" />
+        <path d="M103.2,544.5v-15.2c0-4.9,3.2-8.9,7.3-8.9h23.1c4,0,7.3,4,7.3,8.9v15.2" class="st14" />
+      </g>
+      <g class="kitchen room" data-id="kitchen" data-type="room">
+        <polygon
+          points="1149.5,7.6 1248.2,100.4 1248.2,258 1018.2,257.4 1019.1,8.4"
+          class="st1 fill-container"
+          data-name="Fill-container"
+        />
+        <polygon
+          points="1019.4,7.6 1151.9,7.8 1248.2,100.4 1248.2,178.6 1186.7,178.6 1185.9,110.1 1128.8,55.3
+				1077.7,55.3 1077.7,113.4 1019.4,112.9 			"
+          class="st15"
+        />
+        <path
+          d="M1078.3,168.1v88.7c0,0.1,0,0.1-0.1,0.1h-58.7c-0.1,0-0.1,0-0.1-0.1v-88.7c0-0.1,0-0.1,0.1-0.1h58.7
+				C1078.2,168,1078.3,168.1,1078.3,168.1z"
+          class="st15"
+        />
+        <g>
+          <text
+            class="st7 st8 st9 st10 room-trigger"
+            data-name="Room-trigger"
+            transform="matrix(1 0 0 1 1082.6759 198.7994)"
+          >
+            +
+          </text>
+          <text class="st4 st5 st6" transform="matrix(1 0 0 1 1104.6593 202.2994)">
+            Kitchen
+          </text>
+        </g>
+        <path d="M1018.3,299.9V7.7" class="st2" />
+        <path d="M1014.1,299.3l0-277.3" class="st3" />
+        <g>
+          <path
+            d="M1085.4,116.1V166c0,1.1-0.9,2-2,2h-61.9c-1.1,0-2-0.9-2-2v-49.9c0-1.1,0.9-2,2-2h61.9
+					C1084.5,114,1085.4,115,1085.4,116.1z"
+            class="st14"
+          />
+          <circle cx="1034.2" cy="126.8" r="8.8" class="st14" />
+          <circle cx="1064" cy="154.8" r="8.8" class="st14" />
+          <circle cx="1064" cy="126.8" r="8.8" class="st14" />
+          <circle cx="1034.2" cy="154.8" r="8.8" class="st14" />
+          <line x1="1078.3" x2="1078.3" y1="168" y2="113.7" class="st14" />
+          <line x1="1049.8" x2="1049.8" y1="167.4" y2="114" class="st14" />
+          <line x1="1019.4" x2="1078.3" y1="140.8" y2="140.8" class="st14" />
+        </g>
+        <path
+          d="M1248.4,181.3v72.3c0,1.5-1.2,2.6-2.6,2.6h-56.7c-1.5,0-2.6-1.2-2.6-2.6v-72.3c0-1.5,1.2-2.6,2.6-2.6h56.7
+				C1247.3,178.7,1248.4,179.9,1248.4,181.3z"
+          class="st14"
+        />
+        <path d="M1193.2,256.3h-12.9c-0.9,0.1-1.6-0.6-1.7-1.5V180c0.1-0.9,0.8-1.5,1.7-1.5h12.9" class="st14" />
+        <path d="M1178.7,251.1h-4.6c-0.5,0-0.9-0.7-0.9-1.5v-2.8c0-0.8,0.4-1.5,0.9-1.5h4.6" class="st14" />
+        <path
+          class="st14"
+          d="M1179.1,47.1l22.6,22.9l-14.5,14.3c-3.6,3.6-9.1,4-12.2,0.9l-17.7-17.9c-3.1-3.1-2.6-8.5,1-12.1
+                l14.5-14.3l16.7,17"
+        />
+      </g>
+      <g class="living-room room" data-id="living-room" data-type="room">
+        <polygon
+          points="685.9,5.8 1018.2,5.8 1018.2,300.3 685.9,300.3"
+          class="st1 fill-container"
+          data-name="Fill-container"
+        />
+        <g>
+          <text
+            class="st7 st8 st9 st10 room-trigger"
+            data-name="Room-trigger"
+            transform="matrix(1 0 0 1 771.5246 158.7741)"
+          >
+            +
+          </text>
+          <text class="st4 st5 st6" transform="matrix(1 0 0 1 793.5085 162.2741)">
+            Living Room
+          </text>
+          <text class="st4 st16 st17" transform="matrix(1 0 0 1 799.7472 180.6081)">
+            12’0
+          </text>
+          <text class="st4 st16 st17" transform="matrix(1 0 0 1 826.9489 180.6081)">
+            ”
+          </text>
+          <text class="st4 st16 st17" transform="matrix(1 0 0 1 833.2067 180.6081)">
+            x 18’8
+          </text>
+          <text class="st4 st16 st17" transform="matrix(1 0 0 1 875.0241 180.6081)">
+            ”
+          </text>
+        </g>
+      </g>
+      <g class="dining-area room" data-id="dining-area" data-type="room">
+        <polygon
+          points="1008.2,300.3 1248.5,300.3 1248.5,529.4 685.4,529.6 685.4,300.6"
+          class="st1 fill-container"
+          data-name="Fill-container"
+        />
+        <g>
+          <text
+            class="st7 st8 st9 st10 room-trigger"
+            data-name="Room-trigger"
+            transform="matrix(1 0 0 1 904.945 416.3499)"
+          >
+            +
+          </text>
+          <text class="st4 st5 st6" transform="matrix(1 0 0 1 926.9294 419.8499)">
+            Dining Area
+          </text>
+          <text class="st4 st16 st17" transform="matrix(1 0 0 1 933.1681 438.1839)">
+            8’4
+          </text>
+          <text class="st4 st16 st17" transform="matrix(1 0 0 1 952.7257 438.1839)">
+            ”
+          </text>
+          <text class="st4 st16 st17" transform="matrix(1 0 0 1 958.984 438.1839)">
+            x 9’6
+          </text>
+          <text class="st4 st16 st17" transform="matrix(1 0 0 1 993.1574 438.1839)">
+            ”
+          </text>
+        </g>
+      </g>
+      <g class="bedroom room" data-id="bedroom-2" data-type="room">
+        <polygon
+          points="428.2,7.6 685.9,7.6 684.9,411.5 428.2,411.5"
+          class="st1 fill-container"
+          data-name="Fill-container"
+        />
+        <polyline points="685.6,7 685.6,411.5 428.2,411.9 428.2,345.6" class="st2" />
+        <polyline points="681.8,14.8 681.8,407.6 432.2,407.6 432.2,14.8" class="st3" />
+        <g>
+          <rect width="64.1" height="3.7" x="590.3" y="408.6" class="st11" />
+          <path d="M640.4,409.7c0-20.2-16.4-36.6-36.6-36.6v36.4L640.4,409.7z" class="st12" />
+          <path d="M640.4,410.5c0-20.2-16.4-36.6-36.6-36.6" class="st13" />
+        </g>
+        <g>
+          <text
+            class="st7 st8 st9 st10 room-trigger"
+            data-name="Room-trigger"
+            transform="matrix(1 0 0 1 486.4933 195.5278)"
+          >
+            +
+          </text>
+          <text class="st4 st5 st6" transform="matrix(1 0 0 1 508.4772 199.0278)">
+            Bedroom 2
+          </text>
+          <text class="st4 st16 st17" transform="matrix(1 0 0 1 510.8039 218.0283)">
+            9’2
+          </text>
+          <text class="st4 st16 st17" transform="matrix(1 0 0 1 530.3615 218.0283)">
+            ”
+          </text>
+          <text class="st4 st16 st17" transform="matrix(1 0 0 1 536.6198 218.0283)">
+            x 14’4
+          </text>
+          <text class="st4 st16 st17" transform="matrix(1 0 0 1 578.4367 218.0283)">
+            ”
+          </text>
+        </g>
+      </g>
+      <g class="master-bedroom room" data-id="master-bedroom" data-type="room">
+        <polygon
+          points="428.2,8.4 428.2,347.9 263.2,346.9 263.2,407.6 6.4,408.5 6.5,7"
+          class="st1 fill-container"
+          data-name="Fill-container"
+        />
+        <polyline points="6.6,408.5 343.7,408.4 343.7,347.7 428.2,347.9 428.2,7.6" class="st2" />
+        <polyline points="425.4,13.1 425.4,343.9 14.4,344.2" class="st3" />
+        <line x1="347.5" x2="6.8" y1="347.7" y2="347.7" class="st2" />
+        <polyline points="14.4,404.3 340.5,404.1 340.4,352.1 14.4,352.1" class="st3" />
+        <g>
+          <g>
+            <text class="st4 st5 st6" transform="matrix(1 0 0 1 47.7179 384.7514)">
+              Closet
+            </text>
+          </g>
+          <g>
+            <text class="st4 st5 st6" transform="matrix(1 0 0 1 172.7174 384.7514)">
+              Closet
+            </text>
+          </g>
+          <g>
+            <text class="st4 st5 st6" transform="matrix(1 0 0 1 278.7174 384.7513)">
+              Closet
+            </text>
+          </g>
+        </g>
+        <g>
+          <text
+            class="st7 st8 st9 st10 room-trigger"
+            data-name="Room-trigger"
+            transform="matrix(1 0 0 1 119.7951 179.8715)"
+          >
+            +
+          </text>
+          <text class="st4 st5 st6" transform="matrix(1 0 0 1 141.7792 183.3715)">
+            Master Bedroom
+          </text>
+          <text class="st4 st16 st17" transform="matrix(1 0 0 1 165.1833 202.372)">
+            15’2
+          </text>
+          <text class="st4 st16 st17" transform="matrix(1 0 0 1 192.385 202.372)">
+            ”
+          </text>
+          <text class="st4 st16 st17" transform="matrix(1 0 0 1 198.6428 202.372)">
+            x 12’0
+          </text>
+          <text class="st4 st16 st17" transform="matrix(1 0 0 1 240.4602 202.372)">
+            ”
+          </text>
+        </g>
+        <g>
+          <rect width="57.8" height="3.3" x="52.9" y="344.3" class="st11" />
+          <path d="M98.1,345.2c0-18.2-14.8-33-33.1-33v32.9L98.1,345.2z" class="st12" />
+          <path d="M98.1,345.9c0-18.2-14.8-33-33.1-33" class="st13" />
+        </g>
+        <g>
+          <rect width="57.8" height="3.3" x="178.7" y="343.8" class="st11" />
+          <path d="M190.9,344.8c0-18.2,14.8-33,33.1-33v32.9L190.9,344.8z" class="st12" />
+          <path d="M190.9,345.5c0-18.2,14.8-33,33.1-33" class="st13" />
+        </g>
+        <line x1="143.5" x2="143.5" y1="347.7" y2="408.5" class="st2" />
+        <line x1="139.2" x2="139.2" y1="355.8" y2="400.6" class="st3" />
+        <line x1="263.2" x2="263.2" y1="347.7" y2="408.4" class="st2" />
+        <line x1="147.2" x2="147.2" y1="355.8" y2="400.6" class="st3" />
+        <line x1="259.2" x2="259.2" y1="355.8" y2="400.6" class="st3" />
+        <line x1="267.2" x2="267.2" y1="355.8" y2="400.6" class="st3" />
+      </g>
+      <g>
+        <path
+          d="M1324.8,494.9l-76,0.5l-0.2,34l-562.6,0.5l-0.4,29.8l-121,0.4v-65.1l-342-0.3l-0.3,55.5L6.9,549.8L6.5,7.9
+				l1145.2-0.2l96.5,92.8v156.5l76.5,0.2L1324.8,494.9z"
+          class="st2"
+        />
+        <path
+          d="M1320.8,261.2l0.5,229.4l-76.4,0l0.2,35.6H682.2l0,29.5l-113.3,0L568,491l-349.5-0.3l-0.2,55.8l-206.8-0.7
+				L9.4,11.1h1140.4l94.6,90.8l-0.4,159.3H1320.8z"
+          class="st3"
+        />
+        <rect width="5.9" height="80.1" x="0.6" y="191.1" class="st18" />
+        <rect width="5.9" height="39" x="0.5" y="425.3" class="st18" />
+        <g>
+          <rect width="3.9" height="68.2" x="1320.8" y="271.8" class="st11" />
+          <path d="M1322.8,286.1c-21.5,0-39,17.5-39,39c0,0,0,0,0,0h38.8L1322.8,286.1z" class="st12" />
+          <path d="M1322.8,286.1c-21.5,0-39,17.5-39,39c0,0,0,0,0,0" class="st13" />
+        </g>
+        <g>
+          <text class="st4 st5 st19" transform="matrix(1.0189 0 0 1 597.6704 531.7871)">
+            Closet
+          </text>
+        </g>
+        <g>
+          <text class="st4 st5 st6" transform="matrix(1 0 0 1 1262.0646 435.8222)">
+            Closet
+          </text>
+          <g>
+            <rect width="65.4" height="2.3" x="1253.2" y="369.9" class="st11" />
+            <g>
+              <path d="M1269.1,370.5c0-18.2,15-32.9,33.5-32.9v32.8L1269.1,370.5z" class="st12" />
+              <path d="M1269.1,370.5c0-18.2,15-32.9,33.5-32.9" class="st13" />
+            </g>
+          </g>
+        </g>
+        <g>
+          <rect x="269.4" y="407.4" class="st11" width="68.2" height="3.9" />
+          <path class="st12" d="M322.6,409.2c0,21.5-17.5,39-39,39l0,0v-38.8L322.6,409.2z" />
+          <path class="st13" d="M322.6,409.2c0,21.5-17.5,39-39,39l0,0" />
+        </g>
+        <polyline points="564.5,498.5 564.5,489 685.9,489 685.9,530.1 			" class="st2" />
+        <polyline points="682.1,523.4 682.2,492.4 571.5,492.8 			" class="st3" />
+        <polygon points="1088.8,256 1015.8,256 1015.8,301 1053.3,301.1 1053.3,266.3 1088.8,266.3 			" class="st20" />
+        <rect width="93.5" height="9.6" x="1147" y="255.7" class="st20" />
+        <g>
+          <rect width="68.2" height="3.9" x="591.1" y="488.1" class="st11" />
+          <path d="M606,490.1c0-21.5,17.5-39,39-39c0,0,0,0,0,0v38.8L606,490.1z" class="st12" />
+          <path d="M606,490.1c0-21.5,17.5-39,39-39c0,0,0,0,0,0" class="st13" />
+        </g>
+        <path d="M1324.8,370.6l-76.6,0.5l0.5,124.2" class="st2" />
+        <path d="M1317.8,374.9l-64.8,0v112" class="st3" />
+        <rect width="63.8" height="5.9" x="1070.6" y="0.5" class="st18" />
+        <rect width="162.5" height="5.9" x="770.6" y="0.5" class="st18" />
+        <rect width="111.4" height="5.9" x="504.4" y="0.5" class="st18" />
+        <rect width="80.6" height="5.9" x="297.9" y="0.5" class="st18" />
+        <polygon points="10.6,308.8 10.6,340.6 47.7,340.7 47.7,308.8 			" class="st20" />
+      </g>
+    </g>
+  </g>
+</svg>

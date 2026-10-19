@@ -1,0 +1,331 @@
+{
+ "102": {
+  "bathrooms": 1,
+  "bedrooms": 1,
+  "fetched_utc": "2026-10-19T05:38:34Z",
+  "labels": [
+   "Kitchen",
+   "Living Room",
+   "12\u20190",
+   "\u201d",
+   "x 18\u20197\u201d",
+   "Dining Area",
+   "9\u20196",
+   "x 9\u20194\u201d",
+   "Closet",
+   "Master Bedroom",
+   "15\u20190",
+   "x 12\u20190\u201d",
+   "Bathroom"
+  ],
+  "layout": "102",
+  "png": "102.png",
+  "seen_in": [
+   "01-A, 530 East 20th Street",
+   "02-A, 445 East 14th Street"
+  ],
+  "source": "/media/4xqcm3ou/102.svg",
+  "sqft": 771,
+  "svg": "102.svg"
+ },
+ "105": {
+  "bathrooms": 1,
+  "bedrooms": 1,
+  "fetched_utc": "2026-10-19T05:38:36Z",
+  "labels": [
+   "Living Room",
+   "12\u20190\u201d x 18\u20198\u201d",
+   "Closet",
+   "Master Bedroom",
+   "10\u20194\u201d",
+   "x 18\u20198\u201d",
+   "Kitchen",
+   "Bathroom",
+   "Dining Area",
+   "8\u20193",
+   "\u201d",
+   "x 9\u20195\u201d"
+  ],
+  "layout": "105",
+  "png": "105.png",
+  "seen_in": [
+   "02-D, 245 Avenue C"
+  ],
+  "source": "/media/qfsa4tig/105.svg",
+  "sqft": 790,
+  "svg": "105.svg"
+ },
+ "107": {
+  "bathrooms": 1,
+  "bedrooms": 1,
+  "fetched_utc": "2026-10-19T05:38:35Z",
+  "labels": [
+   "Living Room",
+   "12\u20190\u201d x 18\u20198\u201d",
+   "Closet",
+   "Master Bedroom",
+   "10\u20194\u201d",
+   "x 18\u20198\u201d",
+   "Kitchen",
+   "Bathroom",
+   "Dining Area",
+   "8\u20192",
+   "\u201d",
+   "x 9\u20196\u201d"
+  ],
+  "layout": "107",
+  "png": "107.png",
+  "seen_in": [
+   "02-F, 653 East 14th Street",
+   "09-F, 451 East 14th Street",
+   "05-F, 5 Stuyvesant Oval"
+  ],
+  "source": "/media/k2inbnne/107.svg",
+  "sqft": 745,
+  "svg": "107.svg"
+ },
+ "108": {
+  "bathrooms": 1,
+  "bedrooms": 1,
+  "fetched_utc": "2026-10-19T05:38:36Z",
+  "labels": [
+   "Kitchen",
+   "Bathroom",
+   "Living Room",
+   "12\u20191",
+   "\u201d",
+   "x 18\u20198\u201d",
+   "Dining Area",
+   "9\u20196",
+   "x 8\u20191\u201d",
+   "Closet",
+   "Master Bedroom",
+   "15\u20190",
+   "x 12\u20190\u201d"
+  ],
+  "layout": "108",
+  "png": "108.png",
+  "seen_in": [
+   "06-H, 17 Stuyvesant Oval",
+   "06-D, 605 East 14th Street"
+  ],
+  "source": "/media/kiwdfaqb/108.svg",
+  "sqft": 764,
+  "svg": "108.svg"
+ },
+ "110": {
+  "bathrooms": 1,
+  "bedrooms": 1,
+  "fetched_utc": "2026-10-19T05:38:36Z",
+  "labels": [
+   "Kitchen",
+   "Bathroom",
+   "Living Room",
+   "11\u201911\u201d",
+   "x 18\u20198\u201d",
+   "Dining Area",
+   "9\u20196",
+   "\u201d",
+   "x 9\u20194\u201d",
+   "Closet",
+   "Master Bedroom",
+   "15\u20190",
+   "x 12\u20190\u201d"
+  ],
+  "layout": "110",
+  "png": "110.png",
+  "seen_in": [
+   "0M-D, 545 East 14th Street"
+  ],
+  "source": "/media/wycf5hbi/110.svg",
+  "sqft": 764,
+  "svg": "110.svg"
+ },
+ "119": {
+  "bathrooms": 1,
+  "bedrooms": 1,
+  "fetched_utc": "2026-10-19T05:38:35Z",
+  "labels": [
+   "Living Room",
+   "12\u20190\u201d x 19\u20194\u201d",
+   "Closet",
+   "Master Bedroom",
+   "12\u20198\u201d",
+   "x 14\u20190\u201d",
+   "Kitchen",
+   "Bathroom",
+   "Dining Area",
+   "8\u20192",
+   "\u201d",
+   "x 10\u20192\u201d"
+  ],
+  "layout": "119",
+  "png": "119.png",
+  "seen_in": [
+   "03-D, 455 East 14th Street",
+   "10-E, 405 East 14th Street"
+  ],
+  "source": "/media/icpllty4/119.svg",
+  "sqft": 749,
+  "svg": "119.svg"
+ },
+ "123": {
+  "bathrooms": 1,
+  "bedrooms": 2,
+  "fetched_utc": "2026-10-19T05:38:35Z",
+  "labels": [
+   "Bathroom",
+   "Kitchen",
+   "Living Room",
+   "12\u20190",
+   "\u201d",
+   "x 18\u20198",
+   "Dining Area",
+   "8\u20194",
+   "x 9\u20196",
+   "Bedroom 2",
+   "9\u20192",
+   "x 14\u20194",
+   "Closet",
+   "Master Bedroom",
+   "15\u20190",
+   "x 12\u20190"
+  ],
+  "layout": "123",
+  "png": "123.png",
+  "seen_in": [
+   "10-G, 510 East 20th Street"
+  ],
+  "source": "/media/cldbxguy/123.svg",
+  "sqft": 932,
+  "svg": "123.svg"
+ },
+ "124": {
+  "bathrooms": 1,
+  "bedrooms": 2,
+  "fetched_utc": "2026-10-19T05:38:35Z",
+  "labels": [
+   "Kitchen",
+   "Living Room",
+   "12\u20190",
+   "\u201d",
+   "x 18\u20198",
+   "Dining Area",
+   "9\u20196",
+   "x 8\u20192",
+   "Bedroom 2",
+   "9\u20192",
+   "x 14\u20193",
+   "Closet",
+   "Master Bedroom",
+   "11\u201911",
+   "x 15\u20190",
+   "Bathroom"
+  ],
+  "layout": "124",
+  "png": "124.png",
+  "seen_in": [
+   "04-B, 277 Avenue C"
+  ],
+  "source": "/media/ftzm0drw/124.svg",
+  "sqft": 932,
+  "svg": "124.svg"
+ },
+ "125": {
+  "bathrooms": 1,
+  "bedrooms": 2,
+  "fetched_utc": "2026-10-19T05:38:34Z",
+  "labels": [
+   "Bathroom",
+   "Kitchen",
+   "Living Room",
+   "12\u20190",
+   "\u201d",
+   "x 18\u20198",
+   "Dining Area",
+   "9\u20192",
+   "x 9\u20196",
+   "Bedroom 2",
+   "x 14\u20194",
+   "Closet",
+   "Master Bedroom",
+   "15\u20190",
+   "x 12\u20190"
+  ],
+  "layout": "125",
+  "png": "125.png",
+  "seen_in": [
+   "06-E, 18 Stuyvesant Oval"
+  ],
+  "source": "/media/3s5be2uq/125.svg",
+  "sqft": 948,
+  "svg": "125.svg"
+ },
+ "126_st2bedclassic": {
+  "bathrooms": 1,
+  "bedrooms": 2,
+  "fetched_utc": "2026-10-19T05:38:34Z",
+  "labels": [
+   "Bathroom",
+   "+",
+   "Kitchen",
+   "Living Room",
+   "12\u20190",
+   "\u201d",
+   "x 18\u20198",
+   "Dining Area",
+   "8\u20194",
+   "x 9\u20196",
+   "Bedroom 2",
+   "9\u20192",
+   "x 14\u20194",
+   "Closet",
+   "Master Bedroom",
+   "15\u20192",
+   "x 12\u20190"
+  ],
+  "layout": "126",
+  "png": "126_st2bedclassic.png",
+  "seen_in": [
+   "08-B, 330 First Avenue",
+   "06-B, 647 East 14th Street"
+  ],
+  "source": "/media/3y5j1ncp/st2bedclassic.svg",
+  "sqft": 955,
+  "svg": "126_st2bedclassic.svg"
+ },
+ "141": {
+  "bathrooms": 1,
+  "bedrooms": 3,
+  "fetched_utc": "2026-10-19T05:38:34Z",
+  "labels": [
+   "Kitchen",
+   "Dining Area",
+   "9\u20196\u201d",
+   "x 8\u20192\u201d",
+   "Living Room",
+   "12\u20190",
+   "\u201d",
+   "x 18\u20198\u201d",
+   "Bathroom",
+   "Bedroom 3",
+   "9\u20193",
+   "x 14\u20195\u201d",
+   "Closet",
+   "Bedroom 2",
+   "9\u20194",
+   "x 14\u201911\u201d",
+   "Master Bedroom",
+   "10\u20198",
+   "x 18\u20190\u201d"
+  ],
+  "layout": "141",
+  "png": "141.png",
+  "seen_in": [
+   "03-B, 610 East 20th Street"
+  ],
+  "source": "/media/1g1ffvt4/141.svg",
+  "sqft": 1148,
+  "svg": "141.svg"
+ }
+}

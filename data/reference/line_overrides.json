@@ -1,0 +1,12 @@
+{
+ "about": "Your own notes on which way a line of apartments faces -- after a viewing, or from a floorplan. The key is 'BUILDING ADDRESS|LINE LETTER' as the listings write them. facing: compass directions of its windows (N, NNE, NE, ... NNW); street: true if it looks onto a street. These win over anything worked out. Keys starting with EXAMPLE are ignored.",
+ "lines": {
+  "EXAMPLE 17 STUYVESANT OVAL|H": {
+   "facing": [
+    "SSW"
+   ],
+   "note": "copy this without EXAMPLE, then edit",
+   "street": false
+  }
+ }
+}
