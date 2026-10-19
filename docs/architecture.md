@@ -1,7 +1,7 @@
 # Architecture: before Phase 1, Phase 1, and Phase 2
 
-The goal hasn't changed: **apply to every unit at or under `AUTO_APPLY_MAX_RENT`
-as soon as it appears.** The watcher's own logs show why speed decides it:
+The goal hasn't changed: **apply to every unit at or under your rent limit
+(`AUTO_APPLY_RULES`, by bedrooms) as soon as it appears.** The watcher's own logs show why speed decides it:
 the cheap units have been gone (all 3 applications taken) **15–45 seconds**
 after appearing, the fastest within 12–27 s of being seen. Phase 1 rebuilds
 the watcher so that applying always comes first, and nothing else (alerts,
@@ -239,6 +239,33 @@ stats will show it.
   only runs for units where both readings agree.
 - More rankings like 08-B's, to confirm the order follows arrival (one
   morning says so). Your email from StuyTown says which number you were.
+
+## Dream units, floorplans and the map
+
+None of this runs while units can appear. At 10:00, after `applier.stop()`,
+the logger runs `units_map.refresh_all()` (time-boxed to 100 s) before the
+summary is written:
+
+1. `reference_data.py` saves the floorplan of any layout seen for the first
+   time: the SVG the site's page loads (from `affordable-housing.stuytown.com/media/…`),
+   a PNG copy drawn by Chromium, and the room labels. The first morning, it
+   also fetches the complexes' buildings and streets from OpenStreetMap
+   (Overpass). It casts three rays out of each wall to find what that wall
+   looks at: the Oval, a perimeter street (First Ave, 14th, 20th, 23rd,
+   Avenue C, FDR), or the next building and how far away it is. From that
+   and NOAA's sun model it works out the winter sun hours at floors 2, 5, 8
+   and 11.
+2. `dream_units.py` rebuilds the apartment atlas and rates each unit.
+   - A listing with Oval views (`VBOV`) faces its building's Oval wall(s),
+     and so does every apartment on its line.
+   - With no building outlines yet, the direction comes from the building's
+     position round the Oval, and is marked estimated.
+   - Your `line_overrides.json` notes beat both.
+3. `units_map.py` writes `data/units.geojson`.
+
+In the morning, the only new work is the alert's dream note. It's worked
+out on the notifier thread from files already on disk, never on the checker
+or the applier.
 
 ## Threads, and why not asyncio
 

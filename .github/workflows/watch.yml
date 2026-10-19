@@ -36,6 +36,10 @@ on:
         description: 'Test auto-apply instead: fill + submit a FAKE form with your APPLICANT_PROFILE secret, screenshot to your phone'
         type: boolean
         default: false
+      refresh_map:
+        description: 'Refresh the map instead: buildings from OpenStreetMap, new floorplans, data/units.geojson and the summary (commits them)'
+        type: boolean
+        default: false
 
 # Only one watcher at a time: a run triggered while another is going waits
 # for it instead of polling (and alerting) twice.
@@ -75,12 +79,26 @@ jobs:
           SEND_TEST_ALERT: ${{ inputs.send_test_alert }}
           FAKE_MORNING: ${{ inputs.fake_morning }}
           # Auto-apply (auto_apply.py). Off unless the AUTO_APPLY_MODE repository
-          # variable is on; AUTO_APPLY_MAX_RENT is then required. The profile is one JSON secret.
+          # variable is on; a rent limit is then required: AUTO_APPLY_RULES
+          # (by bedrooms, e.g. 1:2200, 2:2700) and/or AUTO_APPLY_MAX_RENT.
+          # The profile is one JSON secret.
           APPLICANT_PROFILE: ${{ secrets.APPLICANT_PROFILE }}
           AUTO_APPLY_MODE: ${{ vars.AUTO_APPLY_MODE }}
+          AUTO_APPLY_RULES: ${{ vars.AUTO_APPLY_RULES }}
           AUTO_APPLY_MAX_RENT: ${{ vars.AUTO_APPLY_MAX_RENT }}
           AUTO_APPLY_SELFTEST: ${{ inputs.auto_apply_selftest }}
+          # Dream units (dream_units.py): highlighted only. Unset = 1:2200, 2:2700 and floors 5-10.
+          DREAM_RULES: ${{ vars.DREAM_RULES }}
+          DREAM_FLOORS: ${{ vars.DREAM_FLOORS }}
+          REFRESH_MAP: ${{ inputs.refresh_map }}
         run: |
+          if [ "$REFRESH_MAP" = "true" ]; then
+            # The morning run does this by itself after 10:00; this is the same, now.
+            python units_map.py --refresh --buildings
+            python summary.py > /dev/null
+            python -c "import watch_loop; watch_loop.commit_and_push('Refresh the map, buildings and floorplans')"
+            exit
+          fi
           if [ "$AUTO_APPLY_SELFTEST" = "true" ]; then
             # Only ever touches the fake form in tests/fixtures/apply_site; its
             # (redacted) recording is uploaded below.

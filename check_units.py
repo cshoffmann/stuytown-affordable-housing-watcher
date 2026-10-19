@@ -40,6 +40,7 @@ import html
 import http.client
 import json
 import os
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -333,6 +334,23 @@ def number(value) -> float | None:
         return None
 
 
+def parse_rules(text: str) -> tuple:
+    """"1:2200, 2:2700" -> ({1: 2200.0, 2: 2700.0}, []); the second item lists
+    the parts that couldn't be read. "studio" or "0" is a studio, and "1br",
+    "1 bed" or "$2,200" are fine too."""
+    rule = re.compile(r"(studio|\d+)\s*(?:br|bd|beds?|bedrooms?)?\s*[:=]\s*\$?\s*(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?",
+                      re.IGNORECASE)
+    rules, problems, last = {}, [], 0
+    for match in rule.finditer(text or ""):
+        problems.append((text or "")[last:match.start()])
+        last = match.end()
+        beds = 0 if match[1].lower() == "studio" else int(match[1])
+        rules[beds] = float(match[2].replace(",", "") + (match[3] or ""))
+    problems.append((text or "")[last:])
+    problems = [p for p in (p.strip(" ,;\n\t") for p in problems) if p]
+    return rules, problems
+
+
 def unit_summary(unit: dict, include_data: bool = False) -> dict:
     """The events.json view of a unit. include_data adds the full API object."""
     summary = {
@@ -451,7 +469,7 @@ _INLINE = background.Worker("inline", inline=True)
 
 
 def process_snapshot(units: list, now: datetime | None = None, label: str = "", apply=None,
-                     qualifies=None, notifier=None, logger=None) -> Changes:
+                     qualifies=None, notifier=None, logger=None, note=None) -> Changes:
     """One check: compare the listings with the saved state, save it, and act
     on what changed -- in order of what matters:
 
@@ -463,7 +481,8 @@ def process_snapshot(units: list, now: datetime | None = None, label: str = "", 
          application. Only units that qualify (qualifies(unit): at or under
          the rent limit, income high enough) get an alert, an Emergency one;
          with no qualifies, every new unit does. Every unit, qualifying or
-         not, goes in the events log.
+         not, goes in the events log. note(unit) adds a line to the alert
+         (the dream-unit rating); it runs on the notifier, not here.
 
     Without notifier/logger (tests, the fake morning) the jobs run inline."""
     now = now or datetime.now(timezone.utc)
@@ -489,8 +508,8 @@ def process_snapshot(units: list, now: datetime | None = None, label: str = "", 
             # "auto-applying now" only when the applier really took it on (it
             # won't, say, for a unit it already applied to before a re-listing).
             taken = {unit_id(u) for u in queued}
-            notifier.submit(background.notify_with_retries, notify,
-                            qualifying_alert(qualifying, auto_applying=all(unit_id(u) in taken for u in qualifying)))
+            notifier.submit(send_qualifying_alert, qualifying,
+                            all(unit_id(u) in taken for u in qualifying), note)
         logger.submit(record_event, {
             "event": "new",
             "detected_at_utc": stamp,
@@ -554,7 +573,12 @@ def record_event(event: dict) -> None:
 # ------------------------------------------------------------------ alerts
 
 
-def qualifying_alert(units: list, auto_applying: bool) -> dict:
+def send_qualifying_alert(units: list, auto_applying: bool, note=None) -> bool:
+    """Build and send the qualifying alert (on the notifier)."""
+    return background.notify_with_retries(notify, qualifying_alert(units, auto_applying, note))
+
+
+def qualifying_alert(units: list, auto_applying: bool, note=None) -> dict:
     """Emergency: a unit at or under your rent limit. The only alert that
     breaks through Do Not Disturb."""
     action = "auto-applying now" if auto_applying else "apply now"
@@ -567,14 +591,21 @@ def qualifying_alert(units: list, auto_applying: bool) -> dict:
     footer = ("Auto-apply is on: you'll get the result in a separate message."
               if auto_applying else "Auto-apply isn't applying to it: apply yourself. "
               "Each unit closes after 3 applications.")
-    message = _fit([_linked_line(u) for u in units], footer=footer)
+    message = _fit([_linked_line(u, note) for u in units], footer=footer)
     return {"title": title, "message": message, "url": url, "url_title": url_title, "priority": 2}
 
 
-def _linked_line(unit: dict) -> str:
+def _linked_line(unit: dict, note=None) -> str:
     line = f'<a href="{html.escape(unit_url(unit))}">{html.escape(unit_label(unit))}</a>'
     details = unit_details(unit)
-    return f"{line} - {html.escape(details)}" if details else line
+    line = f"{line} - {html.escape(details)}" if details else line
+    extra = ""
+    if note:
+        try:
+            extra = note(unit) or ""
+        except Exception:
+            extra = ""
+    return f"{line}\n{html.escape(extra)}" if extra else line
 
 
 def _fit(lines: list, footer: str = "") -> str:

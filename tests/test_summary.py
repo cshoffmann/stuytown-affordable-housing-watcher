@@ -7,6 +7,7 @@ Run from the repo folder:
 """
 
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -17,8 +18,12 @@ from unittest import mock
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "tests"))
 
 import apply_recorder  # noqa: E402
+import dream_units  # noqa: E402
+import fake_osm  # noqa: E402
+import reference_data  # noqa: E402
 import run_stats  # noqa: E402
 import summary  # noqa: E402
 
@@ -29,7 +34,9 @@ UNIT = FAKE_UNITS["5A"]
 def new_event(stamp, apartment, rent, spk):
     return {"event": "new", "detected_at_utc": stamp, "units": [
         {"unit_id": spk, "apartment": apartment, "address": "287 Avenue C", "bedrooms": 1, "price": rent,
-         "income_requirement": 60000, "data": {**UNIT, "unitSpk": spk}}]}
+         "income_requirement": 60000,
+         "data": {**UNIT, "unitSpk": spk, "name": apartment, "unitFloor": apartment[:2], "bedrooms": 1, "price": rent,
+                  "style": {"id": 1, "name": "108"}}}]}
 
 
 def removed_event(stamp, spk, first, listed_for):
@@ -68,18 +75,61 @@ def morning(**overrides):
 
 
 class SummaryPageTests(unittest.TestCase):
+    def setUp(self):
+        # Not the real reference data: the page must look the same whatever's been fetched.
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.tmp = tmp.name
+        for target, name, value in ((reference_data, "BUILDINGS_FILE", f"{tmp.name}/buildings.json"),
+                                    (reference_data, "FLOORPLANS_DIR", f"{tmp.name}/floorplans"),
+                                    (dream_units, "OVERRIDES_FILE", f"{tmp.name}/line_overrides.json")):
+            patcher = mock.patch.object(target, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
     def test_the_page_has_every_morning_unit_and_pattern(self):
         page = summary.render(EVENTS, [morning()], APPLICATIONS, max_rent=3000,
                               now=datetime(2026, 10, 12, 14, 0, tzinfo=timezone.utc))
+        self.assertIn("Auto-apply rent limits: **any <= $3,000**", page)
         self.assertIn("Direct submit: **ready**.", page)
         self.assertIn("Nothing: the latest morning went as it should.", page)
         self.assertIn("| Mon Oct 12 | 7:15:00, 7:30:00 | 1 | 1 submitted | 5,400 | 45 / 258 ms |", page)
-        self.assertIn("| Oct 12 7:15:00 AM | 08-B, 287 Avenue C | $2,787 | 1 | $60,000 | 40.0 s | yes | "
-                      "submitted, sent 0.07 s after it appeared, direct |", page)
-        self.assertIn("| Oct 12 7:30:00 AM | 06-B, 287 Avenue C | $3,067 | 1 | $60,000 | 90.0 s | no |  |", page)
+        self.assertIn("| Oct 12 7:15:00 AM | 08-B, 287 Avenue C | interior | 8 | 1 | 766 | $2,787 | $3.64 | $60,000 | "
+                      "Classic | 108 | Marble bath |  |  | 40.0 s | yes | submitted, sent 0.07 s after it appeared, direct |",
+                      page)
+        self.assertIn("| Oct 12 7:30:00 AM | 06-B, 287 Avenue C | interior | 6 | 1 | 766 | $3,067 | $4.00 | $60,000 | "
+                      "Classic | 108 | Marble bath |  |  | 90.0 s | no |  |", page)
         self.assertIn("**Posting times** (ET, all days): 7:15 ×1, 7:30 ×1", page)
         self.assertIn("-0.21 to +0.04", page)
         self.assertIn("1 sent (1 direct); median 0.1 s from the unit appearing to sending, 0.3 s to the site's", page)
+        self.assertIn("| 108 | 1 | 766 | 2 | $2,787-$3,067 | not downloaded yet |", page)
+        self.assertIn("| ISMB | Marble bath | 2 |", page)
+        self.assertIn("[units.geojson](units.geojson)", page)
+
+    def test_per_bedroom_limits_decide_what_qualified(self):
+        events = [new_event("2026-10-12T11:15:00Z", "08-B", 2600, "P~A")]
+        events[0]["units"][0]["bedrooms"] = 2
+        page = summary.render(events, [], {}, rules={1: 2200.0, 2: 2700.0},
+                              now=datetime(2026, 10, 12, 14, 0, tzinfo=timezone.utc))
+        self.assertIn("Auto-apply rent limits: **1 bed <= $2,200, 2 bed <= $2,700**", page)
+        self.assertIn("| Mon Oct 12 | 7:15:00 | 1 |", page)
+
+    def test_dream_units_and_floorplans_are_on_the_page(self):
+        os.makedirs(f"{self.tmp}/floorplans")
+        Path(f"{self.tmp}/floorplans/108.png").write_bytes(b"png")
+        Path(reference_data.BUILDINGS_FILE).write_text(json.dumps(reference_data.analyze(fake_osm.answer())))
+        dream = fake_osm.unit_at("1", "Stuyvesant Oval", "06-A", price=2150, codes=("VBOV",))
+        events = [{"event": "new", "detected_at_utc": "2026-10-12T11:15:00Z", "units": [
+            {"unit_id": dream["unitSpk"], "apartment": "06-A", "address": "1 Stuyvesant Oval", "bedrooms": 1,
+             "price": 2150, "income_requirement": 70000, "data": dream}]}]
+        page = summary.render(events, [], {}, rules={1: 2200.0}, now=datetime(2026, 10, 12, 14, 0, tzinfo=timezone.utc))
+        self.assertIn("| Oct 12 7:15 AM | 06-A, 1 Stuyvesant Oval | $2,150 | 1 | 6 | SSW | dream | Oval views, faces SSW", page)
+        self.assertIn("| Oval | 6 | 1 | 760 | $2,150 |", page)
+        self.assertIn("| [108](floorplans/108.png) | Oval views | SSW | **dream** |", page)
+        self.assertIn('<img src="floorplans/108.png" width="140" alt="layout 108">', page)
+        self.assertIn("**Buildings whose Oval windows get sun** (OpenStreetMap; gold on the map): "
+                      "1 Stuyvesant Oval, 5 Stuyvesant Oval, 8 Stuyvesant Oval", page)
+        self.assertIn("| 1 Stuyvesant Oval | Oval | windows face SSW | 5.2 min | 1 | $2,150 |  | 1 |", page)
 
     def test_it_is_built_from_the_real_data_folder_without_errors(self):
         events, stats, applications = summary.load_all()
