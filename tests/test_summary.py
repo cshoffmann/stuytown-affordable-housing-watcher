@@ -102,7 +102,7 @@ class SummaryPageTests(unittest.TestCase):
         self.assertIn("**Posting times** (ET, all days): 7:15 ×1, 7:30 ×1", page)
         self.assertIn("-0.21 to +0.04", page)
         self.assertIn("1 sent (1 direct); median 0.1 s from the unit appearing to sending, 0.3 s to the site's", page)
-        self.assertIn("| 108 | 1 | 766 | 2 | $2,787-$3,067 | not downloaded yet |", page)
+        self.assertIn("| 108 | 1 | 766 | 2 | $2,787-$3,067 |  | not downloaded yet |", page)
         self.assertIn("| ISMB | Marble bath | 2 |", page)
         self.assertIn("[units.geojson](units.geojson)", page)
 
@@ -117,6 +117,8 @@ class SummaryPageTests(unittest.TestCase):
     def test_dream_units_and_floorplans_are_on_the_page(self):
         os.makedirs(f"{self.tmp}/floorplans")
         Path(f"{self.tmp}/floorplans/108.png").write_bytes(b"png")
+        reference_data.write_json(f"{self.tmp}/floorplans/index.json", {"108": {"rooms": {
+            "Living Room": "12’1” x 18’8”", "Master Bedroom": "15’0” x 12’0”", "Closet": "", "Closet 2": ""}}})
         Path(reference_data.BUILDINGS_FILE).write_text(json.dumps(reference_data.analyze(fake_osm.answer())))
         dream = fake_osm.unit_at("1", "Stuyvesant Oval", "06-A", price=2150, codes=("VBOV",))
         events = [{"event": "new", "detected_at_utc": "2026-10-12T11:15:00Z", "units": [
@@ -126,7 +128,8 @@ class SummaryPageTests(unittest.TestCase):
         self.assertIn("| Oct 12 7:15 AM | 06-A, 1 Stuyvesant Oval | $2,150 | 1 | 6 | SSW | dream | Oval views, faces SSW", page)
         self.assertIn("| Oval | 6 | 1 | 760 | $2,150 |", page)
         self.assertIn("| [108](floorplans/108.png) | Oval views | SSW | **dream** |", page)
-        self.assertIn('<img src="floorplans/108.png" width="140" alt="layout 108">', page)
+        self.assertIn('| living 12’1” x 18’8”, bedroom 15’0” x 12’0”, 2 closets | <a href="floorplans/108.png">'
+                      '<img src="floorplans/108.png" width="140" alt="layout 108"></a> |', page)
         self.assertIn("**Buildings whose Oval windows get sun** (OpenStreetMap; gold on the map): "
                       "1 Stuyvesant Oval, 5 Stuyvesant Oval, 8 Stuyvesant Oval", page)
         self.assertIn("| 1 Stuyvesant Oval | Oval | windows face SSW | 5.2 min | 1 | $2,150 |  | 1 |", page)

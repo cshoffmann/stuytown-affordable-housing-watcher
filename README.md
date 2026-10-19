@@ -79,18 +79,20 @@ fills the form in a browser (about 1 s). After applying, finish the
 ## Dream units and the map
 
 A **dream unit** is at or under `DREAM_RULES`, on a `DREAM_FLOORS` floor,
-listed with **Oval views**, with its Oval windows facing **E round to SW**,
-which means a building on the north side of the Oval. Dream units are only
+listed with **Oval views**, with its Oval windows facing **E, ESE, SE, S or
+SW** (in between counts too), which means a building on the north side of
+the Oval. Dream units are only
 highlighted (alert, summary, map). Auto-apply still follows `AUTO_APPLY_RULES`.
 Ratings: **dream**, **possible dream** (unsure which way it faces), **almost**
 (one thing missing; it says what), **great light** (sunny and away from the
 streets, e.g. Peter Cooper Village), **price match**.
 
-Which way windows face comes from OpenStreetMap's building outlines. Every
-building is lined up with the street grid, so a window faces SSW (most sun),
-ESE (morning sun), WNW (late sun) or NNE (almost none). A unit listed with
-Oval views faces its building's Oval wall, and so does every apartment on
-its line. If you learn a line's direction (at a viewing, say), add it to
+Which way windows face comes from OpenStreetMap's building outlines: each
+wall's direction, and whether it looks at the Oval, a street or the next
+building. Most buildings sit on the street grid, so their windows face SSW
+(most sun), ESE (morning), WNW (late day) or NNE (almost none). The ones
+round the Oval are turned to face it. A unit listed with Oval views faces
+its building's Oval wall, and so does every apartment on its line. If you learn a line's direction (at a viewing, say), add it to
 `data/reference/line_overrides.json`.
 
 **The map:** open [`data/units.geojson`](data/units.geojson) on github.com and

@@ -92,12 +92,20 @@ def read_json(path, default=None):
         return default
 
 
-def write_json(path, data) -> None:
+def write_json(path, data, one_per_line: str | None = None) -> None:
+    """Write atomically. one_per_line: a top-level list written one item per
+    line, so a big file stays small and its diffs readable."""
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     tmp = f"{path}.tmp"
     with open(tmp, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=1, sort_keys=True)
-        f.write("\n")
+        if one_per_line and isinstance(data.get(one_per_line), list):
+            rest = {k: v for k, v in data.items() if k != one_per_line}
+            f.write(json.dumps(rest, indent=1, sort_keys=True, ensure_ascii=False)[:-2] + f',\n "{one_per_line}": [\n')
+            f.write(",\n".join(json.dumps(item, sort_keys=True, ensure_ascii=False) for item in data[one_per_line]))
+            f.write("\n ]\n}\n")
+        else:
+            json.dump(data, f, indent=1, sort_keys=True, ensure_ascii=False)
+            f.write("\n")
     os.replace(tmp, path)
 
 
@@ -130,13 +138,18 @@ out tags geom;"""
 
 
 def fetch_osm(timeout: float = 90) -> dict:
-    """The raw Overpass answer for the area. Raises on failure (refresh() catches)."""
+    """The raw Overpass answer for the area, trying each mirror within
+    `timeout` seconds in all. Raises on failure (refresh() catches)."""
     body = urllib.parse.urlencode({"data": overpass_query()}).encode()
+    deadline = time.monotonic() + timeout
     last = None
     for url in OVERPASS_URLS:
+        left = deadline - time.monotonic()
+        if left < 5:
+            break
         try:
             request = urllib.request.Request(url, data=body, headers={"User-Agent": USER_AGENT})
-            with urllib.request.urlopen(request, timeout=timeout) as response:
+            with urllib.request.urlopen(request, timeout=left) as response:
                 data = json.loads(response.read().decode("utf-8"))
             if data.get("elements"):
                 return data
@@ -416,7 +429,8 @@ def analyze(data: dict) -> dict:
         floors = _floors(fp["tags"], complex_name)
         obstacles.append({"id": fp["id"], "segments": _segments(ring), "bbox": _bbox(ring), "floors": floors})
         kind = str(fp["tags"].get("building")).lower()
-        if complex_name and area >= 250 and kind not in ("garage", "garages", "parking", "roof", "shed", "kiosk"):
+        if (complex_name and area >= 250 and floors > 3  # not the shops and garages
+                and kind not in ("garage", "garages", "parking", "roof", "shed", "kiosk", "retail", "commercial")):
             points = [{"address": fp["address"], "xy": center}] if fp["address"] else []
             points += [a for a in parsed["addresses"] if _inside(a["xy"], ring) and a["address"] != fp["address"]]
             ours.append((fp, complex_name, floors, center, area, points))
@@ -500,7 +514,7 @@ def refresh_buildings(force: bool = False, timeout: float = 90) -> str:
     result = analyze(data)
     if not result["footprints"]:
         return "buildings: OpenStreetMap answered, but no Stuy Town buildings were found -- kept the old file"
-    write_json(BUILDINGS_FILE, result)
+    write_json(BUILDINGS_FILE, result, one_per_line="footprints")
     oval = sum(1 for f in result["footprints"] if any(w["faces_oval"] for w in f["walls"]))
     return (f"buildings: {len(result['footprints'])} from OpenStreetMap, {oval} look at the Oval "
             f"(Oval outline: {result['oval']['from']})")
@@ -561,14 +575,34 @@ def fetch_floorplan(path: str, timeout: float = 12) -> bytes:
 
 
 def svg_labels(svg: str) -> list:
-    """The words on a floorplan drawing: ['LIVING ROOM', '18\\'2" x 11\\'6"', ...]."""
+    """The words on a floorplan drawing, in order: ['Living Room', '12’0', '”', 'x 18’8”', ...]."""
     labels = []
     for match in re.finditer(r"<text\b[^>]*>(.*?)</text>", svg, re.S | re.I):
         text = html.unescape(re.sub(r"<[^>]+>", " ", match[1]))
         text = re.sub(r"\s+", " ", text).strip()
-        if text and text not in labels:
+        if text:
             labels.append(text)
-    return labels[:60]
+    return labels[:80]
+
+
+def rooms(labels: list) -> dict:
+    """{'Living Room': '12’1” x 18’8”', 'Closet': '', ...}: each room name with
+    the size written under it (the drawings split sizes into pieces)."""
+    found, current = {}, None
+    for text in labels:
+        if re.search(r"[A-Za-z]{3,}", text):
+            name, n = text.strip(), 2
+            while name in found:  # a second closet
+                name, n = f"{text.strip()} {n}", n + 1
+            current = name
+            found[current] = ""
+        elif current and re.search(r"[\dx”\"]", text):
+            found[current] += text
+    for name, size in found.items():
+        size = re.sub(r"\s*x\s*", " x ", size).strip()
+        size = re.sub(r"(\d)(?= x|$)", r"\1”", size)  # a size missing its inch mark
+        found[name] = size
+    return found
 
 
 def render_pngs(jobs: list, width: int = FLOORPLAN_PNG_WIDTH) -> str:
@@ -622,8 +656,11 @@ def refresh_floorplans(events: list, deadline: float) -> str:
             os.makedirs(FLOORPLANS_DIR, exist_ok=True)
             Path(svg_file).write_text(text, encoding="utf-8")
             entry.pop("last_error", None)
-            entry.update({"svg": f"{name}.svg", "fetched_utc": now_utc(), "labels": svg_labels(text)})
+            entry.update({"svg": f"{name}.svg", "fetched_utc": now_utc()})
             new += 1
+        if os.path.exists(svg_file):  # re-read each time, so a better reader updates old ones too
+            entry["labels"] = svg_labels(Path(svg_file).read_text(encoding="utf-8"))
+            entry["rooms"] = rooms(entry["labels"])
         png_file = f"{FLOORPLANS_DIR}/{name}.png"
         if os.path.exists(svg_file) and not os.path.exists(png_file):
             pngs.append((svg_file, png_file))

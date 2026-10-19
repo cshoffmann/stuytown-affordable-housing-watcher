@@ -77,11 +77,11 @@ def _money(value) -> str:
 def building_kind(footprint) -> str:
     walls = footprint.get("walls", [])
     oval = [w for w in walls if w.get("faces_oval")]
-    if any(w.get("good") for w in oval):
+    if any(dream_units.sunny(w) for w in oval):
         return "sunny Oval"
     if oval:
         return "shady Oval"
-    if any(w.get("good") and not w.get("street") for w in walls):
+    if any(dream_units.sunny(w) and not w.get("street") for w in walls):
         return "sunny, quiet"
     return "other"
 
@@ -126,8 +126,8 @@ def building_features(buildings, units_by_address) -> list:
         features.append(_feature(_polygon(fp["outline"]), properties))
         for w in walls:
             if w.get("faces_oval"):
-                color, width, what = ("#f08c00", 4, "Oval wall, sunny") if w.get("good") else ("#1f6fd1", 4, "Oval wall, shady")
-            elif w.get("good") and not w.get("street"):
+                color, width, what = ("#f08c00", 4, "Oval wall, sunny") if dream_units.sunny(w) else ("#1f6fd1", 4, "Oval wall, shady")
+            elif dream_units.sunny(w) and not w.get("street"):
                 color, width, what = "#2e9e44", 2, "sunny wall, away from the streets"
             else:
                 continue

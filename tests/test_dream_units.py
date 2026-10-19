@@ -46,12 +46,10 @@ class GeoTests(unittest.TestCase):
         self.assertAlmostEqual(azimuth, 180, delta=2)
         self.assertAlmostEqual(elevation, 25.8, delta=0.5)  # 90 - 40.73 - 23.44
 
-    def test_compass_and_the_four_ways_a_grid_window_faces(self):
+    def test_compass_and_which_ways_are_sunny(self):
         self.assertEqual([geo.compass(b) for b in (29, 119, 209, 299)], ["NNE", "ESE", "SSW", "WNW"])
-        self.assertEqual(geo.grid_facings_toward(120), [119])
-        self.assertEqual(geo.grid_facings_toward(80), [119, 29])  # near the diagonal: either
-        self.assertTrue(geo.is_good_facing(209) and geo.is_good_facing(119))
-        self.assertFalse(geo.is_good_facing(299) or geo.is_good_facing(29))
+        self.assertTrue(all(geo.is_good_facing(b) for b in (80, 119, 131.7, 164, 209, 236)))  # E ... SW
+        self.assertFalse(any(geo.is_good_facing(b) for b in (74, 254, 299, 29)))  # ENE, WSW, WNW, NNE
 
     def test_zones_and_the_walk_to_the_l(self):
         on_14th = (40.731373, -73.98167)  # 405 E 14th St, as the listings place it
@@ -122,7 +120,7 @@ class RatingTests(WithReferenceData):
         }
         for (number, street, apartment, beds, price), why in cases.items():
             rating = self.rate(number, street, apartment, bedrooms=beds, price=price, codes=("VBOV",))
-            self.assertEqual((rating["tier"], rating["why"]), ("almost", f"all but: {why}"))
+            self.assertEqual((rating["tier"], rating["why"]), ("almost", why))
 
     def test_a_building_looking_at_the_oval_two_ways_is_a_possible_dream(self):
         rating = self.rate("8", "Stuyvesant Oval", "07-B", price=2100, codes=("VBOV",))
@@ -169,6 +167,8 @@ class RatingTests(WithReferenceData):
         alert = check_units.qualifying_alert([dream, plain], auto_applying=False, note=dream_units.alert_note)
         self.assertIn("* Dream unit: Oval views, faces SSW", alert["message"])
         self.assertEqual(alert["message"].count("Dream unit"), 1)
+        shady = fake_osm.unit_at("10", "Stuyvesant Oval", "06-A", price=2150, codes=("VBOV",))
+        self.assertEqual(dream_units.alert_note(shady), "* Almost a dream unit: its windows face NNE")
         broken = check_units.qualifying_alert([dream], auto_applying=False, note=lambda u: 1 / 0)
         self.assertIn("Apt 06-A", broken["message"])  # a failing note never stops the alert
 

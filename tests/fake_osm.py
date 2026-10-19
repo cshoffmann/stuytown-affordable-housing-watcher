@@ -29,6 +29,7 @@ STREET_BUILDINGS = {  # absolute grid positions
     ("451", "East 14th Street"): (-200, -100, 60, 20),   # behind it
     ("441", "East 20th Street"): (0, 330, 60, 20),       # Peter Cooper Village
     ("300", "First Avenue"): (-380, 0, 20, 60),          # across First Ave: not ours
+    ("272", "First Avenue"): (-300, 120, 20, 60),        # a one-storey shop: not an apartment building
 }
 
 
@@ -52,9 +53,10 @@ def answer() -> dict:
         elements.append({"type": "node", "id": next(next_id), **node(OVAL_U + du, OVAL_V + dv),
                          "tags": {"addr:housenumber": number, "addr:street": street}})
     for (number, street), (u, v, w, d) in STREET_BUILDINGS.items():
-        elements.append({"type": "way", "id": next(next_id),
-                         "tags": {"building": "apartments", "addr:housenumber": number, "addr:street": street},
-                         "geometry": rectangle(u, v, w, d)})
+        tags = {"building": "apartments", "addr:housenumber": number, "addr:street": street}
+        if number == "272":
+            tags.update({"building": "yes", "building:levels": "1"})
+        elements.append({"type": "way", "id": next(next_id), "tags": tags, "geometry": rectangle(u, v, w, d)})
     loop = [node(OVAL_U + OVAL_RADIUS * math.cos(a / 24 * 2 * math.pi), OVAL_V + OVAL_RADIUS * math.sin(a / 24 * 2 * math.pi))
             for a in range(25)]
     elements.append({"type": "way", "id": next(next_id), "tags": {"highway": "service", "name": "Stuyvesant Oval"},

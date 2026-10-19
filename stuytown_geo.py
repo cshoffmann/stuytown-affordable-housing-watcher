@@ -13,10 +13,11 @@ window gets -- plain math, no network, no files.
                        on a given day, optionally with a building across from it
     sun_profile        the same for winter, the equinox and summer
 
-Every Stuy Town building is lined up with the street grid, so its windows
-face one of four ways: SSW (toward 14th St, the most sun), ESE (toward Avenue
-C, morning sun), WNW (toward First Ave, late-day sun) or NNE (toward 20th St,
-almost none). The sun model is NOAA's, the one suncalc.org uses.
+Most buildings are lined up with the street grid, so their windows face one
+of four ways: SSW (downtown, the most sun), ESE (toward Avenue C, morning
+sun), WNW (toward First Ave, late-day sun) or NNE (uptown, almost none). The
+ones round the Oval are turned to face it. The sun model is NOAA's, the one
+suncalc.org uses.
 """
 
 import functools
@@ -41,8 +42,8 @@ L_ENTRANCES = {
 WALK_M_PER_MIN = 80
 TO_WALKING = 1.15  # paths through the complex aren't straight lines
 
-# The windows you want: from E round to SW (E, ESE, SE, SSE, S, SSW, SW).
-GOOD_FACING = (67.5, 247.5)
+# The windows you want: E, ESE, SE, SSE, S, SSW or SW (16-point compass sectors).
+GOOD_FACING = (78.75, 236.25)
 
 COMPASS = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
            "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
@@ -115,17 +116,6 @@ def angle_between(a, b) -> float:
     return abs((float(a) - float(b) + 180) % 360 - 180)
 
 
-def grid_facings_toward(degrees, ambiguous_within: float = 20) -> list:
-    """The grid-aligned wall bearings (29, 119, 209, 299) that face roughly
-    `degrees`: one, or two when it's near a diagonal (within
-    ambiguous_within of halfway), nearest first."""
-    walls = sorted((GRID_BEARING + 90 * i) % 360 for i in range(4))
-    ranked = sorted(walls, key=lambda w: angle_between(w, degrees))
-    if angle_between(ranked[1], degrees) - angle_between(ranked[0], degrees) < 2 * ambiguous_within:
-        return ranked[:2]
-    return ranked[:1]
-
-
 def walk_to_l(lat, lon) -> tuple:
     """(minutes, entrance name) to the nearest First Ave L entrance."""
     best = None
@@ -176,7 +166,7 @@ def zone(lat, lon, address: str = "", complex_name: str = "Stuy Town") -> str:
 
 def oval_side(lat, lon, center=OVAL_CENTER) -> dict:
     """Which side of the Oval a building is on, and which way it looks at it:
-    {"side": "NW", "faces": 120.4, "faces_compass": "ESE", "north_side": True}.
+    {"side": "NW", "faces": 131.7, "faces_compass": "SE", "north_side": True}.
     "North side" means its Oval windows face E round to SW, so they get sun."""
     faces = bearing(lat, lon, *center)
     return {"side": compass((faces + 180) % 360), "faces": round(faces, 1), "faces_compass": compass(faces),

@@ -338,8 +338,8 @@ def dream_section(rows: list) -> list:
 
     good = [r for r in rows if (r.get("rating") or {}).get("tier") in ("dream", "possible dream", "almost",
                                                                       "great light")]
-    out = [f"Dream: {dream_units.settings_text()}; Oval views; windows facing E round to SW (the north side of the "
-           "Oval). Highlighted only -- auto-apply follows its own rules. Set with the DREAM_RULES and DREAM_FLOORS "
+    out = [f"Dream: {dream_units.settings_text()}; Oval views; windows facing E, ESE, SE, S or SW (the north side "
+           "of the Oval). Highlighted only -- auto-apply follows its own rules. Set with the DREAM_RULES and DREAM_FLOORS "
            "repository variables.", ""]
     if not good:
         matches = sum(1 for r in rows if (r.get("rating") or {}).get("tier") == "price match")
@@ -362,7 +362,7 @@ def buildings_section(rows: list, buildings: dict | None) -> list:
     out = []
     if buildings:
         sunny = sorted({a for fp in buildings.get("footprints", []) for a in fp.get("addresses", [])
-                        if any(w.get("faces_oval") and w.get("good") for w in fp.get("walls", []))},
+                        if any(w.get("faces_oval") and dream_units.sunny(w) for w in fp.get("walls", []))},
                        key=lambda a: (a.split(" ", 1)[-1], int(a.split()[0]) if a.split()[0].isdigit() else 0))
         out += ["**Buildings whose Oval windows get sun** (OpenStreetMap; gold on the map): "
                 + (", ".join(" ".join(w.capitalize() for w in a.split()) for a in sunny) or "none found"), ""]
@@ -403,7 +403,10 @@ def layouts_section(rows: list) -> list:
             layouts[str((r["data"].get("style") or {}).get("name") or "?")].append(r)
     if not layouts:
         return ["None seen yet."]
-    out = ["| Layout | Beds | Sq ft | Seen | Rents | Floorplan |", "| --- | --- | --- | --- | --- | --- |"]
+    import reference_data
+
+    index = reference_data.read_json(os.path.join(reference_data.FLOORPLANS_DIR, "index.json"), {}) or {}
+    out = ["| Layout | Beds | Sq ft | Seen | Rents | Rooms | Floorplan |", "| --- | --- | --- | --- | --- | --- | --- |"]
     for layout, group in sorted(layouts.items(), key=lambda item: (item[1][0]["beds"] or 0, item[0])):
         data = group[0]["data"]
         rents = sorted(r["rent"] for r in group if r["rent"])
@@ -415,10 +418,22 @@ def layouts_section(rows: list) -> list:
             plan = f"[SVG]({FLOORPLANS_FROM_SUMMARY}/{svg})"
         else:
             plan = "not downloaded yet"
+        name = (png or svg or "").rsplit(".", 1)[0]
         out.append(f"| {layout} | {group[0]['beds']} | {data.get('sqft') or '?'} | {len(group)} | "
                    + (f"${rents[0]:,.0f}" + (f"-${rents[-1]:,.0f}" if rents[-1] != rents[0] else "") if rents else "?")
-                   + f" | {plan} |")
+                   + f" | {rooms_text((index.get(name) or {}).get('rooms') or {})} | {plan} |")
     return out
+
+
+def rooms_text(rooms: dict) -> str:
+    """'Living 12’1” x 18’8”, bedroom 15’0” x 12’0”, dining 9’6” x 8’1”, 4 closets'"""
+    short = {"living room": "living", "master bedroom": "bedroom", "dining area": "dining"}
+    parts = [f"{short.get(name.lower(), name.lower())} {size}" for name, size in rooms.items()
+             if size and not name.lower().startswith("closet")]
+    closets = sum(1 for name in rooms if name.lower().startswith("closet"))
+    if closets:
+        parts.append(f"{closets} closet{'s' if closets != 1 else ''}")
+    return ", ".join(parts)
 
 
 def feature_codes_section(rows: list) -> list:

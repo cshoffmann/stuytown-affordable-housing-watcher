@@ -8,8 +8,8 @@ A dream unit is all four:
     rent   at or under DREAM_RULES for its bedrooms (default "1:2200, 2:2700")
     floor  in DREAM_FLOORS (default "5-10")
     Oval   listed with Oval views (feature code VBOV)
-    sun    its Oval windows face E round to SW (E, ESE, SE, S, SSW, SW): a
-           building on the north side of the Oval
+    sun    its Oval windows face E, ESE, SE, SSE, S, SSW or SW: a building
+           on the north side of the Oval
 
 Ratings, best first:
 
@@ -206,6 +206,12 @@ def _middle(wall) -> tuple:
     return (lat1 + lat2) / 2, (lon1 + lon2) / 2
 
 
+def sunny(wall: dict) -> bool:
+    """Does this wall face E-SW? Worked out from its direction each time, so a
+    change to what counts never needs the buildings fetched again."""
+    return wall.get("facing") is not None and geo.is_good_facing(wall["facing"])
+
+
 def oval_center(buildings: dict | None) -> tuple:
     center = ((buildings or {}).get("oval") or {}).get("center")
     return tuple(center) if center else geo.OVAL_CENTER
@@ -228,7 +234,7 @@ def building_info(unit: dict, buildings: dict | None = None) -> dict:
         info["zone"] = "Oval" if "OVAL" in info["address"] else "unknown"
     info["oval_walls"] = sorted({w["compass"] for w in walls if w.get("faces_oval")})
     info["street_walls"] = sorted({f"{w['compass']} ({w['street']})" for w in walls if w.get("street")})
-    info["quiet_sunny_walls"] = sorted({w["compass"] for w in walls if w.get("good") and not w.get("street")})
+    info["quiet_sunny_walls"] = sorted({w["compass"] for w in walls if sunny(w) and not w.get("street")})
     return info
 
 
@@ -278,9 +284,8 @@ def facing(unit: dict, buildings: dict | None = None, atlas: dict | None = None,
     where = position(unit)
     if not where:
         return _facing([], False, f"{via}, but the building's position isn't listed", None, None)
-    toward = geo.oval_side(*where, oval_center(buildings))["faces"]
-    bearings = geo.grid_facings_toward(toward)
-    return _facing(bearings, len(bearings) == 1, f"{via} + the building's position (estimated)", False, None)
+    toward = geo.oval_side(*where, oval_center(buildings))["faces"]  # the ring buildings face the Oval's middle
+    return _facing([toward], True, f"{via} + the building's position (estimated)", False, None)
 
 
 def _nearest_sun_floor(floor) -> int:
@@ -340,7 +345,7 @@ def rate(unit: dict, buildings: dict | None = None, atlas: dict | None = None,
               and face.get("street") is False):
             tier, why = "great light", f"faces {faces}{hours}, not onto a street"
         elif len(misses) == 1 and (checks["rent"] or rent <= limit * (1 + ALMOST_OVER)):
-            tier, why = "almost", f"all but: {misses[0]}"
+            tier, why = "almost", misses[0]
         elif checks["rent"]:
             tier, why = "price match", "; ".join(misses)
     return {"tier": tier, "why": why, "checks": checks, "misses": misses, "facing": face,
@@ -353,9 +358,12 @@ def alert_note(unit: dict) -> str:
         rating = rate(unit, atlas=load_atlas())
     except Exception:
         return ""
-    if rating["tier"] in (None, "price match"):
-        return ""
-    return f"* {rating['tier'].capitalize()} unit: {rating['why']}"
+    label = ALERT_LABELS.get(rating["tier"])
+    return f"* {label}: {rating['why']}" if label else ""
+
+
+ALERT_LABELS = {"dream": "Dream unit", "possible dream": "Possible dream unit", "almost": "Almost a dream unit",
+                "great light": "Great light"}
 
 
 # ------------------------------------------------------------------- atlas

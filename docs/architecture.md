@@ -258,8 +258,8 @@ summary is written:
 2. `dream_units.py` rebuilds the apartment atlas and rates each unit.
    - A listing with Oval views (`VBOV`) faces its building's Oval wall(s),
      and so does every apartment on its line.
-   - With no building outlines yet, the direction comes from the building's
-     position round the Oval, and is marked estimated.
+   - With no building outlines yet, the direction is straight at the Oval's
+     middle from the building's position, and is marked estimated.
    - Your `line_overrides.json` notes beat both.
 3. `units_map.py` writes `data/units.geojson`.
 

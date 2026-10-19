@@ -78,6 +78,15 @@ class BuildingTests(unittest.TestCase):
         self.assertIn("1 STUYVESANT OVAL", oval)
         self.assertNotIn("405 EAST 14TH STREET", oval)
 
+    def test_big_lists_are_written_one_item_per_line(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = f"{tmp}/b.json"
+            reference_data.write_json(path, self.result, one_per_line="footprints")
+            self.assertEqual(json.loads(Path(path).read_text()), json.loads(json.dumps(self.result)))
+            one_per_line = len(Path(path).read_text().splitlines())
+            reference_data.write_json(path, self.result)
+            self.assertLess(one_per_line * 4, len(Path(path).read_text().splitlines()))
+
     def test_addresses_are_written_the_listings_way(self):
         self.assertEqual(reference_data.normalize_address("330 1st Avenue"), "330 FIRST AVENUE")
         self.assertEqual(reference_data.normalize_address("405  East 14th Street"), "405 EAST 14TH STREET")
@@ -141,11 +150,19 @@ class FloorplanTests(unittest.TestCase):
         self.assertNotIn("AIza", saved)
         index = json.loads(Path(self.tmp, "floorplans", "index.json").read_text())
         self.assertEqual(index["108"]["labels"], ["LIVING ROOM", "18'2\" x 11'6\""])
+        self.assertEqual(index["108"]["rooms"], {"LIVING ROOM": "18'2\" x 11'6\""})
         self.assertEqual(index["108"]["seen_in"], ["06-A, 1 Stuyvesant Oval"])
         self.assertIn("last_error", index["999"])
         with mock.patch.object(reference_data, "fetch_floorplan", side_effect=AssertionError("fetched twice")), \
                 mock.patch.object(reference_data, "render_pngs", return_value=""):
             reference_data.refresh_floorplans(self.events[:1], time.monotonic() + 30)
+
+    def test_room_sizes_are_put_back_together(self):
+        labels = ["Kitchen", "Living Room", "12’0", "”", "x 18’7”", "Dining Area", "9’6", "x 9’4”", "Closet",
+                  "Master Bedroom", "15’0", "x 12’0", "Closet"]
+        self.assertEqual(reference_data.rooms(labels), {
+            "Kitchen": "", "Living Room": "12’0” x 18’7”", "Dining Area": "9’6” x 9’4”", "Closet": "",
+            "Master Bedroom": "15’0” x 12’0”", "Closet 2": ""})
 
     def test_a_layout_not_named_after_its_file_keeps_both_names(self):
         self.assertEqual(reference_data.floorplan_name("126", "/media/3y5j1ncp/st2bedclassic.svg"), "126_st2bedclassic")
