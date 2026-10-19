@@ -123,7 +123,7 @@ log line on every check (now one status line a minute).
 | Alert | When | Priority |
 | --- | --- | --- |
 | Qualifying StuyTown unit – auto-applying now | A new unit at or under your rent limit (and income) | **2 Emergency**, the only one that breaks through Do Not Disturb |
-| New StuyTown unit (doesn't qualify) | Any other new unit | 0 normal |
+| *(none)* | Any other new unit: logged in `events.json` only *(since 2026-10-19; before, a normal alert)* | |
 | Applied: Apt … | The site confirmed the application (filled form attached) | 0 normal |
 | Auto-apply failed / unconfirmed: Apt … | Anything else (page attached) | 0 normal |
 

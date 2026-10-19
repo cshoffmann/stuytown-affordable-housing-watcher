@@ -260,15 +260,15 @@ class Watcher:
         self.notifier.drain(timeout)  # the "needs a look" alert, if any
 
     def _wrap_up(self) -> None:
-        """The morning's stats, the summary page (also shown on the GitHub
-        Actions run's page), and ONE alert -- only if something needs a look."""
+        """The morning's stats and the summary page (also shown on the GitHub
+        Actions run's page). Anything that needs a look goes on the page and
+        in the log -- not to your phone: alerts are only for qualifying units."""
         self.stats.write(self.applier, check_units.load_state())
         text = summary.write(auto_apply.MAX_RENT)
         summary.github_step_summary(text)
         found = summary.issues(self.stats.last_summary)
         if found:
-            print("Needs a look:\n" + "\n".join(f"   - {line}" for line in found))
-            self.notifier.submit(background.notify_with_retries, check_units.notify, summary.attention_alert(found))
+            print("Needs a look (see data/summary.md):\n" + "\n".join(f"   - {line}" for line in found))
 
 
 def _quarter_hour(now: datetime) -> datetime:

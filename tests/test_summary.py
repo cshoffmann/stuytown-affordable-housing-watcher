@@ -110,13 +110,6 @@ class NeedsALookTests(unittest.TestCase):
             "status": "rejected", "detail": "the site says you already have an open application for this apartment"}
         self.assertEqual(summary.issues(run), [])
 
-    def test_the_alert_links_to_the_page(self):
-        with mock.patch.dict("os.environ", {"GITHUB_REPOSITORY": "me/watcher"}):
-            alert = summary.attention_alert(["a", "b"])
-        self.assertEqual(alert["priority"], 0)
-        self.assertEqual(alert["url"], "https://github.com/me/watcher/blob/main/data/summary.md")
-        self.assertIn("&bull; a", alert["message"])
-
 
 class RecordingPagesTests(unittest.TestCase):
     PAGE = "<html><script src='/sb/aHUnit-js.js.v555'></script><input name='x' value='4B'></html>"

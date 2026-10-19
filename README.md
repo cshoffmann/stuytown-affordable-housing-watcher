@@ -1,548 +1,127 @@
 # StuyTown / PCV Affordable Housing Watcher
 
-Checks the real StuyTown/PCV affordable housing listings **every 2 seconds**
-from 7:00 to 10:00am ET, every day, and **every 0.25 seconds around each
-quarter hour**, when StuyTown posts units. When a unit at or under your rent
-limit appears, it **applies for you**: straight to StuyTown's application
-API once the site's own form has shown it exactly what to send (about 0.05 s
-after the unit appears), otherwise through a browser kept open since 6:59
-(about 1 s). It also sends an
-Emergency-priority Pushover alert (bypasses silent mode / Do Not Disturb),
-then a message with the result. Each unit closes after 3 applications, and
-the cheap ones have been gone in 15–45 seconds, so speed is the whole game.
-Every unit's details are logged to `data/events.json`. Runs free on GitHub
-Actions, started each morning by Google Cloud Scheduler (free tier); nothing
-has to stay running on your computer.
+Every morning from 7:00 to 10:00am ET it checks StuyTown's affordable-housing
+listings: every **2 seconds**, and every **0.25 seconds** around each quarter
+hour, when StuyTown posts units. It records **every** listing it sees and,
+optionally, applies for you. It runs free on GitHub Actions, started at 6:13am
+by Google Cloud Scheduler. Nothing runs on your computer.
 
-**How it's built:** a checker that never stops, an applier that always goes
-first, and background workers for everything else. See
-[docs/architecture.md](docs/architecture.md), which also compares it with the
-old one-thing-at-a-time design.
+How it's built, and what the live data has shown so far:
+[docs/architecture.md](docs/architecture.md).
 
-## How alerts work (no duplicates)
+## What it does each morning
 
-`data/last_seen.json` remembers every unit currently listed, with the exact
-data the API last returned for it. On every check, **the applier gets the
-listings first**; alerts and logging come after, in the background:
+1. **Checks the listings** and compares each answer with the last one. A unit
+   that's new, changed or gone is logged in `data/events.json`, qualifying or
+   not.
+2. **Alerts you only for units that qualify**: rent at or under
+   `AUTO_APPLY_MAX_RENT`, and your income at or above the unit's minimum. That's
+   one **Emergency** Pushover alert, which breaks through Do Not Disturb. Units
+   that don't qualify are logged, never alerted.
+3. **Applies, if auto-apply is on.** The alert then says *auto-applying now*,
+   and a second, normal-priority message gives the result: *Applied*, or
+   *failed / unconfirmed, apply yourself*. With auto-apply off, the alert says
+   *apply now*.
+4. **At 10:00** it writes the morning's stats and rebuilds the summary page,
+   then commits everything in `data/`.
 
-| What the API shows | What happens |
+| You get | When |
 | --- | --- |
-| A new unit that **qualifies** (rent ≤ `AUTO_APPLY_MAX_RENT`, your income ≥ its minimum) | Auto-apply starts on it right away. **Emergency alert** "Qualifying StuyTown unit – auto-applying now", then one message with the result. Logged in `events.json` with the unit's full metadata |
-| A new unit that **doesn't qualify** | One **normal** alert "New StuyTown unit (doesn't qualify)" with a link to it. Logged |
-| The same unit, same data | **Nothing.** This is what stops a listing from alerting every 2 seconds |
-| The same unit, changed data (rent, available date, income requirement…) | Logged in `events.json`, no alert |
-| A unit gone for a minute (at least 2 checks in a row) | Logged, no alert. The unit leaves the state, so if it's **re-listed later it counts as new again** |
-| A unit missing from just one response, then back | Nothing: treated as an API blip, so it can't re-alert you |
+| Emergency: "Qualifying StuyTown unit - auto-applying now" (or "apply now" when auto-apply is off) | A new unit meets your conditions |
+| Normal: "Applied: Apt …" / "Auto-apply failed …" | Auto-apply is on and has a result for that unit |
+| Nothing | Any other unit, update or removal; problems (those go on the summary page) |
 
-Alerts are sent by a background worker with its own retries, so a slow or
-failing Pushover can delay an alert but never a check or an application.
-With no `AUTO_APPLY_MAX_RENT` set, every new unit gets the Emergency alert.
-There's no silent "baseline" run: if units are already listed the first time
-it runs, you're alerted.
-
-The state is committed back to the repo every 5 minutes when something
-changed, and at the end of each morning, so the next day picks up exactly
-where the last one left off.
-
-## The schedule
-
-Two independent triggers start the same workflow
-(`.github/workflows/watch.yml`):
-
-1. **Google Cloud Scheduler — the main trigger.** A job fires every day at
-   **6:13am New York time** and calls GitHub's API to start the workflow
-   (the same as tapping **Run workflow**), so the run starts within seconds
-   and shows as **"via manual request"** in the Actions tab. The job sets up,
-   opens the auto-apply browsers at 6:59, checks every 2 seconds (0.25 s
-   around each quarter hour) from 7:00
-   until 10:00, then exits. You'll see one ~4-hour run per day. Setup is under
-   [Google Cloud Scheduler](#google-cloud-scheduler-the-613am-start) below.
-2. **GitHub's own schedule — the backup.** The workflow's `schedule` fires at
-   6:13, 6:43, 7:13 … 9:43 (shows as **"via schedule"**). GitHub's scheduler
-   is best-effort: in this repo's first week its runs arrived 4 to 9 hours
-   late or not at all, which is why it isn't the main trigger. It's kept
-   because it's free and harmless: while a watcher is running, backups wait
-   in line and are replaced by newer ones — **"cancelled" runs in the Actions
-   tab are normal** — and one that arrives after 10:00 exits within a minute.
-   On a morning the Google trigger fails, an on-time backup covers whatever
-   is left of the window.
-
-Only one watcher ever runs at a time, so the two triggers can't double-alert.
-
-Other safeguards:
-
-- If the Pushover secrets are missing or wrong, the watcher still watches and
-  auto-applies (that doesn't need your phone), and the run ends with a red X,
-  so GitHub emails you.
-- If the site ever asks it to slow down (HTTP 429/403), it backs off,
-  honoring the site's Retry-After, and returns to 2 seconds gradually. Plain
-  errors such as timeouts are retried quickly.
-- GitHub turns off schedules in public repos after 60 days without a commit;
-  if nothing has been committed for 45 days, the watcher commits a tiny
-  `data/heartbeat.json` to prevent that.
-
-To watch it live: Actions tab → today's **StuyTown watcher** run → expand
-"Watch for new units". Changes log a line like
-`[07:55:00 ET] 1 listed - NEW: Apt 5A, 287 Avenue C`, and there's one
-"still checking" line a minute.
-
-### Checking on it: one page, and an alert only when needed
-
-**[`data/summary.md`](data/summary.md)** is rewritten at the end of every
-morning, and GitHub shows it as a formatted page you can open on your phone.
-
-- **Needs a look:** anything from the latest morning that means something may
-  be broken. For example, a form that couldn't be opened or filled, a
-  qualifying unit that wasn't applied to, the listings API pushing back,
-  direct submit unable to learn the request, or a profile value the site
-  would refuse.
-- **Mornings:** one line each, with when units were posted, how many
-  qualified, what auto-apply did, and how the API held up.
-- **Units:** every unit seen (posted, rent, beds, income minimum, how long it
-  stayed listed, what auto-apply did), newest first.
-- **Patterns:** posting times, units by weekday, how long units last at or
-  under your limit and over it, exactly when on the quarter hour they're
-  posted (by the site's own clock), and how fast our applications were.
-
-The top of it also appears on each run's page in the Actions tab. When
-*Needs a look* isn't empty, you get **one** normal-priority Pushover message
-at 10:00 that links to the page. On a morning where everything worked, you
-get nothing extra.
-
-## Setup
-
-1. In your Pushover dashboard, note your **User Key**, then **Your
-   Applications → Create an Application/API Token** and copy the **API Token**.
-2. In this repo on GitHub: **Settings → Secrets and variables → Actions**, add
-   `PUSHOVER_TOKEN` (the API token) and `PUSHOVER_USER` (your user key).
-3. In the Pushover app, pick a sound for Emergency-priority alerts, and allow
-   Pushover through your phone's Focus / Do Not Disturb settings.
-4. Set up the 6:13am trigger in Google Cloud Scheduler (next section).
-
-### Google Cloud Scheduler (the 6:13am start)
-
-Free: Cloud Scheduler includes 3 jobs per billing account, and this uses 1.
-Daily runs don't count against that.
-
-**Google Cloud account.** Sign up at cloud.google.com (a card is required to
-verify you, but isn't charged). Then:
-
-- Click **Activate full account** (or upgrade under **Billing**). A free-trial
-  account shuts down after 90 days and stops the job; an upgraded one keeps
-  the free allowance, so this still costs $0.
-- Under **Billing → Budgets & alerts**, create a **$1** budget so Google
-  emails you if anything ever starts to cost money.
-
-**GitHub token.** github.com → Settings → Developer settings → Personal
-access tokens → **Fine-grained tokens** → Generate new token:
-
-- Repository access: **Only select repositories** → this repo
-- Repository permissions: **Actions → Read and write** (nothing else)
-- Expiration: the longest offered. **Put a reminder in your calendar a week
-  before it expires** — an expired token silently stops the 6:13 start (the
-  GitHub backup schedule would still run, but unreliably).
-
-**The job.** In the Google Cloud console, search **Cloud Scheduler** → enable
-the API if asked → **Create job**:
-
-| Field | Value |
-| --- | --- |
-| Name | `start-stuytown-watcher` |
-| Region | any (this repo's uses `us-central1`) |
-| Frequency | `13 6 * * *` |
-| Timezone | `America/New_York` (handles daylight saving) |
-| Target type | HTTP |
-| URL | `https://api.github.com/repos/cshoffmann/stuytown-affordable-housing-watcher/actions/workflows/watch.yml/dispatches` |
-| HTTP method | POST |
-| Body | `{"ref":"main"}` |
-| Header `Authorization` | `Bearer <your github_pat_… token>` |
-| Header `Accept` | `application/vnd.github+json` |
-| Header `X-GitHub-Api-Version` | `2022-11-28` |
-| Header `Content-Type` | `application/json` |
-| Auth header | None |
-| Max retry attempts / Min backoff | `3` / `30s` |
-
-**Test it:** ⋮ → **Force run**. After a minute or two (click the console's
-own **Refresh**), *Status of last execution* should say **Success** and a
-"via manual request" run should appear in the Actions tab. Outside 6–10am
-that run exits in about a minute saying the window is over — that's expected.
-If it says **Failed**, the job's logs show GitHub's answer: 401 = token
-pasted wrong or `Bearer ` missing, 403 = token lacks Actions write, 404 =
-token not scoped to this repo.
-
-**Renewing the token:** generate a new one the same way, then edit the job
-and replace the `Authorization` header value. Force run once to confirm.
-
-## Auto-apply (`auto_apply.py`)
-
-When a listed unit's monthly rent is **at or under your limit** (and your
-income meets the unit's minimum), the watcher applies for you. **Applying
-always comes first**: nothing else can delay it.
-
-1. **At 6:59** two applier workers each open Chromium and load the StuyTown
-   site, and the site's form settings are read (see *Direct submit*).
-2. **The check that first sees the unit** hands it to the applier before
-   any alert or log is queued; the checker carries on checking.
-3. **Direct submit, when it's ready:** the application request goes
-   straight to StuyTown's application API on a thread of its own, over a
-   connection opened before the quarter hour. That's the same request the
-   site's SUBMIT button sends, built from your profile.
-4. **Otherwise, a browser** opens the unit's page, presses **APPLY NOW**
-   (drawn at the very bottom; look-alike links in the menu and footer are
-   ignored), fills every field from your profile, **reads each box back**,
-   and, only if everything required is right, presses **SUBMIT**. The
-   screenshot of the filled form is taken right after. If two cheap units
-   appear together, each browser takes one.
-5. **The site's answer decides the result:** its API's reply to the
-   application ("Created", or why not), the moment it arrives.
-6. In the background: **one** normal-priority message with the result
-   ("Applied", or a separate "Auto-apply failed / unconfirmed" message). The
-   recording and `data/applications.json` are written by the background
-   logger, which waits until no application is running.
-
-### Direct submit (`direct_submit.py`)
-
-On 2026-10-12 the browser took about 1.1 s from a unit appearing to
-SUBMIT; 0.75 s of that was loading the unit page. The site's SUBMIT is a
-single JSON request to its application API, and the API's address, its key
-and the site's messages are written into every unit page. Direct submit
-sends that request itself, but **only while it's proven to be exactly what
-the site's form would send**:
-
-- **Learning without sending.** When an over-limit unit's form is
-  recorded, the form is filled from your profile and SUBMIT is pressed with
-  **every outgoing request held back inside the browser**, so nothing is
-  sent. The request the site's form built is kept in memory. Every real
-  browser application is used the same way. At 6:59, if the format isn't
-  proven yet, the same is tried on the last unit posted, in case its page
-  still opens the form, so direct submit can be ready before 7:15.
-- From that request it learns *how* each value is written: the phone
-  format, the income format, where the building address and `version` come
-  from. Only these rule names are saved, in `data/apply_api.json`, never
-  your details. Rebuilding the captured request from your profile with
-  them must give exactly the same request, or direct submit stays off.
-- **Tied to the site's code.** The format is only used with the same
-  version of the site's JavaScript it was proven on. When StuyTown deploys
-  new code, the browser applies until the next capture proves it again.
-- **Safe fallback.** If the API refuses a direct request, or its answer is
-  lost, the browser applies instead. StuyTown refuses a second application
-  to the same apartment ("you have an open application"), so nothing can
-  be sent twice by mistake. If that happens after a lost answer, you're
-  told it most likely went through.
-
-To turn direct submit off, set `DIRECT_SUBMIT = False` in `auto_apply.py`.
-
-**Speed matters.** Units under $3,000 have been gone **15–45 seconds** after
-they appeared (all 3 applications taken), and on 2026-10-12 the other
-applicants were within about a second. Posting → SUBMIT was about 8.7 s
-before Phase 1 and 1.0–1.2 s on 2026-10-12 (browser). With direct submit
-and the quarter-hour checks it should be about 0.1–0.3 s.
-
-**After it submits:** StuyTown emails you a link to the *detailed*
-application, which has to be completed **within 24 hours** to stay eligible.
-That part is still yours, and the "Applied" message reminds you.
-
-### The form it fills (as recorded 2026-10-12)
-
-It's one dialog on the unit page. Each field is found by its label text (`FORM_FIELDS` in
-`auto_apply.py`), so the site's code can change without breaking anything as
-long as the labels stay the same:
-
-| Form label | Profile key | Notes |
-| --- | --- | --- |
-| First Name * | `first_name` | |
-| Last Name * | `last_name` | |
-| Email * | `email` | StuyTown's follow-up link goes here |
-| Cell Phone * | `cell_phone` | Any US format. The box starts with "+", so the +1 is added for you |
-| Work Phone | `work_phone` | Optional |
-| Building * | `building` | The **building number** of your current address, e.g. `123` |
-| Street name * | `street_name` | e.g. `Example Street` |
-| Apartment No. | `apartment_no` | Optional |
-| City * | `city` | |
-| State | `state` | Optional, e.g. `NY` |
-| Zip * | `zip` | 5 digits |
-| Household Size * | `household_size` | Everyone who'll live there, including you |
-| Household Gross Annual Income, $ * | `annual_income` | Before-tax yearly total, as a plain number, e.g. `95000` |
-
-If the site ever adds a field, put it in the profile's `extra_fields`, keyed
-by its label, e.g. `"extra_fields": {"Date of Birth": "01/31/1990"}`. No code
-change is needed (the browser applies until the new request is proven for
-direct submit).
-
-The site's own limits, from its settings: first name up to 20 characters
-and last name up to 25 (both plain ASCII: no accents), building up to 7,
-street up to 32, apartment up to 6, city up to 30, state 2 letters. The
-watcher warns at startup (by key name) if a profile value breaks one.
-
-### What makes it reliable
-
-- **Labels, not page code.** It reads each box's label the way a person
-  would: from the `<label>`, or from the text sitting just above the box. That
-  works whether or not the site's HTML links the label to the box. A "*" in
-  the label counts as required.
-- **Every value is read back.** Masked boxes reformat what's typed. If a value
-  doesn't stick, it's typed again key by key, and other spellings are tried
-  (`95000`, `95000.00`, and so on). If it still doesn't show correctly, the
-  form isn't sent. One example this catches: a "+" phone box given a 10-digit
-  number would read "+212 555…", which is a Moroccan number.
-- **Never sends a half-filled form.** It won't press SUBMIT if:
-  - a required box is empty or wrong, or
-  - any field StuyTown requires wasn't found at all, which would mean a label
-    changed.
-- **SUBMIT is checked to have been pressed.** It confirms the click reached
-  the button. If it didn't, it clicks again; a missed click sends nothing.
-- **Knows how it ended:**
-
-  | Result | What happened | Tried again? |
-  | --- | --- | --- |
-  | submitted | The API answered "Created" (or the site's success message appeared) | Not that day |
-  | unconfirmed | Sent, but no clear answer: no reply within 30 s, a server error, or a lost answer | Not that day: it may have gone through |
-  | rejected | The site said no: you already have an open application, the unit already has its 3, or a form error | Not that day |
-  | incomplete | Something required couldn't be filled; nothing sent | Not that day |
-  | blocked | A CAPTCHA you'd have to click; nothing sent | Not that day |
-  | failed | It crashed, timed out, or couldn't press SUBMIT; nothing sent | Once more that day, on a later check |
-
-  "That day" is the New York date. If the same unit is listed again on a
-  later morning, it's applied to again.
-
-  Everything except *submitted* gets its own "Auto-apply failed" (or
-  "unconfirmed") message telling you to **apply yourself now**, with the unit
-  link and a screenshot of where it ended.
-- **Every qualifying unit, once a day:** there's no daily limit, so every
-  unit at or under your rent limit gets applied to, but each unit only once
-  a day: a unit being applied to is never queued again by the next checks,
-  and one that was submitted (or may have been) isn't sent again that day.
-  If it's listed again on a later morning, it's applied to again, since the
-  site ranks applications in the order they arrive. Only an attempt that
-  sent nothing (a crash, a missed SUBMIT click) gets one more try that day.
-- **Isolation:** the applier never waits on Pushover, disk or git, and a
-  failure in any of those can't reach it. If an applier browser crashes, it's
-  restarted.
-
-### What gets recorded, so failures can be fixed
-
-Every trip through the form is saved to
-`data/apply_runs/<time>_<apartment>_apply/` and committed with the morning's
-results. **Your details are replaced with their key names** before anything
-is written: "Jane" becomes `<first_name>`, and "+1 212 555 0123" becomes
-`<cell_phone>`. That covers any letter case, any phone format, the income as
-`95000`, `95,000.00` or in cents, and URL-encoded text. In the application
-request and the site's answer to it, every personal field is also replaced
-**by its key**, whatever its value looks like (`"5B"`, `2`, an income sent
-as a bare number), and secrets such as the application's `token` (which
-the detailed-application link is made from) become `<secret>` in any JSON.
-API keys in headers are kept as a length, and what was typed into a box is
-never kept in a saved page.
+## The data
 
 | File | What's in it |
 | --- | --- |
-| `report.json` | Each step with its timing and page address. Every form field with its label and how the site built it (`name`, `id`, `autocomplete`, `inputmode`, `maxlength`, `class` …, never its value). How each box took its value (a plain fill, typed key by key, which spelling) and, for phone/income/zip-type boxes, the *shape* it ended up in (`+# ### ### ####`). The buttons. What was filled and what wasn't. Whether the form named the right apartment. Console errors. **The text the page gained after SUBMIT** (the site's real confirmation or complaint). Page navigations, live (WebSocket) connections, and cookies by name and settings (never values). How the page is built and loaded (framework, load times, slowest requests). On recordings: how the form is sent (`action`, `method`, hidden fields by name and length, CAPTCHA widgets). The outcome, with a timeline |
-| `report.json` → `analysis` | Worked out when it's written: **the request SUBMIT sent**, summarized (method, address, header names, the body's field names, which ones look like tokens, the answer and how fast it came), every request in the seconds after SUBMIT, where the scripts come from, the CDN, and any sign of an anti-bot, CAPTCHA or waiting-room service |
-| `network.json` | Every request the browser made, including **the request SUBMIT sends and the site's answer**, with bodies for pages and API calls. Cookie headers are dropped. A direct submit's folder (`..._direct/`) holds just its request and answer |
-| `1_unit_page.html` … `4_after_submit.html` | The page's HTML at each stage, and the screenshot of the empty form. Kept only when they can tell something new: the first time a version of the site's code is seen (`data/site_versions.json` says where), or when the trip didn't go as it should. Each copy is ~400 KB, nearly all of it the same site code, so this keeps the repo from growing ~1 MB per recording. `report.json` says whether they were kept, and why |
+| [`data/summary.md`](data/summary.md) | **Start here.** Rebuilt every morning: what needs a look, one line per morning, every unit seen (posted, rent, beds, income minimum, how long it lasted), patterns (posting times, weekdays, how long units last) |
+| `data/events.json` | Every unit ever seen, with the full listing as the site gave it, and every change and removal |
+| `data/run_stats/<date>.json` | One per morning: when each unit was posted (to within 0.25 s, against the site's own clock), how long it stayed up, how the listings API behaved |
+| `data/applications.json` | Each application: result and timeline (when sent, when the site received it) |
+| `data/apply_runs/` | Recordings of trips through the form (only while auto-apply is on) |
 
-Each application in `data/applications.json` also gets a **timeline**: when
-the checker queued it, when it started, how it went (`direct (API)` or
-`unit page`), when the form was found, when SUBMIT was pressed or the
-request sent, when the answer came, and **when the site's own clock received
-it** (`server_submitted_utc`, what ranks the 1-2-3), all in UTC to the
-millisecond.
+Nothing personal is ever committed: your details are replaced with their key
+names before anything is written, and so are tokens and API keys. The repo is
+public, so that matters.
 
-**One stats file per morning**, `data/run_stats/<date>.json`, covers what a
-single recording can't: how the listings API answers being checked every 2
-seconds (response times, statuses, whether the kept-open connection holds,
-caching headers such as `Age` or `ETag`, any rate-limit headers, and how far
-its clock is from ours), every slow-down and why, and every unit with **when it was
-posted** (between the last check without it and the first with it, and,
-using the site's clock, how far from its quarter hour). The clock
-reading comes from the site's `Date` header. That header only gives whole
-seconds, but the 0.25 s checks keep landing on either side of the site's
-second boundaries, so they pin its clock down to about 0.3 s. Each unit
-also gets how long it really stayed listed, and how many seconds after it
-appeared SUBMIT was pressed and the site received it. The file also says
-whether direct submit was ready, and what the idle listings page did on its
-own. It's about the site and the listings: nothing of
-yours is in it. `docs/architecture.md` has a table of which file answers
-which question.
+## Turning it on and off
 
-Screenshots of the filled-in form can't be redacted, so they only go to your
-phone (and the runner's gitignored `private/` folder, which disappears after
-the run).
+- **Everything off:** Actions tab → **StuyTown watcher** → **⋯** → **Disable
+  workflow**. Also pause the Cloud Scheduler job. GitHub's own backup schedule
+  would otherwise still start it.
+- **Collect data and alert, but don't apply:** set the `AUTO_APPLY_MODE`
+  variable to `off`.
+- **Apply too:** set `AUTO_APPLY_MODE` to `on`. Needs the variable and secret
+  below.
 
-**There's real data even on mornings nothing qualifies.** While auto-apply is
-on, it also opens the form of up to **2 units over your limit** each morning
-and records it, only while no application is running. These go to
-`data/apply_runs/<time>_<apartment>_record/`, including a screenshot of the
-empty form, which contains nothing of yours. The form is then filled and
-SUBMIT pressed with every outgoing request held back in the browser
-(nothing is sent), which is how direct submit learns and re-checks the
-site's request.
+| Setting (Settings → Secrets and variables → Actions) | What it is |
+| --- | --- |
+| Variable `AUTO_APPLY_MAX_RENT` | Your rent limit in $/month, e.g. `3000` (inclusive). Decides which units alert, even with auto-apply off |
+| Variable `AUTO_APPLY_MODE` | `on` or `off` |
+| Secret `APPLICANT_PROFILE` | Your details as one JSON document. `applicant_profile.example.json` shows every key. Keep your own copy: GitHub never shows a secret again |
+| Secrets `PUSHOVER_TOKEN`, `PUSHOVER_USER` | Your Pushover app token and user key |
 
-### Settings: repository variables, not code
+With auto-apply on, it applies **at most once per unit per day**. It goes
+straight to StuyTown's application API (about 0.05 s after the unit appears)
+once it has checked its request against the site's own form, and otherwise
+fills the form in a browser (about 1 s). After applying, finish the
+*detailed* application that StuyTown emails you **within 24 hours**.
 
-Nothing is hard-coded. Two **repository variables** (Settings → Secrets and
-variables → Actions → **Variables** tab) control auto-apply. Changes apply
-from the next run.
+## Setup (once)
 
-| Variable | Value | Meaning |
-| --- | --- | --- |
-| `AUTO_APPLY_MODE` | `on` / `off` | `on`: fill, screenshot and submit for qualifying units. `off` or not set: auto-apply does nothing at all |
-| `AUTO_APPLY_MAX_RENT` | e.g. `3000` | Your rent limit in $/month, inclusive (a $3,000.00 unit qualifies; $3,000.01 doesn't). **Required** when on: there's no built-in default, and if it's missing, auto-apply stays off and tells you why. It also decides which new units get the Emergency alert, even with auto-apply off |
+1. **Pushover:** create an application to get an API token, and note your
+   user key. Add both as secrets (above). In the Pushover app, allow Emergency
+   alerts through Focus / Do Not Disturb.
+2. **GitHub token for the 6:13 start:** github.com → Settings → Developer
+   settings → **Fine-grained tokens**. Give it access to this repo only, with
+   **Actions: Read and write** and the longest expiry. Set a calendar reminder
+   to renew it.
+3. **Google Cloud Scheduler** (free: 3 jobs included; this uses 1). Activate a
+   full account, so it doesn't stop after the 90-day trial, and set a $1
+   budget alert. Then **Cloud Scheduler → Create job**:
 
-Variables aren't shown to visitors of the repo, but they aren't encrypted
-either. That's fine for a rent limit, but not for your details.
+| Field | Value |
+| --- | --- |
+| Frequency / Timezone | `13 6 * * *` / `America/New_York` |
+| Target | HTTP `POST` to `https://api.github.com/repos/cshoffmann/stuytown-affordable-housing-watcher/actions/workflows/watch.yml/dispatches` |
+| Body | `{"ref":"main"}` |
+| Headers | `Authorization: Bearer <github_pat_…>`, `Accept: application/vnd.github+json`, `X-GitHub-Api-Version: 2022-11-28`, `Content-Type: application/json` |
+| Retries | 3, min backoff 30s |
 
-### Your details: one encrypted secret
+To test it, use **⋮ → Force run**. A "via manual request" run should appear
+in the Actions tab. If it fails, the error code says why: 401 means the token
+is wrong, 403 means it lacks Actions write access, and 404 means it isn't
+scoped to this repo.
 
-Your details go in **one repository secret**, `APPLICANT_PROFILE`, holding
-the whole profile as JSON (`applicant_profile.example.json` shows every key).
-This is the reliable way to keep them hidden:
-
-- GitHub encrypts secrets and never shows them again, not even to you. Keep
-  your own copy, e.g. in a password manager, for when you need to change
-  something: you re-paste the whole JSON.
-- The repo and its Actions logs are public, so:
-  - every profile value is masked (shown as `***`) at the start of each run;
-  - screenshots of the filled form go only to your phone;
-  - the recordings and `data/applications.json` never contain a value.
-- At the start of each run the profile is checked: every required key
-  present, email, phone, ZIP, household size and income well-formed. A
-  problem turns auto-apply off for that morning, and you get an alert naming
-  the key (never the value), instead of finding out when a unit appears.
-- On your own computer, the same JSON goes in `applicant_profile.json`, which
-  is gitignored.
-
-### Turning it on
-
-1. Copy `applicant_profile.example.json` and fill in your real details.
-   Keep the copy **out of the repo** (password manager, notes app).
-2. GitHub → this repo → **Settings → Secrets and variables → Actions**:
-   - **Secrets** tab → *New repository secret*: name `APPLICANT_PROFILE`,
-     value: paste the whole JSON.
-   - **Variables** tab → *New repository variable*: `AUTO_APPLY_MAX_RENT` =
-     `3000`, and `AUTO_APPLY_MODE` = `on`.
-3. **Test your real profile on the fake form:** Actions → **StuyTown
-   watcher** → **Run workflow** → tick *Test auto-apply instead*. It runs the
-   real auto-apply code against the copy of the form in
-   `tests/fixtures/apply_site/` on GitHub's server (nothing reaches
-   StuyTown). You get a `[TEST] Applied` alert on your phone with a
-   screenshot of the filled-in form showing exactly what it typed. The run's
-   redacted recording is attached to the run as `test-output`.
-
-To watch it fill a real unit's form on your own computer without submitting:
-`python auto_apply.py --check-form "<the unit's link>" --headed`.
+GitHub's own schedule (6:13, 6:43 … 9:43) is only a backup: it's often hours
+late. While one run is going, any others wait and then cancel themselves.
+"Cancelled" runs in the Actions tab are normal.
 
 ## Testing
 
-All tests live in `tests/`; fake data in `tests/fixtures/`. Nothing in
-`tests/` touches the real `data/` folder or git; simulation output goes to
-`tests/output/` (gitignored, wiped each run).
-
-One-time setup on your computer (PowerShell, from the repo folder):
-
-```powershell
-pip install -r requirements.txt
-playwright install chromium
+```
+pip install -r requirements.txt && playwright install chromium
+python -m unittest discover -s tests       # everything, offline, against fake copies of the site
+python tests/simulate_morning.py           # a fake morning through the real code (1 Emergency alert)
+python tests/send_test_notification.py     # one test alert to your phone
+python auto_apply.py --selftest            # the real applier against a fake copy of the form
 ```
 
-**1. Automated checks.** These cover:
-
-- the duplicate/state logic and the alert rules;
-- the 2-second checker: back-off, recovery, quiet logging, batched commits;
-- the background workers;
-- the applier's queue;
-- form filling in a real headless browser;
-- two browsers applying in parallel, and the learned form address, against a
-  fake copy of StuyTown's site.
-
-No network, no phone:
-
-```powershell
-python -m unittest discover -s tests -v
-```
-
-**2. Simulated morning on your phone.** Replays
-`tests/fixtures/morning_scenario.json` (15 checks: a unit is posted, stays
-listed, changes rent, has an API blip, is taken down, is re-listed alongside a
-second unit) through the real watcher code, against a fake copy of the
-listings API running on your computer. Auto-apply stays off; the rent limit
-is set to $1,500 so both kinds of new-unit alert show up:
-
-```powershell
-$env:PUSHOVER_TOKEN="your-app-token"; $env:PUSHOVER_USER="your-user-key"; python tests/simulate_morning.py
-```
-
-Your phone should get exactly three alerts, all titled `[TEST] …`:
-
-1. **Normal**: "New StuyTown unit (doesn't qualify)" (Apt 5A, $1,873).
-2. **Emergency**: "Qualifying StuyTown unit - apply now" (Apt 12C, $1,450).
-   Repeats every minute until you tap Acknowledge (test alerts stop by
-   themselves after 3 minutes).
-3. **Normal**: "New StuyTown unit (doesn't qualify)" (5A, re-listed at the
-   same time).
-
-The rent change and the removal are only logged. The script prints `OK` /
-`MISMATCH` for each check; afterwards, look at `tests/output/events.json`.
-Without the `$env:` part it's a dry run that prints the alerts instead of
-sending them. `--interval 2` runs it at the real pace.
-
-**3. One test alert.** Sends a single Emergency alert, built like the real
-one for a qualifying unit, and nothing else. Run it as often as you like
-while tuning Do Not Disturb:
-
-```powershell
-$env:PUSHOVER_TOKEN="your-app-token"; $env:PUSHOVER_USER="your-user-key"; python tests/send_test_notification.py
-```
-
-**4. The auto-apply self-test** (`python auto_apply.py --selftest`, or *Test
-auto-apply instead* under **Run workflow**). This is the real applier: warm
-browser, queue, background message and logging. It runs against the fake
-copy of the form with your profile, and the result arrives as a `[TEST]
-Applied` message with the filled-in form.
-
-**5. The real thing in GitHub Actions.** Actions tab → **StuyTown watcher** →
-**Run workflow**, set *minutes* to 2 and tick *Send a [TEST] alert*. That
-checks the live listings every 2 seconds for 2 minutes from GitHub's servers
-and sends one test alert, proving the secrets, the API and the setup all work
-there. (Run it outside 7–10am, or it waits for the morning run to finish.)
+The Pushover keys are read from `PUSHOVER_TOKEN` / `PUSHOVER_USER`; without
+them, alerts are printed instead of sent. In GitHub, **Run workflow** has the
+same tests: *minutes* for a short live run, *Send a [TEST] alert*, *Test the
+alerts instead* and *Test auto-apply instead*.
 
 ## Files
 
-- `watch_loop.py`: the 7–10am run. The checker (`Watcher`, `Pace`), plus
-  starting the applier and the background workers and committing results.
-  `python watch_loop.py --minutes 2` does a local test run against the live
-  site (alerts only if you've set the Pushover variables; never commits).
-- `check_units.py`: the core. Fetch the listings (one kept-open
-  connection), compare with the saved state, pick the alerts, log events.
-  `python check_units.py` just prints what's listed right now.
-- `auto_apply.py`: the `Applier`, which applies to units at or under your
-  rent limit (see *Auto-apply*). `applicant_profile.example.json` shows every
-  profile key.
-- `direct_submit.py`: reads the site's form settings, learns and checks the
-  application request, and sends it straight to the API.
-- `background.py`: the notifier and logger workers, and alert retries.
-- `apply_recorder.py`: records each trip through the form, with your details
-  redacted, and works out the `analysis` (the SUBMIT request, anti-bot
-  signs). Also `SiteWatch`, which notes what the idle listings page does.
-- `run_stats.py`: the morning's stats file (listings API, pace, units,
-  applier, and the site's clock to a fraction of a second).
-- `summary.py`: builds `data/summary.md` and decides what "needs a look".
-  `python summary.py` rebuilds it from what's in `data/`.
-- `docs/architecture.md`: how it's built, and how that compares with the
-  old design.
-- `data/last_seen.json`: the state (what's listed right now).
-- `data/events.json`: history of every new / updated / removed unit.
-- `data/applications.json`: which units auto-apply tried, and how it went
-  (no personal details).
-- `data/apply_api.json`: the proven direct-submit format (rule names and
-  the site's code version; none of your details).
-- `data/apply_runs/`: the form recordings.
-- `data/run_stats/`: one stats file per morning (no personal details).
-- `data/summary.md`: the page built from all of it (see *Checking on it*).
-- `data/site_versions.json`: each version of StuyTown's site code seen, and
-  which recording has its pages.
-- `tests/`: automated tests, the phone simulation, the test alert, and the
-  fake data they use (`tests/fixtures/`, including `apply_site/`, a fake copy
-  of a unit page and the application form).
-- `.github/workflows/watch.yml`: the workflow. Google Cloud Scheduler starts
-  it each morning, and its own `schedule` is the backup.
+| File | Job |
+| --- | --- |
+| `watch_loop.py` | The 7–10am run: the checking schedule, starting everything, commits |
+| `check_units.py` | Fetches the listings, spots changes, picks alerts, logs events |
+| `auto_apply.py` | The applier: browsers, the form, results |
+| `direct_submit.py` | Learns the site's application request and sends it straight to its API |
+| `apply_recorder.py` | Records each trip through the form, and redacts it |
+| `run_stats.py`, `summary.py` | The morning's stats, and the summary page |
+| `background.py` | The background workers that send alerts and write logs |
+| `.github/workflows/watch.yml` | The GitHub Actions workflow |

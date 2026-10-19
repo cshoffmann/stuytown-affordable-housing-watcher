@@ -14,8 +14,8 @@ the exact data the API last returned for it. On each check
      or log is even queued.
   2. NEW unit (its ID isn't in the state)
        qualifies for auto-apply  -> Emergency alert (bypasses Do Not Disturb)
-       doesn't                   -> one normal alert
-     plus an events.json entry with the unit's full metadata.
+       doesn't                   -> no alert
+     and, either way, an events.json entry with the unit's full metadata.
   3. SAME unit, DIFFERENT data (rent, available date...) -> events.json only.
   4. Unit GONE -> only counts as removed once it's been missing for
      REMOVAL_CONFIRM_SECONDS (and at least REMOVAL_MIN_MISSED_CHECKS checks),
@@ -460,8 +460,10 @@ def process_snapshot(units: list, now: datetime | None = None, label: str = "", 
          and returns the units it took on).
       2. Alerts go to the notifier, and the events log to the logger -- both
          background workers, so neither can delay the next check or an
-         application. qualifies(unit) picks Emergency vs normal alerts; with
-         no qualifies, every new unit is an Emergency.
+         application. Only units that qualify (qualifies(unit): at or under
+         the rent limit, income high enough) get an alert, an Emergency one;
+         with no qualifies, every new unit does. Every unit, qualifying or
+         not, goes in the events log.
 
     Without notifier/logger (tests, the fake morning) the jobs run inline."""
     now = now or datetime.now(timezone.utc)
@@ -483,15 +485,12 @@ def process_snapshot(units: list, now: datetime | None = None, label: str = "", 
         print(f"[{label or stamp}] {changes.listed} listed - {changes.summary()}")
     if changes.new:
         qualifying = [u for u in changes.new if qualifies is None or _safe_bool(qualifies, u)]
-        others = [u for u in changes.new if u not in qualifying]
         if qualifying:
             # "auto-applying now" only when the applier really took it on (it
             # won't, say, for a unit it already applied to before a re-listing).
             taken = {unit_id(u) for u in queued}
             notifier.submit(background.notify_with_retries, notify,
                             qualifying_alert(qualifying, auto_applying=all(unit_id(u) in taken for u in qualifying)))
-        if others:
-            notifier.submit(background.notify_with_retries, notify, new_units_alert(others))
         logger.submit(record_event, {
             "event": "new",
             "detected_at_utc": stamp,
@@ -566,22 +565,10 @@ def qualifying_alert(units: list, auto_applying: bool) -> dict:
         title = f"{len(units)} qualifying StuyTown units - {action}"
         url, url_title = LISTINGS_URL, "Open all listings"
     footer = ("Auto-apply is on: you'll get the result in a separate message."
-              if auto_applying else "Each unit closes after 3 applications.")
+              if auto_applying else "Auto-apply isn't applying to it: apply yourself. "
+              "Each unit closes after 3 applications.")
     message = _fit([_linked_line(u) for u in units], footer=footer)
     return {"title": title, "message": message, "url": url, "url_title": url_title, "priority": 2}
-
-
-def new_units_alert(units: list) -> dict:
-    """Normal priority: new units that don't qualify (over your rent limit or
-    above your income)."""
-    if len(units) == 1:
-        title = "New StuyTown unit (doesn't qualify)"
-        url, url_title = unit_url(units[0]), "Open this unit"
-    else:
-        title = f"{len(units)} new StuyTown units (don't qualify)"
-        url, url_title = LISTINGS_URL, "Open all listings"
-    message = _fit([_linked_line(u) for u in units], footer="Each unit closes after 3 applications.")
-    return {"title": title, "message": message, "url": url, "url_title": url_title, "priority": 0}
 
 
 def _linked_line(unit: dict) -> str:
