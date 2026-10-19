@@ -3,7 +3,7 @@
   "steps": [
     {"time": "07:00:00", "what": "Watcher starts - nothing listed yet", "units": [], "expect": "nothing"},
     {"time": "07:00:02", "what": "Still nothing", "units": [], "expect": "nothing"},
-    {"time": "07:55:00", "what": "Apt 5A is posted (over the test's rent limit: a normal alert)", "units": ["5A"], "expect": "new"},
+    {"time": "07:55:00", "what": "Apt 5A is posted (over the test's rent limit: logged, no alert)", "units": ["5A"], "expect": "new"},
     {"time": "07:55:02", "what": "5A still listed, same data - must NOT alert again", "units": ["5A"], "expect": "nothing"},
     {"time": "07:55:04", "what": "5A still listed, same data", "units": ["5A"], "expect": "nothing"},
     {"time": "08:10:00", "what": "5A's rent changes - logged, no alert", "units": ["5A_rent_change"], "expect": "updated"},

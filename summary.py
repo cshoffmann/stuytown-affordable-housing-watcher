@@ -3,8 +3,8 @@ data/summary.md: everything the watcher has collected, on one page you can
 read on GitHub (or your phone) -- rewritten at the end of every morning.
 
     Needs a look   anything from the latest morning that means something may
-                   be broken (also sent as ONE normal alert, only when there is
-                   something): a form that couldn't be opened or filled, a
+                   be broken (only here and in the run's log -- never sent to
+                   your phone): a form that couldn't be opened or filled, a
                    qualifying unit that wasn't applied to, the listings API
                    pushing back, direct submit unable to learn the request ...
     Mornings       one line per morning: when units were posted, how many
@@ -175,15 +175,6 @@ def issues(run: dict | None) -> list:
     if pushed:
         found.append(f"The listings API asked us to slow down {pushed} times")
     return found
-
-
-def attention_alert(found: list) -> dict:
-    repo = os.environ.get("GITHUB_REPOSITORY")
-    alert = {"title": "StuyTown watcher: needs a look",
-             "message": "<br>".join(f"&bull; {line}" for line in found[:8]), "priority": 0}
-    if repo:
-        alert.update(url=f"https://github.com/{repo}/blob/main/{SUMMARY_FILE}", url_title="Open the summary")
-    return alert
 
 
 # ---------------------------------------------------------------- render

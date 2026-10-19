@@ -174,12 +174,12 @@ class ProcessSnapshotTests(unittest.TestCase):
     def test_only_qualifying_units_get_the_emergency_alert(self):
         cheap = lambda unit: unit["price"] < 1500  # noqa: E731 -- 12C is $1,450, 5A $1,873
         self.check([UNIT_5A, UNIT_12C], qualifies=cheap, apply=lambda units: [UNIT_12C])
-        emergency, normal = self.sent
-        self.assertEqual((emergency["priority"], normal["priority"]), (2, 0))
+        (emergency,) = self.sent  # 5A doesn't qualify: logged, no alert
+        self.assertEqual(emergency["priority"], 2)
         self.assertIn("auto-applying now", emergency["title"])
         self.assertIn("12C", emergency["message"])
-        self.assertIn("doesn't qualify", normal["title"])
-        self.assertIn("5A", normal["message"])
+        self.assertNotIn("5A", emergency["message"])
+        # Every unit is logged, qualifying or not.
         self.assertEqual([u["qualifies_for_auto_apply"] for u in self.events()[0]["units"]], [False, True])
 
     def test_a_qualifying_unit_the_applier_didnt_take_says_apply_now(self):
@@ -243,7 +243,7 @@ class AlertContentTests(unittest.TestCase):
 
     def test_many_new_units_still_fit_pushovers_limit(self):
         units = [dict(UNIT_5A, unitSpk=f"P~TEST~U~{i}", name=f"{i}A") for i in range(40)]
-        alert = check_units.new_units_alert(units)
+        alert = check_units.qualifying_alert(units, auto_applying=False)
         self.assertLessEqual(len(alert["message"]), check_units.PUSHOVER_MESSAGE_LIMIT)
         self.assertIn("more on the listings page", alert["message"])
         self.assertEqual(alert["url"], check_units.LISTINGS_URL)

@@ -7,17 +7,15 @@ alert and events-log code that runs in GitHub Actions -- against a fake copy
 of the listings API running on your own computer. It never touches the real
 data/ folder or git: everything goes to tests/output/ (wiped at the start of
 each run). Auto-apply stays off (the fake units have no real pages;
-tests/test_auto_apply.py covers applying), but the rent limit is set to
-$1,500 so both kinds of new-unit alert show up.
+tests/test_auto_apply.py covers applying), and the rent limit is set to
+$1,500: 5A ($1,873) doesn't qualify, 12C ($1,450) does.
 
-What your phone should get (every title starts with [TEST]):
-  1. normal     "New StuyTown unit (doesn't qualify)" when 5A ($1,873) is posted.
-  2. EMERGENCY  "Qualifying StuyTown unit - apply now" when 12C ($1,450) is
-                posted. Breaks through Do Not Disturb and repeats every minute
-                until you tap Acknowledge (test alerts stop after 3 minutes).
-  3. normal     "New StuyTown unit (doesn't qualify)" for 5A, re-listed at the
-                same time.
-5A's rent change and its removal are logged in events.json, with no alert.
+What your phone should get (the title starts with [TEST]) -- ONE alert:
+  EMERGENCY  "Qualifying StuyTown unit - apply now" when 12C is posted.
+             Breaks through Do Not Disturb and repeats every minute until you
+             tap Acknowledge (test alerts stop after 3 minutes).
+5A (posted, rent change, removal, re-listing) is only logged in events.json:
+units that don't qualify never alert.
 
 Run from the repo folder:
     python tests/simulate_morning.py      (no keys set = dry run: alerts are printed, not sent)
@@ -142,11 +140,11 @@ def main() -> int:
         server.server_close()
 
     print("\n" + "=" * 60)
-    print(f"Alerts: {sent['emergency']} emergency (qualifying units), {sent['normal']} normal "
-          "-- updates and removals are logged, not alerted.")
+    print(f"Alerts: {sent['emergency']} emergency (qualifying units), {sent['normal']} other "
+          "-- every unit, update and removal is logged in events.json.")
     print(f"Events log:  {check_units.EVENTS_FILE}")
-    if mismatches or (sent["emergency"], sent["normal"]) != (1, 2):
-        print(f"{mismatches} check(s) did NOT behave as expected, or the alerts weren't 1 emergency + 2 normal.")
+    if mismatches or (sent["emergency"], sent["normal"]) != (1, 0):
+        print(f"{mismatches} check(s) did NOT behave as expected, or the alerts weren't exactly 1 emergency.")
         return 1
     print("All checks behaved as expected.")
     return 0

@@ -364,9 +364,9 @@ def _profile_if_any() -> dict | None:
 
 def qualifies(unit: dict) -> bool:
     """Would auto-apply's rules take this unit (rent at or under the limit,
-    income at or above its minimum)? Picks the Emergency alert over the
-    normal one -- also when auto-apply is off, so you can apply yourself. With
-    no AUTO_APPLY_MAX_RENT set, every new unit counts."""
+    income at or above its minimum)? Decides which new units get an alert
+    (Emergency) -- also when auto-apply is off, so you can apply yourself.
+    With no AUTO_APPLY_MAX_RENT set, every new unit counts."""
     if MAX_RENT is None:
         return True
     return skip_reason(unit, _profile_if_any() or {}) is None
