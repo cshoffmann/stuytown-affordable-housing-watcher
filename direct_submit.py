@@ -400,16 +400,27 @@ class ApiClient:
                 return {"error": f"couldn't connect: {type(e).__name__}", "sent": False}
         path = parts.path + (f"?{parts.query}" if parts.query else "")
         sent_utc, started = _utc_ms(), time.monotonic()
-        try:
-            conn.request("POST", path, body=payload, headers={**headers, "Content-Length": str(len(payload))})
-            response = conn.getresponse()
-            text = response.read().decode("utf-8", "replace")
-        except (OSError, http.client.HTTPException) as e:
-            conn.close()
-            return {"error": f"{type(e).__name__}: {e}"[:200], "sent": True, "sent_utc": sent_utc}
+        for attempt in (1, 2):
+            try:
+                conn.request("POST", path, body=payload, headers={**headers, "Content-Length": str(len(payload))})
+                response = conn.getresponse()
+                text = response.read().decode("utf-8", "replace")
+                break
+            except (http.client.RemoteDisconnected, ConnectionResetError, BrokenPipeError) as e:
+                conn.close()
+                # The kept-open connection had been closed by the server while
+                # idle (2026-10-13, 8:00): it closed without answering, so the
+                # request never reached the API. Once more, on a new connection.
+                if attempt == 2 or not reused:
+                    return {"error": f"{type(e).__name__}: {e}"[:200], "sent": True, "sent_utc": sent_utc}
+                conn, reused = _connection(parts), False
+                sent_utc, started = _utc_ms(), time.monotonic()
+            except (OSError, http.client.HTTPException) as e:
+                conn.close()
+                return {"error": f"{type(e).__name__}: {e}"[:200], "sent": True, "sent_utc": sent_utc}
         conn.close()
         return {"status": response.status, "text": text, "sent_utc": sent_utc, "answered_utc": _utc_ms(),
-                "seconds": round(time.monotonic() - started, 3), "reused": reused}
+                "seconds": round(time.monotonic() - started, 3), "reused": reused, "retried": attempt == 2}
 
     def _close(self):
         if self._conn is not None:

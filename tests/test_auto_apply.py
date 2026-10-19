@@ -431,6 +431,40 @@ class DirectSubmitFormatTests(unittest.TestCase):
         self.assertEqual(direct_submit.interpret(400, '{"message": "validation"}')[0], "refused")
         self.assertEqual(direct_submit.interpret(503, "")[0], "unknown")
 
+    def test_a_warm_connection_the_server_dropped_is_retried_on_a_new_one(self):
+        import http.client
+
+        class Conn:
+            def __init__(self, fails):
+                self.fails, self.requests = fails, 0
+
+            def connect(self):
+                pass
+
+            def request(self, *args, **kwargs):
+                self.requests += 1
+
+            def getresponse(self):
+                if self.fails:
+                    raise http.client.RemoteDisconnected("Remote end closed connection without response")
+                response = mock.Mock(status=200)
+                response.read.return_value = b'{"status": "Created"}'
+                return response
+
+            def close(self):
+                pass
+
+        dropped, fresh = Conn(fails=True), Conn(fails=False)
+        client = direct_submit.ApiClient()
+        with mock.patch.object(direct_submit, "_connection", side_effect=[dropped, fresh]):
+            client.warm("https://api.test/x")  # opened ahead of time ...
+            result = client.post("https://api.test/x", {"a": 1}, {})  # ... and closed by the server since
+        self.assertEqual((result["status"], result["retried"]), (200, True))
+        self.assertEqual((dropped.requests, fresh.requests), (1, 1))
+        # A brand-new connection failing the same way isn't retried: that answer may really be lost.
+        with mock.patch.object(direct_submit, "_connection", side_effect=[Conn(fails=True)]):
+            self.assertIn("error", direct_submit.ApiClient().post("https://api.test/x", {"a": 1}, {}))
+
     def test_the_headers_carry_the_current_key_and_this_units_page(self):
         fmt = {"headers": {"accept": "*/*", "subscription-key": "old", "referer": "https://x/units?unitSpk=P~A"},
                "verified_from": "P~A"}
