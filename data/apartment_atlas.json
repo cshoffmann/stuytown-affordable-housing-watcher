@@ -1,0 +1,483 @@
+{
+ "about": "Each line of apartments seen (same building, same letter = stacked, facing the same way). Built by dream_units.py from data/events.json; your notes go in data/reference/line_overrides.json.",
+ "lines": {
+  "17 STUYVESANT OVAL|H": {
+   "bedrooms": 1,
+   "building": "17 STUYVESANT OVAL",
+   "complex": "Stuy Town",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "108": 1
+   },
+   "line": "H",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "06-H",
+     "finish": "Blank",
+     "first_seen_utc": "2026-10-13T11:15:00Z",
+     "floor": 6,
+     "rent": 2080.6
+    }
+   ],
+   "sqft": 764,
+   "winter_sun_h": null
+  },
+  "18 STUYVESANT OVAL|E": {
+   "bedrooms": 2,
+   "building": "18 STUYVESANT OVAL",
+   "complex": "Stuy Town",
+   "facing": [
+    "WSW"
+   ],
+   "facing_certain": true,
+   "facing_from": "Oval views + the building's Oval walls (OpenStreetMap)",
+   "layouts": {
+    "125": 1
+   },
+   "line": "E",
+   "looks_onto_street": false,
+   "oval_views": {
+    "no": 0,
+    "yes": 1
+   },
+   "seen": [
+    {
+     "apartment": "06-E",
+     "finish": "Blank",
+     "first_seen_utc": "2026-10-09T11:30:00Z",
+     "floor": 6,
+     "rent": 2648.34
+    }
+   ],
+   "sqft": 948,
+   "winter_sun_h": 4.6
+  },
+  "245 AVENUE C|D": {
+   "bedrooms": 1,
+   "building": "245 AVENUE C",
+   "complex": "Stuy Town",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "105": 1
+   },
+   "line": "D",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "02-D",
+     "finish": "Classic",
+     "first_seen_utc": "2026-10-06T11:15:00Z",
+     "floor": 2,
+     "rent": 4405.4
+    }
+   ],
+   "sqft": 790,
+   "winter_sun_h": null
+  },
+  "277 AVENUE C|B": {
+   "bedrooms": 2,
+   "building": "277 AVENUE C",
+   "complex": "Stuy Town",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "124": 1
+   },
+   "line": "B",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "04-B",
+     "finish": "Classic",
+     "first_seen_utc": "2026-10-07T11:30:00Z",
+     "floor": 4,
+     "rent": 4502.74
+    }
+   ],
+   "sqft": 932,
+   "winter_sun_h": null
+  },
+  "330 FIRST AVENUE|B": {
+   "bedrooms": 2,
+   "building": "330 FIRST AVENUE",
+   "complex": "Stuy Town",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "126": 1
+   },
+   "line": "B",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "08-B",
+     "finish": "Blank",
+     "first_seen_utc": "2026-10-12T11:15:00Z",
+     "floor": 8,
+     "rent": 2787.04
+    }
+   ],
+   "sqft": 955,
+   "winter_sun_h": null
+  },
+  "405 EAST 14TH STREET|E": {
+   "bedrooms": 1,
+   "building": "405 EAST 14TH STREET",
+   "complex": "Stuy Town",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "119": 1
+   },
+   "line": "E",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "10-E",
+     "finish": "Blank",
+     "first_seen_utc": "2026-10-09T11:15:00Z",
+     "floor": 10,
+     "rent": 2077.88
+    }
+   ],
+   "sqft": 749,
+   "winter_sun_h": null
+  },
+  "445 EAST 14TH STREET|A": {
+   "bedrooms": 1,
+   "building": "445 EAST 14TH STREET",
+   "complex": "Stuy Town",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "102": 1
+   },
+   "line": "A",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "02-A",
+     "finish": "Blank",
+     "first_seen_utc": "2026-10-12T12:00:00Z",
+     "floor": 2,
+     "rent": 2202.64
+    }
+   ],
+   "sqft": 771,
+   "winter_sun_h": null
+  },
+  "451 EAST 14TH STREET|F": {
+   "bedrooms": 1,
+   "building": "451 EAST 14TH STREET",
+   "complex": "Stuy Town",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "107": 1
+   },
+   "line": "F",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "09-F",
+     "finish": "Platinum",
+     "first_seen_utc": "2026-10-08T11:15:00Z",
+     "floor": 9,
+     "rent": 4380.54
+    }
+   ],
+   "sqft": 745,
+   "winter_sun_h": null
+  },
+  "455 EAST 14TH STREET|D": {
+   "bedrooms": 1,
+   "building": "455 EAST 14TH STREET",
+   "complex": "Stuy Town",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "119": 1
+   },
+   "line": "D",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "03-D",
+     "finish": "Blank",
+     "first_seen_utc": "2026-10-08T11:15:00Z",
+     "floor": 3,
+     "rent": 2032.62
+    }
+   ],
+   "sqft": 749,
+   "winter_sun_h": null
+  },
+  "5 STUYVESANT OVAL|F": {
+   "bedrooms": 1,
+   "building": "5 STUYVESANT OVAL",
+   "complex": "Stuy Town",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "107": 1
+   },
+   "line": "F",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "05-F",
+     "finish": "Blank",
+     "first_seen_utc": "2026-10-08T11:30:03Z",
+     "floor": 5,
+     "rent": 2183.86
+    }
+   ],
+   "sqft": 745,
+   "winter_sun_h": null
+  },
+  "510 EAST 20TH STREET|G": {
+   "bedrooms": 2,
+   "building": "510 EAST 20TH STREET",
+   "complex": "Stuy Town",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "123": 1
+   },
+   "line": "G",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "10-G",
+     "finish": "Blank",
+     "first_seen_utc": "2026-10-09T12:00:00Z",
+     "floor": 10,
+     "rent": 2644.28
+    }
+   ],
+   "sqft": 932,
+   "winter_sun_h": null
+  },
+  "530 EAST 20TH STREET|A": {
+   "bedrooms": 1,
+   "building": "530 EAST 20TH STREET",
+   "complex": "Stuy Town",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "102": 1
+   },
+   "line": "A",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "01-A",
+     "finish": "Blank",
+     "first_seen_utc": "2026-10-08T12:00:03Z",
+     "floor": 1,
+     "rent": 3040.84
+    }
+   ],
+   "sqft": 771,
+   "winter_sun_h": null
+  },
+  "545 EAST 14TH STREET|D": {
+   "bedrooms": 1,
+   "building": "545 EAST 14TH STREET",
+   "complex": "Stuy Town",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "110": 1
+   },
+   "line": "D",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "0M-D",
+     "finish": "Blank",
+     "first_seen_utc": "2026-10-13T11:15:00Z",
+     "floor": 1,
+     "rent": 2234.25
+    }
+   ],
+   "sqft": 764,
+   "winter_sun_h": null
+  },
+  "605 EAST 14TH STREET|D": {
+   "bedrooms": 1,
+   "building": "605 EAST 14TH STREET",
+   "complex": "Stuy Town",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "108": 1
+   },
+   "line": "D",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "06-D",
+     "finish": "Blank",
+     "first_seen_utc": "2026-10-13T12:00:00Z",
+     "floor": 6,
+     "rent": 2124.69
+    }
+   ],
+   "sqft": 764,
+   "winter_sun_h": null
+  },
+  "610 EAST 20TH STREET|B": {
+   "bedrooms": 3,
+   "building": "610 EAST 20TH STREET",
+   "complex": "Stuy Town",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "141": 1
+   },
+   "line": "B",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "03-B",
+     "finish": "Platinum",
+     "first_seen_utc": "2026-10-12T12:15:00Z",
+     "floor": 3,
+     "rent": 5444.25
+    }
+   ],
+   "sqft": 1148,
+   "winter_sun_h": null
+  },
+  "647 EAST 14TH STREET|B": {
+   "bedrooms": 2,
+   "building": "647 EAST 14TH STREET",
+   "complex": "Stuy Town",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "126": 1
+   },
+   "line": "B",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "06-B",
+     "finish": "Blank",
+     "first_seen_utc": "2026-10-12T11:30:00Z",
+     "floor": 6,
+     "rent": 3067.19
+    }
+   ],
+   "sqft": 955,
+   "winter_sun_h": null
+  },
+  "653 EAST 14TH STREET|F": {
+   "bedrooms": 1,
+   "building": "653 EAST 14TH STREET",
+   "complex": "Stuy Town",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "107": 1
+   },
+   "line": "F",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "02-F",
+     "finish": "Modern",
+     "first_seen_utc": "2026-10-07T11:15:00Z",
+     "floor": 2,
+     "rent": 4470.82
+    }
+   ],
+   "sqft": 745,
+   "winter_sun_h": null
+  }
+ }
+}

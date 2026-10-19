@@ -24,8 +24,11 @@ sys.path.insert(0, str(REPO_ROOT))
 
 import background  # noqa: E402
 import check_units  # noqa: E402
+import dream_units  # noqa: E402
+import reference_data  # noqa: E402
 import run_stats  # noqa: E402
 import summary  # noqa: E402
+import units_map  # noqa: E402
 import watch_loop  # noqa: E402
 
 FAKE_UNITS = json.loads((REPO_ROOT / "tests" / "fixtures" / "fake_units.json").read_text(encoding="utf-8"))
@@ -88,6 +91,14 @@ class CheckerTests(unittest.TestCase):
             (check_units, "notify", lambda **alert: True),
             (run_stats, "RUN_STATS_DIR", f"{tmp.name}/run_stats"),
             (summary, "SUMMARY_FILE", f"{tmp.name}/summary.md"),
+            # The wrap-up's map and floorplans: a temp folder, and no network.
+            (reference_data, "BUILDINGS_FILE", f"{tmp.name}/reference/buildings.json"),
+            (reference_data, "FLOORPLANS_DIR", f"{tmp.name}/floorplans"),
+            (reference_data, "fetch_osm", mock.Mock(side_effect=OSError("offline"))),
+            (reference_data, "fetch_floorplan", mock.Mock(side_effect=OSError("offline"))),
+            (dream_units, "ATLAS_FILE", f"{tmp.name}/apartment_atlas.json"),
+            (dream_units, "OVERRIDES_FILE", f"{tmp.name}/reference/line_overrides.json"),
+            (units_map, "MAP_FILE", f"{tmp.name}/units.geojson"),
         ]:
             patcher = mock.patch.object(target, name, value)
             patcher.start()

@@ -14,16 +14,18 @@ How it's built, and what the live data has shown so far:
 1. **Checks the listings** and compares each answer with the last one. A unit
    that's new, changed or gone is logged in `data/events.json`, qualifying or
    not.
-2. **Alerts you only for units that qualify**: rent at or under
-   `AUTO_APPLY_MAX_RENT`, and your income at or above the unit's minimum. That's
-   one **Emergency** Pushover alert, which breaks through Do Not Disturb. Units
-   that don't qualify are logged, never alerted.
+2. **Alerts you only for units that qualify**: rent at or under your limit
+   for its size (`AUTO_APPLY_RULES`, e.g. 1 bed $2,200, 2 bed $2,700), and your
+   income at or above the unit's minimum. That's one **Emergency** Pushover
+   alert, which breaks through Do Not Disturb. If it's a dream unit (below),
+   the alert says so. Units that don't qualify are logged, never alerted.
 3. **Applies, if auto-apply is on.** The alert then says *auto-applying now*,
    and a second, normal-priority message gives the result: *Applied*, or
    *failed / unconfirmed, apply yourself*. With auto-apply off, the alert says
    *apply now*.
-4. **At 10:00** it writes the morning's stats and rebuilds the summary page,
-   then commits everything in `data/`.
+4. **At 10:00**, with the applier stopped, it writes the morning's stats,
+   saves any new layout's floorplan, refreshes the map, and rebuilds the
+   summary page, then commits everything in `data/`.
 
 | You get | When |
 | --- | --- |
@@ -35,11 +37,15 @@ How it's built, and what the live data has shown so far:
 
 | File | What's in it |
 | --- | --- |
-| [`data/summary.md`](data/summary.md) | **Start here.** Rebuilt every morning: what needs a look, one line per morning, every unit seen (posted, rent, beds, income minimum, how long it lasted), patterns (posting times, weekdays, how long units last) |
+| [`data/summary.md`](data/summary.md) | **Start here.** Rebuilt every morning: what needs a look, one line per morning, dream units, every unit seen (where, floor, size, rent, finish, layout, features, which way it faces, how long it lasted), buildings, layouts with floorplans, patterns |
+| [`data/units.geojson`](data/units.geojson) | **The map**: every building and every unit seen (below) |
 | `data/events.json` | Every unit ever seen, with the full listing as the site gave it, and every change and removal |
 | `data/run_stats/<date>.json` | One per morning: when each unit was posted (to within 0.25 s, against the site's own clock), how long it stayed up, how the listings API behaved |
 | `data/applications.json` | Each application: result and timeline (when sent, when the site received it) |
 | `data/apply_runs/` | Recordings of trips through the form (only while auto-apply is on) |
+| `data/floorplans/` | Each layout's floorplan (the site's SVG and a PNG copy), and `index.json` |
+| `data/apartment_atlas.json` | Each line of apartments seen (same building + letter = stacked): layout, floors, rents, Oval views, which way it faces |
+| `data/reference/` | `buildings.json` (from OpenStreetMap: outlines, which way each wall faces and what it looks at) and `line_overrides.json` (your own notes) |
 
 Nothing personal is ever committed: your details are replaced with their key
 names before anything is written, and so are tokens and API keys. The repo is
@@ -57,8 +63,10 @@ public, so that matters.
 
 | Setting (Settings → Secrets and variables → Actions) | What it is |
 | --- | --- |
-| Variable `AUTO_APPLY_MAX_RENT` | Your rent limit in $/month, e.g. `3000` (inclusive). Decides which units alert, even with auto-apply off |
+| Variable `AUTO_APPLY_RULES` | Rent limits by bedrooms, $/month, inclusive: `1:2200, 2:2700` (`studio:` works too). Decide which units alert, even with auto-apply off |
+| Variable `AUTO_APPLY_MAX_RENT` | One limit, e.g. `3000`: for every unit, or for sizes `AUTO_APPLY_RULES` doesn't list |
 | Variable `AUTO_APPLY_MODE` | `on` or `off` |
+| Variables `DREAM_RULES`, `DREAM_FLOORS` | Optional. What counts as a dream unit; unset means `1:2200, 2:2700` and `5-10` |
 | Secret `APPLICANT_PROFILE` | Your details as one JSON document. `applicant_profile.example.json` shows every key. Keep your own copy: GitHub never shows a secret again |
 | Secrets `PUSHOVER_TOKEN`, `PUSHOVER_USER` | Your Pushover app token and user key |
 
@@ -67,6 +75,41 @@ straight to StuyTown's application API (about 0.05 s after the unit appears)
 once it has checked its request against the site's own form, and otherwise
 fills the form in a browser (about 1 s). After applying, finish the
 *detailed* application that StuyTown emails you **within 24 hours**.
+
+## Dream units and the map
+
+A **dream unit** is at or under `DREAM_RULES`, on a `DREAM_FLOORS` floor,
+listed with **Oval views**, with its Oval windows facing **E, ESE, SE, S or
+SW** (in between counts too), which means a building on the north side of
+the Oval. Dream units are only
+highlighted (alert, summary, map). Auto-apply still follows `AUTO_APPLY_RULES`.
+Ratings: **dream**, **possible dream** (unsure which way it faces), **almost**
+(one thing missing; it says what), **great light** (sunny and away from the
+streets, e.g. Peter Cooper Village), **price match**.
+
+Which way windows face comes from OpenStreetMap's building outlines: each
+wall's direction, and whether it looks at the Oval, a street or the next
+building. Most buildings sit on the street grid, so their windows face SSW
+(most sun), ESE (morning), WNW (late day) or NNE (almost none). The ones
+round the Oval are turned to face it. A unit listed with Oval views faces
+its building's Oval wall, and so does every apartment on its line. If you learn a line's direction (at a viewing, say), add it to
+`data/reference/line_overrides.json`.
+
+**The map:** open [`data/units.geojson`](data/units.geojson) on github.com and
+GitHub draws it. You can also use the geojson.io link on the summary page,
+which is easier on a phone. Tap anything for details.
+
+| On the map | Means |
+| --- | --- |
+| Gold building / orange wall | Looks at the Oval, sunny side: the dream buildings |
+| Blue building / blue wall | Looks at the Oval, shady side |
+| Green building / green wall | Sunny walls away from the streets, with 5+ hours of winter sun at floor 8 |
+| Grey building | No sunny, quiet walls |
+| Gold star, orange star, purple, green, blue, grey dot | A unit: dream, possible dream, almost, great light, price match, the rest |
+
+The buildings are fetched once, on the first morning (or press **Run
+workflow → Refresh the map instead**). Until then, the map shows units as
+dots on their buildings.
 
 ## Setup (once)
 
@@ -111,7 +154,8 @@ python auto_apply.py --selftest            # the real applier against a fake cop
 The Pushover keys are read from `PUSHOVER_TOKEN` / `PUSHOVER_USER`; without
 them, alerts are printed instead of sent. In GitHub, **Run workflow** has the
 same tests: *minutes* for a short live run, *Send a [TEST] alert*, *Test the
-alerts instead* and *Test auto-apply instead*.
+alerts instead* and *Test auto-apply instead*. It also has *Refresh the map
+instead*.
 
 ## Files
 
@@ -123,5 +167,11 @@ alerts instead* and *Test auto-apply instead*.
 | `direct_submit.py` | Learns the site's application request and sends it straight to its API |
 | `apply_recorder.py` | Records each trip through the form, and redacts it |
 | `run_stats.py`, `summary.py` | The morning's stats, and the summary page |
+| `dream_units.py` | Dream-unit ratings, which way a unit faces, the apartment atlas |
+| `reference_data.py` | Fetches the buildings (OpenStreetMap) and floorplans, and works out each wall's direction and view |
+| `stuytown_geo.py` | The street grid, zones, the walk to the L, and the sun (NOAA's model, as suncalc.org uses) |
+| `units_map.py` | Builds `data/units.geojson` |
 | `background.py` | The background workers that send alerts and write logs |
 | `.github/workflows/watch.yml` | The GitHub Actions workflow |
+
+Map data © OpenStreetMap contributors (ODbL).

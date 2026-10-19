@@ -35,8 +35,10 @@ from zoneinfo import ZoneInfo
 import auto_apply
 import background
 import check_units
+import dream_units
 import run_stats
 import summary
+import units_map
 
 POLL_INTERVAL_SECONDS = 2  # every check is one small request; cheap units have been gone in 15-45s
 # StuyTown posts units on the quarter hour (7:15, 7:30, 8:00, 8:15 in every
@@ -61,6 +63,9 @@ MAX_WAIT_BEFORE_WINDOW = timedelta(hours=1)
 # this many days without one, the watcher commits a tiny heartbeat file.
 KEEPALIVE_AFTER_DAYS = 45
 HEARTBEAT_FILE = "data/heartbeat.json"
+# After the window: floorplans, the map's buildings, the atlas and the map
+# get this long (they only start once the applier has stopped).
+REFERENCE_BUDGET_SECONDS = 100
 
 
 @functools.cache
@@ -143,11 +148,11 @@ class Watcher:
     def check(self, units: list, now: datetime | None = None, label: str | None = None) -> check_units.Changes:
         """One check's worth of work for a fetched list of units."""
         now = now or datetime.now(timezone.utc)
-        qualifies = auto_apply.qualifies if auto_apply.MAX_RENT is not None else None
+        qualifies = auto_apply.qualifies if auto_apply.limits_configured() else None
         changes = check_units.process_snapshot(
             units, now=now, label=label or f"{now_et():%H:%M:%S} ET",
             apply=self.applier.dispatch if self.applier else None,
-            qualifies=qualifies, notifier=self.notifier, logger=self.logger,
+            qualifies=qualifies, notifier=self.notifier, logger=self.logger, note=dream_units.alert_note,
         )
         if changes:
             self._unsent.append(f"{now_et():%H:%M} {changes.summary()}")
@@ -247,9 +252,9 @@ class Watcher:
             ": " + " | ".join(summaries) if summaries else ": save state")
         self.logger.submit(commit_and_push, message)
 
-    def finish(self, timeout: float = 120) -> None:
+    def finish(self, timeout: float = 120 + REFERENCE_BUDGET_SECONDS) -> None:
         """Let a running application finish, send what's queued, write the
-        morning's stats, commit."""
+        morning's stats, the map and the summary, commit."""
         if self.applier:
             self.applier.stop(timeout=60)
         self.notifier.drain(timeout)
@@ -260,11 +265,16 @@ class Watcher:
         self.notifier.drain(timeout)  # the "needs a look" alert, if any
 
     def _wrap_up(self) -> None:
-        """The morning's stats and the summary page (also shown on the GitHub
-        Actions run's page). Anything that needs a look goes on the page and
-        in the log -- not to your phone: alerts are only for qualifying units."""
+        """The morning's stats; new floorplans, the map's buildings, the
+        apartment atlas and the map (units_map.refresh_all -- only now, with
+        the applier stopped, so none of it can slow an application); and the
+        summary page (also shown on the GitHub Actions run's page). Anything
+        that needs a look goes on the page and in the log -- not to your
+        phone: alerts are only for qualifying units."""
         self.stats.write(self.applier, check_units.load_state())
-        text = summary.write(auto_apply.MAX_RENT)
+        for line in units_map.refresh_all(budget_seconds=REFERENCE_BUDGET_SECONDS):
+            print(f"   {line}")
+        text = summary.write(auto_apply.MAX_RENT, rules=auto_apply.RENT_RULES)
         summary.github_step_summary(text)
         found = summary.issues(self.stats.last_summary)
         if found:
@@ -364,6 +374,9 @@ def main(argv=None) -> int:
 
     # First, so the applicant profile is masked in the log before anything else prints.
     auto_apply.startup_check()
+    print(f"Dream units (highlighted, never applied to by themselves): {dream_units.settings_text()}")
+    for warning in dream_units.startup_warnings():
+        print(f"WARNING: {warning} -- using the rest")
     print(f"Pushover credentials loaded: {bool(check_units.PUSHOVER_TOKEN and check_units.PUSHOVER_USER)}")
     pushover_problem = None
     if os.environ.get("GITHUB_ACTIONS") == "true":

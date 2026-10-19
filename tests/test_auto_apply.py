@@ -63,7 +63,32 @@ class EligibilityTests(unittest.TestCase):
         with mock.patch.object(auto_apply, "MAX_RENT", 3500):
             self.assertIsNone(auto_apply.skip_reason(unit(price=3040.84), EXAMPLE_PROFILE))
         with mock.patch.object(auto_apply, "MAX_RENT", None):
-            self.assertIn("isn't set", auto_apply.skip_reason(unit(price=100), EXAMPLE_PROFILE))
+            self.assertIn("no rent limit is set", auto_apply.skip_reason(unit(price=100), EXAMPLE_PROFILE))
+
+    def test_limits_by_bedrooms(self):
+        def reason(beds, price):
+            return auto_apply.skip_reason(unit(price=price, bedrooms=beds), EXAMPLE_PROFILE)
+
+        with mock.patch.object(auto_apply, "RENT_RULES", {1: 2200.0, 2: 2700.0}), \
+                mock.patch.object(auto_apply, "MAX_RENT", None):
+            self.assertIsNone(reason(1, 2200))
+            self.assertIn("over $2,200.00", reason(1, 2200.01))
+            self.assertIsNone(reason(2, 2700))
+            self.assertEqual(reason(3, 1000), "no rent limit for 3 bed units")
+            self.assertTrue(auto_apply.qualifies(unit(price=2650, bedrooms=2)))
+            self.assertFalse(auto_apply.qualifies(unit(price=2650, bedrooms=1)))
+            self.assertEqual(auto_apply.limits_text(), "1 bed <= $2,200, 2 bed <= $2,700")
+        with mock.patch.object(auto_apply, "RENT_RULES", {1: 2200.0}):  # AUTO_APPLY_MAX_RENT (3000) covers the rest
+            self.assertIsNone(reason(2, 2999))
+            self.assertIn("over $2,200.00", reason(1, 2300))
+            self.assertEqual(auto_apply.limits_text(), "1 bed <= $2,200, others <= $3,000")
+
+    def test_limits_are_read_like_people_write_them(self):
+        parse = check_units.parse_rules
+        self.assertEqual(parse("1:2200, 2:2700"), ({1: 2200.0, 2: 2700.0}, []))
+        self.assertEqual(parse("studio: $1,800; 1br=2,200, 2 bed:2700.50")[0], {0: 1800.0, 1: 2200.0, 2: 2700.5})
+        self.assertEqual(parse("1:2200, junk"), ({1: 2200.0}, ["junk"]))
+        self.assertEqual(parse(""), ({}, []))
 
     def test_without_a_price_the_cheapest_lease_rate_counts(self):
         cheap = unit(price=None, unitRates={"12": 3100, "24": 2950})

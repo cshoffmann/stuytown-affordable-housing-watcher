@@ -21,12 +21,16 @@ it every check's listings FIRST, before any alert or log is even queued:
     straight to the API, ~0.05 s after the checker sees it. Anything
     unproven, refused or lost goes to a browser instead.
 
-Two repository variables control it:
+Repository variables control it:
 
     AUTO_APPLY_MODE      on | off (default). Off = auto-apply does nothing at all.
-    AUTO_APPLY_MAX_RENT  your rent limit in $/month, e.g. 3000 -- required when
-                         on; there is no built-in default. Also decides which
-                         new units get the Emergency alert.
+    AUTO_APPLY_RULES     rent limits by bedrooms, $/month: "1:2200, 2:2700"
+                         (0 = studio). A unit whose bedroom count isn't listed
+                         falls back to AUTO_APPLY_MAX_RENT, or doesn't qualify.
+    AUTO_APPLY_MAX_RENT  one limit for every unit, e.g. 3000.
+                         At least one of the two is required when on; there is
+                         no built-in default. They also decide which new units
+                         get the Emergency alert.
 
 Your details come from APPLICANT_PROFILE -- the whole JSON document, stored as
 ONE GitHub secret -- or, on your own computer, the gitignored
@@ -89,6 +93,39 @@ _MODE_SETTING = os.environ.get("AUTO_APPLY_MODE", "").strip().lower()
 ENABLED = _MODE_SETTING in ("on", "true", "yes", "1")
 _MAX_RENT_SETTING = os.environ.get("AUTO_APPLY_MAX_RENT", "").strip()
 MAX_RENT = check_units.number(_MAX_RENT_SETTING)  # $/month, inclusive; None = not set
+
+parse_rules = check_units.parse_rules  # "1:2200, 2:2700" -> ({1: 2200.0, 2: 2700.0}, [])
+RENT_RULES, RULE_PROBLEMS = check_units.parse_rules(os.environ.get("AUTO_APPLY_RULES", ""))  # {bedrooms: $/month}
+
+
+def rent_limit_for(unit: dict) -> float | None:
+    """This unit's rent limit: its bedroom count's rule, else AUTO_APPLY_MAX_RENT."""
+    beds = check_units.number(unit.get("bedrooms"))
+    if beds is not None and int(beds) in RENT_RULES:
+        return RENT_RULES[int(beds)]
+    return MAX_RENT
+
+
+def limits_configured() -> bool:
+    return bool(RENT_RULES) or MAX_RENT is not None
+
+
+def beds_text(beds) -> str:
+    beds = check_units.number(beds)
+    if beds is None:
+        return "?"
+    return "studio" if beds == 0 else f"{beds:g} bed"
+
+
+def limits_text(rules: dict | None = None, max_rent: float | None = None) -> str:
+    """'1 bed <= $2,200, 2 bed <= $2,700, others <= $3,000' (the current
+    settings by default); '' when none are set."""
+    rules = RENT_RULES if rules is None else rules
+    max_rent = MAX_RENT if rules is RENT_RULES and max_rent is None else max_rent
+    parts = [f"{beds_text(beds)} <= ${limit:,.0f}" for beds, limit in sorted(rules.items())]
+    if max_rent is not None:
+        parts.append(f"{'others' if parts else 'any'} <= ${max_rent:,.0f}")
+    return ", ".join(parts)
 
 PROFILE_ENV = "APPLICANT_PROFILE"
 PROFILE_FILE = "applicant_profile.json"
@@ -259,9 +296,10 @@ def _profile_for_run() -> dict | None:
     is reported (log + one alert) and switches auto-apply off for the run; it
     never stops the watcher -- the alerts matter more."""
     try:
-        if MAX_RENT is None:
-            raise ProfileError("the AUTO_APPLY_MAX_RENT repository variable isn't set to a number "
-                               "(e.g. 3000)")
+        if not limits_configured():
+            raise ProfileError("no rent limit is set: set the AUTO_APPLY_RULES repository variable "
+                               "(e.g. 1:2200, 2:2700) or AUTO_APPLY_MAX_RENT (e.g. 3000)"
+                               + (f" -- couldn't read {', '.join(RULE_PROBLEMS)!r}" if RULE_PROBLEMS else ""))
         profile = load_profile()
         if profile is None:
             raise ProfileError(f"no applicant profile found (set the {PROFILE_ENV} secret, "
@@ -285,9 +323,12 @@ def startup_check() -> None:
     if not ENABLED:
         print("Auto-apply: off (set the AUTO_APPLY_MODE repository variable to on to turn it on)")
         return
+    if RULE_PROBLEMS:
+        print(f"WARNING: AUTO_APPLY_RULES: couldn't read {', '.join(RULE_PROBLEMS)!r} "
+              "(write it like 1:2200, 2:2700) -- ignoring that part.")
     profile = _profile_for_run()
     if profile:
-        print(f"Auto-apply: ON for units at or under ${MAX_RENT:,.0f}/mo (applicant profile loaded)")
+        print(f"Auto-apply: ON for {limits_text()} a month (applicant profile loaded)")
         for warning in profile_warnings(profile):
             print(f"   WARNING: {warning} -- the site would refuse the application")
 
@@ -300,10 +341,13 @@ def skip_reason(unit: dict, profile: dict) -> str | None:
     rent = check_units.unit_rent(unit)
     if rent is None:
         return "no rent listed"
-    if MAX_RENT is None:
-        return "AUTO_APPLY_MAX_RENT isn't set"
-    if rent > MAX_RENT:
-        return f"rent ${rent:,.2f} is over ${MAX_RENT:,.2f}"
+    if not limits_configured():
+        return "no rent limit is set (AUTO_APPLY_RULES or AUTO_APPLY_MAX_RENT)"
+    limit = rent_limit_for(unit)
+    if limit is None:
+        return f"no rent limit for {beds_text(unit.get('bedrooms'))} units"
+    if rent > limit:
+        return f"rent ${rent:,.2f} is over ${limit:,.2f}"
     income = check_units.number(profile.get("annual_income"))
     required = check_units.number(unit.get("incomeRequirement"))
     if income is not None and required is not None and income < required:
@@ -363,11 +407,11 @@ def _profile_if_any() -> dict | None:
 
 
 def qualifies(unit: dict) -> bool:
-    """Would auto-apply's rules take this unit (rent at or under the limit,
-    income at or above its minimum)? Decides which new units get an alert
-    (Emergency) -- also when auto-apply is off, so you can apply yourself.
-    With no AUTO_APPLY_MAX_RENT set, every new unit counts."""
-    if MAX_RENT is None:
+    """Would auto-apply's rules take this unit (rent at or under its bedroom
+    count's limit, income at or above its minimum)? Decides which new units
+    get an alert (Emergency) -- also when auto-apply is off, so you can apply
+    yourself. With no limit set at all, every new unit counts."""
+    if not limits_configured():
         return True
     return skip_reason(unit, _profile_if_any() or {}) is None
 
@@ -1988,7 +2032,9 @@ def _selftest(profile: dict) -> int:
     check_units.UNIT_PAGE_URL = f"{base}/unit.html"
     check_units.LISTINGS_URL = f"{base}/unit.html"
     global APPLICATIONS_FILE, MAX_RENT
-    MAX_RENT = MAX_RENT or 2850  # the fake unit always qualifies: its rent is set to your limit
+    if rent_limit_for({"bedrooms": 1}) is None:
+        MAX_RENT = 2850
+    limit = rent_limit_for({"bedrooms": 1})  # the fake 1 bed always qualifies: its rent is your limit
     APPLICATIONS_FILE = f"{SELFTEST_RUNS_DIR}/applications.json"  # never the real log
     direct_submit.API_FORMAT_FILE = f"{SELFTEST_RUNS_DIR}/apply_api.json"
     check_units.EVENTS_FILE = f"{SELFTEST_RUNS_DIR}/events.json"  # not the real units
@@ -1999,9 +2045,9 @@ def _selftest(profile: dict) -> int:
         if os.path.exists(leftover):
             os.remove(leftover)
     building = {"address": "FAKE FORM, NOT A REAL UNIT"}
-    over = {"unitSpk": "P~SELF~U~OVER", "name": "OVER", "building": building, "price": MAX_RENT + 1000,
+    over = {"unitSpk": "P~SELF~U~OVER", "name": "OVER", "building": building, "price": limit + 1000,
             "incomeRequirement": 0, "bedrooms": 1, "bathrooms": 1, "version": 2}
-    unit = {"unitSpk": "P~SELF~U~TEST", "name": "TEST", "building": building, "price": MAX_RENT,
+    unit = {"unitSpk": "P~SELF~U~TEST", "name": "TEST", "building": building, "price": limit,
             "incomeRequirement": 0, "bedrooms": 1, "bathrooms": 1, "version": 1}
     SelftestSiteHandler.units = {u["unitSpk"]: u for u in (over, unit)}
     SelftestSiteHandler.applications = []
