@@ -1,0 +1,96 @@
+{
+  "started_utc": "2026-10-13T12:00:00.077Z",
+  "seconds": null,
+  "outcome": {
+    "status": "lost",
+    "detail": "RemoteDisconnected: Remote end closed connection without response",
+    "timeline": {
+      "started_utc": "2026-10-13T12:00:00.077Z",
+      "queue_wait_seconds": 0.0,
+      "form_via": "direct (API)",
+      "submit_pressed_utc": "2026-10-13T12:00:00.077Z",
+      "answer_utc": null,
+      "server_submitted_utc": null,
+      "api_seconds": null,
+      "connection_was_warm": null
+    }
+  },
+  "steps": [
+    {
+      "t": 0.0,
+      "step": "pressing SUBMIT",
+      "how": "sent straight to the API"
+    }
+  ],
+  "notes": {
+    "unit": {
+      "unit_id": "P~NYST31~B~605~U~06-D",
+      "apartment": "06-D",
+      "address": "605 East 14th Street",
+      "bedrooms": 1,
+      "bathrooms": 1,
+      "price": 2124.69,
+      "income_requirement": 72846.51,
+      "available_date": "2026-11-28T00:00:00Z",
+      "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~605~U~06-D"
+    }
+  },
+  "console": [],
+  "navigations": [],
+  "websockets": [],
+  "cookies": [],
+  "files": [
+    "network.json"
+  ],
+  "analysis": {
+    "submit_request": {
+      "method": "POST",
+      "url": "https://pd-dlcore.beamliving.com/affordable-housing/create-application",
+      "type": "direct",
+      "seconds_after_pressing": 0.0,
+      "content_type": "application/json",
+      "header_names": [
+        "accept",
+        "content-type",
+        "origin",
+        "referer",
+        "sec-ch-ua",
+        "sec-ch-ua-mobile",
+        "sec-ch-ua-platform",
+        "subscription-key",
+        "user-agent"
+      ],
+      "body_keys": [
+        "unitSpk",
+        "firstName",
+        "lastName",
+        "cellPhone",
+        "householdSize",
+        "email",
+        "totalAnnualEarnings",
+        "buildingAddress",
+        "workPhone",
+        "address",
+        "address.apartment",
+        "address.building",
+        "address.streetName",
+        "address.city",
+        "address.state",
+        "address.zip",
+        "version"
+      ],
+      "token_like": [],
+      "status": null,
+      "answered_after_seconds": null,
+      "response_content_type": null,
+      "response_excerpt": null,
+      "failed": "RemoteDisconnected: Remote end closed connection without response"
+    },
+    "requests_after_submit": [
+      "POST - https://pd-dlcore.beamliving.com/affordable-housing/create-application"
+    ],
+    "script_hosts": {},
+    "anti_bot": {},
+    "cdn": {}
+  }
+}

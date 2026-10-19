@@ -1,0 +1,149 @@
+{
+  "started_utc": "2026-10-13T10:59:01Z",
+  "seconds": 15.882,
+  "outcome": {
+    "status": "failed",
+    "detail": "TimeoutError: Locator.click: Timeout 15000ms exceeded.",
+    "seconds": 15.85,
+    "form_url": "",
+    "fields_filled": [],
+    "problems": [],
+    "site_messages": [],
+    "form_fields": [],
+    "timeline": {}
+  },
+  "steps": [
+    {
+      "t": 0.054,
+      "step": "opening the unit page",
+      "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~610~U~03-B"
+    },
+    {
+      "t": 0.778,
+      "step": "APPLY NOW button visible",
+      "text": "APPLY NOW",
+      "page_url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~610~U~03-B"
+    },
+    {
+      "t": 15.815,
+      "step": "crashed",
+      "error": "TimeoutError: Locator.click: Timeout 15000ms exceeded.\nCall log:\n  - waiting for locator(\"[data-autoapply-apply]\").first\n"
+    }
+  ],
+  "notes": {
+    "unit": {
+      "unit_id": "P~NYST31~B~610~U~03-B",
+      "apartment": "03-B",
+      "address": "610 East 20th Street",
+      "bedrooms": 3,
+      "bathrooms": 1,
+      "price": 5444.25,
+      "income_requirement": 186660.0,
+      "available_date": "2026-01-24T00:00:00Z",
+      "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~610~U~03-B"
+    },
+    "kind": "recording: the form recorded, then filled and SUBMIT pressed with every outgoing request blocked -- nothing was sent",
+    "direct_submit_check": "no request captured"
+  },
+  "console": [
+    {
+      "t": 0.237,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.713,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.713,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.714,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.721,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.722,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.723,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.723,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.725,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    }
+  ],
+  "navigations": [
+    {
+      "t": 0.225,
+      "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~610~U~03-B"
+    }
+  ],
+  "websockets": [],
+  "cookies": [
+    {
+      "name": "INGRESSCOOKIE",
+      "domain": "affordable-housing.stuytown.com",
+      "path": "/",
+      "http_only": true,
+      "secure": true,
+      "same_site": "Lax",
+      "expires_in_days": null,
+      "value_length": 59
+    },
+    {
+      "name": "__cf_bm",
+      "domain": ".fonts.net",
+      "path": "/",
+      "http_only": true,
+      "secure": true,
+      "same_site": "None",
+      "expires_in_days": 0.0,
+      "value_length": 199
+    }
+  ],
+  "files": [
+    "1_unit_page.html",
+    "network.json"
+  ],
+  "analysis": {
+    "submit_request": null,
+    "requests_after_submit": [],
+    "script_hosts": {
+      "affordable-housing.stuytown.com": 3,
+      "global.ketchcdn.com": 1,
+      "www.googletagmanager.com": 1
+    },
+    "anti_bot": {
+      "cloudflare_bot_check": [
+        "cookies: __cf_bm (set by .fonts.net)"
+      ]
+    },
+    "cdn": {
+      "azure_front_door": [
+        "requests",
+        "pages",
+        "headers"
+      ]
+    }
+  }
+}
