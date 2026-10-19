@@ -511,6 +511,7 @@ class Applier:
         self._direct_tried = {}  # unit ID -> what a direct request that the browser took over from did
         self._ready_seconds = []  # per browser launch: start -> site loaded
         self.site_watch = apply_recorder.SiteWatch()  # what the idle listings page does on its own
+        self.recordings = []  # this run's recordings: apartment, outcome, what direct submit made of it
         self._recorded = set()
         self._skips_logged = set()
         self._recording = False
@@ -583,6 +584,8 @@ class Applier:
             "workers": self.workers,
             "browser_ready_seconds": list(self._ready_seconds),
             "direct_submit": self.direct.observations(),
+            "recordings": list(self.recordings),
+            "profile_warnings": profile_warnings(self.profile),
             "idle_listings_page": self.site_watch.summary(),
         }
 
@@ -779,6 +782,8 @@ class Applier:
         learned = self.direct.learn(attempt.captured, unit, "a recording (nothing sent)")
         attempt.captured = None
         print(f"   Direct submit: {learned}")
+        self.recordings.append({"apartment": check_units.apartment(unit), "unit_id": check_units.unit_id(unit),
+                                "status": attempt.status, "detail": attempt.detail, "direct_submit_check": learned})
         if recording:
             recording.report["notes"]["direct_submit_check"] = learned
             self.logger.submit(recording.write)
@@ -1987,8 +1992,10 @@ def _selftest(profile: dict) -> int:
     APPLICATIONS_FILE = f"{SELFTEST_RUNS_DIR}/applications.json"  # never the real log
     direct_submit.API_FORMAT_FILE = f"{SELFTEST_RUNS_DIR}/apply_api.json"
     check_units.EVENTS_FILE = f"{SELFTEST_RUNS_DIR}/events.json"  # not the real units
+    apply_recorder.SITE_VERSIONS_FILE = f"{SELFTEST_RUNS_DIR}/site_versions.json"
     check_units.STATE_FILE = f"{SELFTEST_RUNS_DIR}/last_seen.json"
-    for leftover in (APPLICATIONS_FILE, direct_submit.API_FORMAT_FILE, check_units.EVENTS_FILE):
+    for leftover in (APPLICATIONS_FILE, direct_submit.API_FORMAT_FILE, check_units.EVENTS_FILE,
+                     apply_recorder.SITE_VERSIONS_FILE):
         if os.path.exists(leftover):
             os.remove(leftover)
     building = {"address": "FAKE FORM, NOT A REAL UNIT"}

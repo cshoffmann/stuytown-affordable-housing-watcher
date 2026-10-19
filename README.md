@@ -86,6 +86,29 @@ To watch it live: Actions tab → today's **StuyTown watcher** run → expand
 `[07:55:00 ET] 1 listed - NEW: Apt 5A, 287 Avenue C`, and there's one
 "still checking" line a minute.
 
+### Checking on it: one page, and an alert only when needed
+
+**[`data/summary.md`](data/summary.md)** is rewritten at the end of every
+morning, and GitHub shows it as a formatted page you can open on your phone.
+
+- **Needs a look:** anything from the latest morning that means something may
+  be broken. For example, a form that couldn't be opened or filled, a
+  qualifying unit that wasn't applied to, the listings API pushing back,
+  direct submit unable to learn the request, or a profile value the site
+  would refuse.
+- **Mornings:** one line each, with when units were posted, how many
+  qualified, what auto-apply did, and how the API held up.
+- **Units:** every unit seen (posted, rent, beds, income minimum, how long it
+  stayed listed, what auto-apply did), newest first.
+- **Patterns:** posting times, units by weekday, how long units last at or
+  under your limit and over it, exactly when on the quarter hour they're
+  posted (by the site's own clock), and how fast our applications were.
+
+The top of it also appears on each run's page in the Actions tab. When
+*Needs a look* isn't empty, you get **one** normal-priority Pushover message
+at 10:00 that links to the page. On a morning where everything worked, you
+get nothing extra.
+
 ## Setup
 
 1. In your Pushover dashboard, note your **User Key**, then **Your
@@ -316,7 +339,7 @@ never kept in a saved page.
 | `report.json` | Each step with its timing and page address. Every form field with its label and how the site built it (`name`, `id`, `autocomplete`, `inputmode`, `maxlength`, `class` …, never its value). How each box took its value (a plain fill, typed key by key, which spelling) and, for phone/income/zip-type boxes, the *shape* it ended up in (`+# ### ### ####`). The buttons. What was filled and what wasn't. Whether the form named the right apartment. Console errors. **The text the page gained after SUBMIT** (the site's real confirmation or complaint). Page navigations, live (WebSocket) connections, and cookies by name and settings (never values). How the page is built and loaded (framework, load times, slowest requests). On recordings: how the form is sent (`action`, `method`, hidden fields by name and length, CAPTCHA widgets). The outcome, with a timeline |
 | `report.json` → `analysis` | Worked out when it's written: **the request SUBMIT sent**, summarized (method, address, header names, the body's field names, which ones look like tokens, the answer and how fast it came), every request in the seconds after SUBMIT, where the scripts come from, the CDN, and any sign of an anti-bot, CAPTCHA or waiting-room service |
 | `network.json` | Every request the browser made, including **the request SUBMIT sends and the site's answer**, with bodies for pages and API calls. Cookie headers are dropped. A direct submit's folder (`..._direct/`) holds just its request and answer |
-| `1_unit_page.html` … `4_after_submit.html` | The page's HTML at each stage |
+| `1_unit_page.html` … `4_after_submit.html` | The page's HTML at each stage, and the screenshot of the empty form. Kept only when they can tell something new: the first time a version of the site's code is seen (`data/site_versions.json` says where), or when the trip didn't go as it should. Each copy is ~400 KB, nearly all of it the same site code, so this keeps the repo from growing ~1 MB per recording. `report.json` says whether they were kept, and why |
 
 Each application in `data/applications.json` also gets a **timeline**: when
 the checker queued it, when it started, how it went (`direct (API)` or
@@ -328,12 +351,17 @@ millisecond.
 **One stats file per morning**, `data/run_stats/<date>.json`, covers what a
 single recording can't: how the listings API answers being checked every 2
 seconds (response times, statuses, whether the kept-open connection holds,
-caching headers such as `Age` or `ETag`, any rate-limit headers, how far its
-clock is from ours), every slow-down and why, every unit with **when it was
-posted** (between the last check without it and the first with it) and how
-long it really stayed listed, how many seconds after it appeared SUBMIT was
-pressed and the site received it, whether direct submit was ready, and what
-the idle listings page did on its own. It's about the site and the listings: nothing of
+caching headers such as `Age` or `ETag`, any rate-limit headers, and how far
+its clock is from ours), every slow-down and why, and every unit with **when it was
+posted** (between the last check without it and the first with it, and,
+using the site's clock, how far from its quarter hour). The clock
+reading comes from the site's `Date` header. That header only gives whole
+seconds, but the 0.25 s checks keep landing on either side of the site's
+second boundaries, so they pin its clock down to about 0.3 s. Each unit
+also gets how long it really stayed listed, and how many seconds after it
+appeared SUBMIT was pressed and the site received it. The file also says
+whether direct submit was ready, and what the idle listings page did on its
+own. It's about the site and the listings: nothing of
 yours is in it. `docs/architecture.md` has a table of which file answers
 which question.
 
@@ -497,7 +525,9 @@ there. (Run it outside 7–10am, or it waits for the morning run to finish.)
   redacted, and works out the `analysis` (the SUBMIT request, anti-bot
   signs). Also `SiteWatch`, which notes what the idle listings page does.
 - `run_stats.py`: the morning's stats file (listings API, pace, units,
-  applier).
+  applier, and the site's clock to a fraction of a second).
+- `summary.py`: builds `data/summary.md` and decides what "needs a look".
+  `python summary.py` rebuilds it from what's in `data/`.
 - `docs/architecture.md`: how it's built, and how that compares with the
   old design.
 - `data/last_seen.json`: the state (what's listed right now).
@@ -508,6 +538,9 @@ there. (Run it outside 7–10am, or it waits for the morning run to finish.)
   the site's code version; none of your details).
 - `data/apply_runs/`: the form recordings.
 - `data/run_stats/`: one stats file per morning (no personal details).
+- `data/summary.md`: the page built from all of it (see *Checking on it*).
+- `data/site_versions.json`: each version of StuyTown's site code seen, and
+  which recording has its pages.
 - `tests/`: automated tests, the phone simulation, the test alert, and the
   fake data they use (`tests/fixtures/`, including `apply_site/`, a fake copy
   of a unit page and the application form).

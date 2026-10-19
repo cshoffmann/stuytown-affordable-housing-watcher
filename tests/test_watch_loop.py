@@ -25,6 +25,7 @@ sys.path.insert(0, str(REPO_ROOT))
 import background  # noqa: E402
 import check_units  # noqa: E402
 import run_stats  # noqa: E402
+import summary  # noqa: E402
 import watch_loop  # noqa: E402
 
 FAKE_UNITS = json.loads((REPO_ROOT / "tests" / "fixtures" / "fake_units.json").read_text(encoding="utf-8"))
@@ -86,6 +87,7 @@ class CheckerTests(unittest.TestCase):
             (check_units, "EVENTS_FILE", f"{tmp.name}/events.json"),
             (check_units, "notify", lambda **alert: True),
             (run_stats, "RUN_STATS_DIR", f"{tmp.name}/run_stats"),
+            (summary, "SUMMARY_FILE", f"{tmp.name}/summary.md"),
         ]:
             patcher = mock.patch.object(target, name, value)
             patcher.start()

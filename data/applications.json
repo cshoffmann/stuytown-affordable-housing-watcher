@@ -48,7 +48,7 @@
     "attempts": [
       {
         "at_utc": "2026-10-12T11:15:31Z",
-        "detail": "pressed SUBMIT but no confirmation appeared within 30s",
+        "detail": "the site's API answered 'Created' (corrected 2026-10-13: reported unconfirmed on the day because the confirmation text check missed the site's curly apostrophe)",
         "fields_filled": [
           "first_name",
           "last_name",
@@ -68,7 +68,7 @@
         "problems": [],
         "recording": "data/apply_runs/2026-10-12T11-15-00Z_08-B_apply",
         "seconds": 31.7,
-        "status": "unconfirmed",
+        "status": "submitted",
         "timeline": {
           "answer_utc": "2026-10-12T11:15:31.632Z",
           "finished_utc": "2026-10-12T11:15:31.774Z",
@@ -91,7 +91,7 @@
     "attempts": [
       {
         "at_utc": "2026-10-12T12:00:31Z",
-        "detail": "pressed SUBMIT but no confirmation appeared within 30s",
+        "detail": "the site's API answered 'Created' (corrected 2026-10-13: reported unconfirmed on the day because the confirmation text check missed the site's curly apostrophe)",
         "fields_filled": [
           "first_name",
           "last_name",
@@ -111,7 +111,7 @@
         "problems": [],
         "recording": "data/apply_runs/2026-10-12T12-00-00Z_02-A_apply",
         "seconds": 31.5,
-        "status": "unconfirmed",
+        "status": "submitted",
         "timeline": {
           "answer_utc": "2026-10-12T12:00:31.499Z",
           "finished_utc": "2026-10-12T12:00:31.629Z",

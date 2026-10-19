@@ -179,7 +179,7 @@ class ListingsClient:
         for attempt in (1, 2):
             reused = self._conn is not None
             conn = self._connection()
-            started = time.monotonic()
+            started, sent_epoch = time.monotonic(), time.time()
             try:
                 conn.request("GET", path, headers=REQUEST_HEADERS)
                 response = conn.getresponse()
@@ -194,6 +194,8 @@ class ListingsClient:
                 "status": response.status,
                 "bytes": len(body),
                 "reused_connection": reused,
+                "sent_epoch": sent_epoch,  # our clock, request out ...
+                "received_epoch": time.time(),  # ... and answer in: brackets the site's Date header
                 "headers": {k.lower(): v for k, v in response.getheaders()},
                 "body": body,
             })

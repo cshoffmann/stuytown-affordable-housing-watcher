@@ -60,11 +60,15 @@ class RunStats:
         self.headers = defaultdict(Counter)
         self.present = Counter()
         self.clock_skew_s = []
+        # The site's clock minus ours lies in [_offset_low, _offset_high]: each
+        # answer's Date (whole seconds) was stamped between our send and receive.
+        self._offset_low, self._offset_high = float("-inf"), float("inf")
         self._etag_for_body = {}
         self.etag_matches_body = True  # same ETag never seen with different contents
         self._bodies = set()  # digests of every different response
         self.pace = []
         self.units = {}
+        self.last_summary = None  # what write() wrote
 
     # ------------------------------------------------------------- checker
 
@@ -86,6 +90,7 @@ class RunStats:
                         values[value] += 1
             self._observe_identity(headers.get("etag"), r.get("body") or b"")
             self._observe_clock(headers.get("date"))
+            self._narrow_offset(headers.get("date"), r.get("sent_epoch"), r.get("received_epoch"))
 
     def _observe_identity(self, etag, body: bytes) -> None:
         digest = hashlib.sha1(body).hexdigest()
@@ -104,6 +109,28 @@ class RunStats:
             self.clock_skew_s.append((theirs - datetime.now(timezone.utc)).total_seconds())
         except (TypeError, ValueError):
             pass
+
+    def _narrow_offset(self, date_header, sent, received) -> None:
+        """Their clock read whole second S at some moment between our send
+        and receive, so (their clock - ours) is in [S - received, S + 1 - sent].
+        Checks 0.25 s apart straddle their second boundaries, which narrows
+        it to well under a second -- enough to tell whether units are posted
+        exactly on their quarter hour."""
+        if not date_header or sent is None or received is None:
+            return
+        try:
+            second = parsedate_to_datetime(date_header).timestamp()
+        except (TypeError, ValueError):
+            return
+        self._offset_low = max(self._offset_low, second - received)
+        self._offset_high = min(self._offset_high, second + 1 - sent)
+
+    def clock_offset(self) -> dict | None:
+        if self._offset_low == float("-inf"):
+            return None
+        low, high = round(self._offset_low, 3), round(self._offset_high, 3)
+        return {"at_least": low, "at_most": high, "best_guess": round((low + high) / 2, 3),
+                "consistent": low <= high}  # False: a clock jumped during the run
 
     def observe_failure(self, error: Exception) -> None:
         self.failures[f"{type(error).__name__}: {str(error)[:80]}"] += 1
@@ -151,7 +178,14 @@ class RunStats:
             if uid in self.units:
                 self.units[uid].setdefault("last_seen_utc", record.get("last_seen_utc"))
                 self.units[uid]["still_listed_at_end"] = True
+        offset = self.clock_offset()
         for entry in self.units.values():
+            if offset and offset["consistent"] and entry.get("posted_within_seconds") is not None:
+                # When it was posted, by THEIR clock, against their quarter hour.
+                seen = entry["seen_seconds_after_quarter_hour"]
+                entry["posted_vs_quarter_hour_their_clock_s"] = [
+                    round(seen - entry["posted_within_seconds"] + offset["best_guess"], 2),
+                    round(seen + offset["best_guess"], 2)]
             if entry.get("first_seen_utc") and entry.get("last_seen_utc"):
                 entry["listed_for_seconds"] = check_units._seconds_between(
                     entry["first_seen_utc"][:19] + "Z", entry["last_seen_utc"][:19] + "Z")
@@ -165,8 +199,9 @@ class RunStats:
                 last = attempts[-1]
                 timeline = last.get("timeline") or {}
                 entry = self.units[uid]
-                entry["auto_apply"] = {"status": last.get("status"), "seconds": last.get("seconds"),
-                                       "via": timeline.get("form_via"), "timeline": timeline}
+                entry["auto_apply"] = {"status": last.get("status"), "detail": last.get("detail"),
+                                       "seconds": last.get("seconds"), "via": timeline.get("form_via"),
+                                       "timeline": timeline}
                 received = timeline.get("server_submitted_utc")
                 if received and entry.get("first_seen_utc"):  # the site's own clock: what ranks applications
                     entry["auto_apply"]["site_received_seconds_after_first_seen"] = _seconds(
@@ -195,6 +230,7 @@ class RunStats:
                 "headers": {name: dict(values) for name, values in sorted(self.headers.items())},
                 "headers_present": dict(self.present),
                 "their_clock_minus_ours_s": _percentiles(sorted(self.clock_skew_s)),
+                "their_clock_minus_ours_exact_s": self.clock_offset(),
             },
             "pace": self.pace,
             "units": self.units,
@@ -206,8 +242,9 @@ class RunStats:
         os.makedirs(directory, exist_ok=True)
         stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%MZ")
         path = os.path.join(directory, f"{stamp}.json")
+        self.last_summary = json.loads(json.dumps(self.summary(applier, state), default=str))
         with open(path, "w", encoding="utf-8") as f:
-            json.dump(self.summary(applier, state), f, indent=2, sort_keys=True, default=str)
+            json.dump(self.last_summary, f, indent=2, sort_keys=True)
             f.write("\n")
         print(f"   Run stats written: {path}")
         return path

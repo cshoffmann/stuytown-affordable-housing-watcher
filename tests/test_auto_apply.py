@@ -431,6 +431,40 @@ class DirectSubmitFormatTests(unittest.TestCase):
         self.assertEqual(direct_submit.interpret(400, '{"message": "validation"}')[0], "refused")
         self.assertEqual(direct_submit.interpret(503, "")[0], "unknown")
 
+    def test_a_warm_connection_the_server_dropped_is_retried_on_a_new_one(self):
+        import http.client
+
+        class Conn:
+            def __init__(self, fails):
+                self.fails, self.requests = fails, 0
+
+            def connect(self):
+                pass
+
+            def request(self, *args, **kwargs):
+                self.requests += 1
+
+            def getresponse(self):
+                if self.fails:
+                    raise http.client.RemoteDisconnected("Remote end closed connection without response")
+                response = mock.Mock(status=200)
+                response.read.return_value = b'{"status": "Created"}'
+                return response
+
+            def close(self):
+                pass
+
+        dropped, fresh = Conn(fails=True), Conn(fails=False)
+        client = direct_submit.ApiClient()
+        with mock.patch.object(direct_submit, "_connection", side_effect=[dropped, fresh]):
+            client.warm("https://api.test/x")  # opened ahead of time ...
+            result = client.post("https://api.test/x", {"a": 1}, {})  # ... and closed by the server since
+        self.assertEqual((result["status"], result["retried"]), (200, True))
+        self.assertEqual((dropped.requests, fresh.requests), (1, 1))
+        # A brand-new connection failing the same way isn't retried: that answer may really be lost.
+        with mock.patch.object(direct_submit, "_connection", side_effect=[Conn(fails=True)]):
+            self.assertIn("error", direct_submit.ApiClient().post("https://api.test/x", {"a": 1}, {}))
+
     def test_the_headers_carry_the_current_key_and_this_units_page(self):
         fmt = {"headers": {"accept": "*/*", "subscription-key": "old", "referer": "https://x/units?unitSpk=P~A"},
                "verified_from": "P~A"}
@@ -696,6 +730,21 @@ class RedactorTests(unittest.TestCase):
             self.assertNotIn(value, scrubbed)
         self.assertIn('\\"token\\":\\"<secret>\\"', scrubbed)
 
+    def test_the_sites_own_api_keys_never_reach_the_repo(self):
+        # StuyTown's pages carry a Google Maps key and the application API's key;
+        # secret scanners flag them, so saved pages, bodies and addresses drop them.
+        redact = apply_recorder.Redactor(EXAMPLE_PROFILE)
+        page = ('"googleMap":{"googleMapAPIKey":"AIzaSyDekalgV9SiHUMNA0ksT1XlNWqs90Hp3KA"},'
+                '"apiUrlHeaderName":"Subscription-Key","apiUrlHeaderValue":"312f7785-864c-43ba-aca8-1f8259183a22"')
+        for text in (page, json.dumps(page), "https://maps.example/js?key=AIzaSyDekalgV9SiHUMNA0ksT1XlNWqs90Hp3KA"):
+            clean = redact(text)
+            self.assertNotIn("AIzaSy", clean)
+            self.assertNotIn("312f7785", clean)
+        self.assertIn('"apiUrlHeaderName":"Subscription-Key"', redact(page))  # the name stays
+        recording = apply_recorder.Recording(None, redact, {}, [], {}, {})
+        body = json.loads(recording._redact_body('{"config": {"googleMapAPIKey": "abc123def456"}}', ""))
+        self.assertEqual(body["config"]["googleMapAPIKey"], "<secret>")
+
     def test_api_keys_are_kept_by_name_only_and_typed_values_never_saved(self):
         recording = apply_recorder.Recording(None, apply_recorder.Redactor(EXAMPLE_PROFILE), {}, [], {}, {})
         self.assertEqual(recording._headers({"Subscription-Key": "312f7785-864c", "Accept": "*/*"}),
@@ -742,6 +791,7 @@ class EndToEndTests(unittest.TestCase):
             (auto_apply, "run_form", timed_run_form),
             (check_units, "EVENTS_FILE", f"{self.tmp}/events.json"),
             (check_units, "STATE_FILE", f"{self.tmp}/last_seen.json"),
+            (apply_recorder, "SITE_VERSIONS_FILE", f"{self.tmp}/site_versions.json"),
         ]:
             patcher = mock.patch.object(target, name, value)
             patcher.start()
@@ -829,7 +879,13 @@ class EndToEndTests(unittest.TestCase):
         recorded = json.loads((runs["9F_record"] / "report.json").read_text())
         self.assertEqual(recorded["notes"]["form_facts"]["forms_on_page"], 1)
         self.assertIn("direct_submit_check", recorded["notes"])
-        self.assertIn("2_form_empty.jpg", [f.name for f in runs["9F_record"].iterdir()])
+        # The pages are kept once per version of the site's code, and whenever something goes wrong.
+        kept = [name for name, folder in runs.items() if any(f.suffix == ".html" for f in folder.iterdir())]
+        self.assertEqual(len(kept), 1, kept)
+        self.assertTrue(json.loads((runs[kept[0]] / "report.json").read_text())["pages_kept"].startswith(
+            "kept: the first time"))
+        self.assertTrue(recorded["pages_kept"].startswith("not kept") or kept == ["9F_record"])
+        self.assertIn("1001", json.loads(Path(f"{self.tmp}/site_versions.json").read_text()))
         self.assertNotIn("P~TEST~U~9F", by_unit)  # the recording's SUBMIT never reached the site
         # Nothing personal in anything that gets committed.
         for folder in runs.values():
