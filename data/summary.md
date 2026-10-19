@@ -1,6 +1,6 @@
 # StuyTown watcher: summary
 
-Updated Mon Oct 19, 1:48 AM ET. Auto-apply rent limits: **1 bed <= $2,200, 2 bed <= $2,700, others <= $3,000**. Dream units: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10. 
+Updated Mon Oct 19, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2 bed <= $2,800**. Dream units: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10. 
 
 Map of every building and unit seen: [units.geojson](units.geojson) (GitHub draws it; tap a dot), or [on geojson.io](https://geojson.io/#data=data:text/x-url,https%3A%2F%2Fraw.githubusercontent.com%2Fcshoffmann%2Fstuytown-affordable-housing-watcher%2Fmain%2Fdata%2Funits.geojson).
 
@@ -12,7 +12,8 @@ Nothing: the latest morning went as it should.
 
 | Date | Units posted at (ET) | Qualified | Auto-apply | Checks | API median / p99 |
 | --- | --- | --- | --- | --- | --- |
-| Tue Oct 13 | 7:15:00, 8:00:00 | 2 | 3 submitted | - | - |
+| Mon Oct 19 | none | 0 | - | 6,132 | 53 / 262 ms |
+| Tue Oct 13 | 7:15:00, 8:00:00 | 3 | 3 submitted | - | - |
 | Mon Oct 12 | 7:15:00, 7:30:00, 8:00:00, 8:15:00 | 2 | 2 submitted | 5,400 | 45 / 258 ms |
 | Sun Oct 11 | none | 0 | - | 5,400 | 16 / 224 ms |
 | Fri Oct 9 | 7:15:00, 7:30:00, 8:00:00 | 3 | - | - | - |
@@ -34,7 +35,7 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Oct 13 8:00:00 AM | 06-D, 605 East 14th Street | 14th St front | 6 | 1 | 764 | $2,125 | $2.78 | $72,847 | Blank | [108](floorplans/108.png) | stainless appliances |  | price match | 25.0 s | yes | submitted, browser |
 | Oct 13 7:15:00 AM | 06-H, 17 Stuyvesant Oval | Oval | 6 | 1 | 764 | $2,081 | $2.72 | $71,335 | Blank | [108](floorplans/108.png) | stainless appliances |  | price match | 53.0 s | yes | submitted, browser |
-| Oct 13 7:15:00 AM | 0M-D, 545 East 14th Street | 14th St front | M | 1 | 764 | $2,234 | $2.92 | $76,603 | Blank | [110](floorplans/110.png) | stainless appliances |  |  | 81.0 s | no | submitted, browser |
+| Oct 13 7:15:00 AM | 0M-D, 545 East 14th Street | 14th St front | M | 1 | 764 | $2,234 | $2.92 | $76,603 | Blank | [110](floorplans/110.png) | stainless appliances |  |  | 81.0 s | yes | submitted, browser |
 | Oct 12 8:15:00 AM | 03-B, 610 East 20th Street | 20th St front | 3 | 3 | 1148 | $5,444 | $4.74 | $186,660 | Platinum | [141](floorplans/141.png) | closet system, PS 40 zone, 3 wall A/Cs, open kitchen |  |  | 3 min | no |  |
 | Oct 12 8:00:00 AM | 02-A, 445 East 14th Street | 14th St front | 2 | 1 | 771 | $2,203 | $2.86 | $75,519 | Blank | [102](floorplans/102.png) | stainless appliances |  |  | 40.0 s | yes | submitted, sent 1.03 s after it appeared, browser |
 | Oct 12 7:30:00 AM | 06-B, 647 East 14th Street | interior | 6 | 2 | 955 | $3,067 | $3.21 | $105,161 | Blank | [126](floorplans/126_st2bedclassic.png) | stainless appliances |  |  | 90.0 s | no |  |
@@ -94,8 +95,8 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 
 - **Posting times** (ET, all days): 7:15 ×8, 7:30 ×4, 8:00 ×4, 8:15 ×1
 - **Units by weekday:** Mon 4, Tue 4, Wed 2, Thu 4, Fri 3
-- **How long units at or under your limit stay listed:** median 40.0 s (fastest 25.0 s, 4 units)
-- **How long units over your limit stay listed:** median 90.0 s (fastest 81.0 s, 3 units)
+- **How long units at or under your limit stay listed:** median 40.0 s (fastest 25.0 s, 5 units)
+- **How long units over your limit stay listed:** median 2 min (fastest 90.0 s, 2 units)
 - **Our applications:** 2 sent (2 browser); median 1.1 s from the unit appearing to sending
 - **All auto-apply results so far:** 5 submitted
 
