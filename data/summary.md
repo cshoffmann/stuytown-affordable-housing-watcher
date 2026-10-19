@@ -1,6 +1,6 @@
 # StuyTown watcher: summary
 
-Updated Mon Oct 19, 1:45 AM ET. Auto-apply rent limits: **1 bed <= $2,200, 2 bed <= $2,700, others <= $3,000**. Dream units: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10. 
+Updated Mon Oct 19, 1:48 AM ET. Auto-apply rent limits: **1 bed <= $2,200, 2 bed <= $2,700, others <= $3,000**. Dream units: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10. 
 
 Map of every building and unit seen: [units.geojson](units.geojson) (GitHub draws it; tap a dot), or [on geojson.io](https://geojson.io/#data=data:text/x-url,https%3A%2F%2Fraw.githubusercontent.com%2Fcshoffmann%2Fstuytown-affordable-housing-watcher%2Fmain%2Fdata%2Funits.geojson).
 
@@ -78,17 +78,17 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 
 | Layout | Beds | Sq ft | Seen | Rents | Rooms | Floorplan |
 | --- | --- | --- | --- | --- | --- | --- |
-| 102 | 1 | 771 | 2 | $2,203-$3,041 | dining 9’6” x 9’4”, living 12’0” x 18’7”, bedroom 15’0” x 12’0”, 4 closets | <a href="floorplans/102.png"><img src="floorplans/102.png" width="140" alt="layout 102"></a> |
-| 105 | 1 | 790 | 1 | $4,405 | dining 8’3” x 9’5”, living 12’0” x 18’8”, bedroom 10’4” x 18’8”, 4 closets | <a href="floorplans/105.png"><img src="floorplans/105.png" width="140" alt="layout 105"></a> |
-| 107 | 1 | 745 | 3 | $2,184-$4,471 | dining 8’2” x 9’6”, living 12’0” x 18’8”, bedroom 10’4” x 18’8”, 4 closets | <a href="floorplans/107.png"><img src="floorplans/107.png" width="140" alt="layout 107"></a> |
-| 108 | 1 | 764 | 2 | $2,081-$2,125 | dining 9’6” x 8’1”, living 12’1” x 18’8”, bedroom 15’0” x 12’0”, 4 closets | <a href="floorplans/108.png"><img src="floorplans/108.png" width="140" alt="layout 108"></a> |
-| 110 | 1 | 764 | 1 | $2,234 | dining 9’6” x 9’4”, living 11’11” x 18’8”, bedroom 15’0” x 12’0”, 4 closets | <a href="floorplans/110.png"><img src="floorplans/110.png" width="140" alt="layout 110"></a> |
-| 119 | 1 | 749 | 2 | $2,033-$2,078 | dining 8’2” x 10’2”, living 12’0” x 19’4”, bedroom 12’8” x 14’0”, 4 closets | <a href="floorplans/119.png"><img src="floorplans/119.png" width="140" alt="layout 119"></a> |
-| 123 | 2 | 932 | 1 | $2,644 | bedroom 2 9’2” x 14’4”, dining 8’4” x 9’6”, living 12’0” x 18’8”, bedroom 15’0” x 12’0”, 5 closets | <a href="floorplans/123.png"><img src="floorplans/123.png" width="140" alt="layout 123"></a> |
-| 124 | 2 | 932 | 1 | $4,503 | bedroom 2 9’2” x 14’3”, dining 9’6” x 8’2”, living 12’0” x 18’8”, bedroom 11’11” x 15’0”, 5 closets | <a href="floorplans/124.png"><img src="floorplans/124.png" width="140" alt="layout 124"></a> |
-| 125 | 2 | 948 | 1 | $2,648 | bedroom 2 9’2” x 14’4”, dining 9’2” x 9’6”, living 12’0” x 18’8”, bedroom 15’0” x 12’0”, 5 closets | <a href="floorplans/125.png"><img src="floorplans/125.png" width="140" alt="layout 125"></a> |
-| 126 | 2 | 955 | 2 | $2,787-$3,067 | bedroom 2 9’2” x 14’4”, dining 8’4” x 9’6”, living 12’0” x 18’8”, bedroom 15’2” x 12’0”, 5 closets | <a href="floorplans/126_st2bedclassic.png"><img src="floorplans/126_st2bedclassic.png" width="140" alt="layout 126"></a> |
-| 141 | 3 | 1148 | 1 | $5,444 | bedroom 2 9’4” x 14’11”, bedroom 3 9’3” x 14’5”, dining 9’6” x 8’2”, living 12’0” x 18’8”, bedroom 10’8” x 18’0”, 6 closets | <a href="floorplans/141.png"><img src="floorplans/141.png" width="140" alt="layout 141"></a> |
+| 102 | 1 | 771 | 2 | $2,203-$3,041 | living 12’0” x 18’7”, bedroom 15’0” x 12’0”, dining 9’6” x 9’4”, 4 closets | <a href="floorplans/102.png"><img src="floorplans/102.png" width="140" alt="layout 102"></a> |
+| 105 | 1 | 790 | 1 | $4,405 | living 12’0” x 18’8”, bedroom 10’4” x 18’8”, dining 8’3” x 9’5”, 4 closets | <a href="floorplans/105.png"><img src="floorplans/105.png" width="140" alt="layout 105"></a> |
+| 107 | 1 | 745 | 3 | $2,184-$4,471 | living 12’0” x 18’8”, bedroom 10’4” x 18’8”, dining 8’2” x 9’6”, 4 closets | <a href="floorplans/107.png"><img src="floorplans/107.png" width="140" alt="layout 107"></a> |
+| 108 | 1 | 764 | 2 | $2,081-$2,125 | living 12’1” x 18’8”, bedroom 15’0” x 12’0”, dining 9’6” x 8’1”, 4 closets | <a href="floorplans/108.png"><img src="floorplans/108.png" width="140" alt="layout 108"></a> |
+| 110 | 1 | 764 | 1 | $2,234 | living 11’11” x 18’8”, bedroom 15’0” x 12’0”, dining 9’6” x 9’4”, 4 closets | <a href="floorplans/110.png"><img src="floorplans/110.png" width="140" alt="layout 110"></a> |
+| 119 | 1 | 749 | 2 | $2,033-$2,078 | living 12’0” x 19’4”, bedroom 12’8” x 14’0”, dining 8’2” x 10’2”, 4 closets | <a href="floorplans/119.png"><img src="floorplans/119.png" width="140" alt="layout 119"></a> |
+| 123 | 2 | 932 | 1 | $2,644 | living 12’0” x 18’8”, bedroom 15’0” x 12’0”, bedroom 2 9’2” x 14’4”, dining 8’4” x 9’6”, 5 closets | <a href="floorplans/123.png"><img src="floorplans/123.png" width="140" alt="layout 123"></a> |
+| 124 | 2 | 932 | 1 | $4,503 | living 12’0” x 18’8”, bedroom 11’11” x 15’0”, bedroom 2 9’2” x 14’3”, dining 9’6” x 8’2”, 5 closets | <a href="floorplans/124.png"><img src="floorplans/124.png" width="140" alt="layout 124"></a> |
+| 125 | 2 | 948 | 1 | $2,648 | living 12’0” x 18’8”, bedroom 15’0” x 12’0”, bedroom 2 9’2” x 14’4”, dining 9’2” x 9’6”, 5 closets | <a href="floorplans/125.png"><img src="floorplans/125.png" width="140" alt="layout 125"></a> |
+| 126 | 2 | 955 | 2 | $2,787-$3,067 | living 12’0” x 18’8”, bedroom 15’2” x 12’0”, bedroom 2 9’2” x 14’4”, dining 8’4” x 9’6”, 5 closets | <a href="floorplans/126_st2bedclassic.png"><img src="floorplans/126_st2bedclassic.png" width="140" alt="layout 126"></a> |
+| 141 | 3 | 1148 | 1 | $5,444 | living 12’0” x 18’8”, bedroom 10’8” x 18’0”, bedroom 2 9’4” x 14’11”, bedroom 3 9’3” x 14’5”, dining 9’6” x 8’2”, 6 closets | <a href="floorplans/141.png"><img src="floorplans/141.png" width="140" alt="layout 141"></a> |
 
 ## Patterns
 

@@ -185,7 +185,7 @@ class MapTests(WithReferenceData):
 
     def test_the_map_has_the_buildings_their_walls_and_every_unit(self):
         line = units_map.write(self.events())
-        self.assertEqual(line, "map: 3 units, 8 building outlines")
+        self.assertEqual(line, "map: 3 units, 7 building outlines")
         data = json.loads(Path(units_map.MAP_FILE).read_text())
         self.assertEqual(data["type"], "FeatureCollection")
         by_title = {f["properties"].get("title"): f for f in data["features"]}
@@ -215,7 +215,7 @@ class MapTests(WithReferenceData):
             notes = units_map.refresh_all(budget_seconds=5)
         self.assertTrue(any("couldn't fetch 108" in n for n in notes), notes)
         self.assertIn("atlas: 3 apartment lines", notes)
-        self.assertIn("map: 3 units, 8 building outlines", notes)
+        self.assertIn("map: 3 units, 7 building outlines", notes)
         self.assertTrue(Path(dream_units.OVERRIDES_FILE).exists())
 
 

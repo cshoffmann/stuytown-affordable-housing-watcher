@@ -212,6 +212,15 @@ def sunny(wall: dict) -> bool:
     return wall.get("facing") is not None and geo.is_good_facing(wall["facing"])
 
 
+GOOD_LIGHT_HOURS = 5  # winter sun at floor 8 for a wall to count as good light
+
+
+def quiet_and_sunny(wall: dict) -> bool:
+    """Faces E-SW, not onto a street, and not shaded much by the next building."""
+    return (sunny(wall) and not wall.get("street")
+            and (wall.get("winter_sun_h") or {}).get("8", 0) >= GOOD_LIGHT_HOURS)
+
+
 def oval_center(buildings: dict | None) -> tuple:
     center = ((buildings or {}).get("oval") or {}).get("center")
     return tuple(center) if center else geo.OVAL_CENTER
@@ -234,7 +243,7 @@ def building_info(unit: dict, buildings: dict | None = None) -> dict:
         info["zone"] = "Oval" if "OVAL" in info["address"] else "unknown"
     info["oval_walls"] = sorted({w["compass"] for w in walls if w.get("faces_oval")})
     info["street_walls"] = sorted({f"{w['compass']} ({w['street']})" for w in walls if w.get("street")})
-    info["quiet_sunny_walls"] = sorted({w["compass"] for w in walls if sunny(w) and not w.get("street")})
+    info["quiet_sunny_walls"] = sorted({w["compass"] for w in walls if quiet_and_sunny(w)})
     return info
 
 

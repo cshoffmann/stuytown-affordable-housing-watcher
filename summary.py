@@ -428,8 +428,10 @@ def layouts_section(rows: list) -> list:
 def rooms_text(rooms: dict) -> str:
     """'Living 12’1” x 18’8”, bedroom 15’0” x 12’0”, dining 9’6” x 8’1”, 4 closets'"""
     short = {"living room": "living", "master bedroom": "bedroom", "dining area": "dining"}
-    parts = [f"{short.get(name.lower(), name.lower())} {size}" for name, size in rooms.items()
-             if size and not name.lower().startswith("closet")]
+    order = ["living", "master", "bedroom", "dining"]
+    sized = sorted((name for name, size in rooms.items() if size and not name.lower().startswith("closet")),
+                   key=lambda n: (next((i for i, w in enumerate(order) if n.lower().startswith(w)), 9), n))
+    parts = [f"{short.get(name.lower(), name.lower())} {rooms[name]}" for name in sized]
     closets = sum(1 for name in rooms if name.lower().startswith("closet"))
     if closets:
         parts.append(f"{closets} closet{'s' if closets != 1 else ''}")

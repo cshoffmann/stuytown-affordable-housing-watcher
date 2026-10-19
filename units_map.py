@@ -12,7 +12,8 @@ summary page).
                   green   has sunny walls that don't face a street
                   grey    the rest
     Walls       orange: an Oval wall with sun; blue: an Oval wall without;
-                green: a sunny wall away from the streets
+                green: a sunny wall away from the streets, with 5+ hours of
+                winter sun at floor 8
     Units       one dot per unit, at its building, coloured by its dream rating
                 (dream_units.py): gold star = dream, orange star = possible
                 dream, purple = almost, green = great light, blue = price
@@ -81,7 +82,7 @@ def building_kind(footprint) -> str:
         return "sunny Oval"
     if oval:
         return "shady Oval"
-    if any(dream_units.sunny(w) and not w.get("street") for w in walls):
+    if any(dream_units.quiet_and_sunny(w) for w in walls):
         return "sunny, quiet"
     return "other"
 
@@ -111,7 +112,7 @@ def building_features(buildings, units_by_address) -> list:
             "Zone": fp.get("zone"),
             "Kind": {"sunny Oval": "looks at the Oval, sunny side",
                      "shady Oval": "looks at the Oval, shady side",
-                     "sunny, quiet": "sunny walls away from the streets",
+                     "sunny, quiet": "sunny walls away from the streets (5+ h of winter sun at floor 8)",
                      "other": "no sunny quiet walls"}[kind],
             "Oval walls": ", ".join(sorted({w["compass"] for w in walls if w.get("faces_oval")})),
             "Side of the Oval": side.get("side") if kind in ("sunny Oval", "shady Oval") else None,
@@ -127,7 +128,7 @@ def building_features(buildings, units_by_address) -> list:
         for w in walls:
             if w.get("faces_oval"):
                 color, width, what = ("#f08c00", 4, "Oval wall, sunny") if dream_units.sunny(w) else ("#1f6fd1", 4, "Oval wall, shady")
-            elif dream_units.sunny(w) and not w.get("street"):
+            elif dream_units.quiet_and_sunny(w):
                 color, width, what = "#2e9e44", 2, "sunny wall, away from the streets"
             else:
                 continue
@@ -261,7 +262,7 @@ def write(events: list | None = None, path: str | None = None) -> str:
         f.write("\n]}\n")
     os.replace(f"{path}.tmp", path)
     units = sum(1 for f in data["features"] if f["geometry"]["type"] == "Point" and "Rating" in f["properties"])
-    shapes = sum(1 for f in data["features"] if f["geometry"]["type"] == "Polygon")
+    shapes = sum(1 for f in data["features"] if f["geometry"]["type"] == "Polygon" and "Kind" in f["properties"])
     return f"map: {units} units, {shapes} building outlines"
 
 

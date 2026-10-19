@@ -103,7 +103,7 @@ which is easier on a phone. Tap anything for details.
 | --- | --- |
 | Gold building / orange wall | Looks at the Oval, sunny side: the dream buildings |
 | Blue building / blue wall | Looks at the Oval, shady side |
-| Green building / green wall | Sunny walls away from the streets |
+| Green building / green wall | Sunny walls away from the streets, with 5+ hours of winter sun at floor 8 |
 | Grey building | No sunny, quiet walls |
 | Gold star, orange star, purple, green, blue, grey dot | A unit: dream, possible dream, almost, great light, price match, the rest |
 
