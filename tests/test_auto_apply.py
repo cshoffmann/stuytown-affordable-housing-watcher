@@ -696,6 +696,21 @@ class RedactorTests(unittest.TestCase):
             self.assertNotIn(value, scrubbed)
         self.assertIn('\\"token\\":\\"<secret>\\"', scrubbed)
 
+    def test_the_sites_own_api_keys_never_reach_the_repo(self):
+        # StuyTown's pages carry a Google Maps key and the application API's key;
+        # secret scanners flag them, so saved pages, bodies and addresses drop them.
+        redact = apply_recorder.Redactor(EXAMPLE_PROFILE)
+        page = ('"googleMap":{"googleMapAPIKey":"AIzaSyDekalgV9SiHUMNA0ksT1XlNWqs90Hp3KA"},'
+                '"apiUrlHeaderName":"Subscription-Key","apiUrlHeaderValue":"312f7785-864c-43ba-aca8-1f8259183a22"')
+        for text in (page, json.dumps(page), "https://maps.example/js?key=AIzaSyDekalgV9SiHUMNA0ksT1XlNWqs90Hp3KA"):
+            clean = redact(text)
+            self.assertNotIn("AIzaSy", clean)
+            self.assertNotIn("312f7785", clean)
+        self.assertIn('"apiUrlHeaderName":"Subscription-Key"', redact(page))  # the name stays
+        recording = apply_recorder.Recording(None, redact, {}, [], {}, {})
+        body = json.loads(recording._redact_body('{"config": {"googleMapAPIKey": "abc123def456"}}', ""))
+        self.assertEqual(body["config"]["googleMapAPIKey"], "<secret>")
+
     def test_api_keys_are_kept_by_name_only_and_typed_values_never_saved(self):
         recording = apply_recorder.Recording(None, apply_recorder.Redactor(EXAMPLE_PROFILE), {}, [], {}, {})
         self.assertEqual(recording._headers({"Subscription-Key": "312f7785-864c", "Accept": "*/*"}),
