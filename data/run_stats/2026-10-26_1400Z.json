@@ -1,0 +1,66 @@
+{
+  "applier": null,
+  "listings_api": {
+    "connections": {
+      "kept-open connection": 6100,
+      "new connection": 37
+    },
+    "distinct_responses": 1,
+    "etag": {
+      "seen": false
+    },
+    "failures": {},
+    "headers": {
+      "access-control-allow-origin": {
+        "*": 6137
+      },
+      "connection": {
+        "close": 37,
+        "keep-alive": 6100
+      },
+      "strict-transport-security": {
+        "max-age=15724800; includeSubDomains": 6137
+      },
+      "x-cache": {
+        "CONFIG_NOCACHE": 6137
+      }
+    },
+    "headers_present": {
+      "x-azure-ref": 6137
+    },
+    "requests": 6137,
+    "response_bytes": {
+      "max": 42,
+      "min": 42
+    },
+    "response_ms": {
+      "max": 2077.8,
+      "median": 75.1,
+      "min": 69.2,
+      "p90": 81.7,
+      "p99": 276.3
+    },
+    "statuses": {
+      "200": 6137
+    },
+    "their_clock_minus_ours_exact_s": {
+      "at_least": -0.03,
+      "at_most": 0.25,
+      "best_guess": 0.11,
+      "consistent": true
+    },
+    "their_clock_minus_ours_s": {
+      "max": -0.1,
+      "median": -0.1,
+      "min": -0.8,
+      "p90": -0.1,
+      "p99": -0.1
+    }
+  },
+  "pace": [],
+  "run": {
+    "ended_utc": "2026-10-26T14:00:00.002Z",
+    "started_utc": "2026-10-26T10:59:00.000Z"
+  },
+  "units": {}
+}
