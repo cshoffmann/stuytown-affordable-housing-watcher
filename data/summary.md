@@ -1,6 +1,6 @@
 # StuyTown watcher: summary
 
-Updated Mon Nov 2, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2 bed <= $2,800**. Dream units: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10. 
+Updated Tue Nov 3, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2 bed <= $2,800**. Dream units: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10. 
 
 Map of every building and unit seen: [units.geojson](units.geojson) (GitHub draws it; tap a dot), or [on geojson.io](https://geojson.io/#data=data:text/x-url,https%3A%2F%2Fraw.githubusercontent.com%2Fcshoffmann%2Fstuytown-affordable-housing-watcher%2Fmain%2Fdata%2Funits.geojson).
 
@@ -12,6 +12,7 @@ Nothing: the latest morning went as it should.
 
 | Date | Units posted at (ET) | Qualified | Auto-apply | Checks | API median / p99 |
 | --- | --- | --- | --- | --- | --- |
+| Tue Nov 3 | none | 0 | - | 6,132 | 74 / 279 ms |
 | Mon Nov 2 | none | 0 | - | 6,154 | 11 / 132 ms |
 | Sun Nov 1 | none | 0 | - | 6,146 | 39 / 235 ms |
 | Sat Oct 31 | none | 0 | - | 6,144 | 39 / 223 ms |
