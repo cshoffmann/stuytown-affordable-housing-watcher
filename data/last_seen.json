@@ -1,3 +1,119 @@
 {
-  "units": {}
+  "units": {
+    "P~NYST31~B~451~U~09-F": {
+      "data": {
+        "amenities": [
+          {
+            "code": "DW18",
+            "friendlyDescription": "Dishwasher",
+            "searchCode": null
+          },
+          {
+            "code": "FS09",
+            "friendlyDescription": "9th floor",
+            "searchCode": null
+          },
+          {
+            "code": "zCRRE",
+            "friendlyDescription": "Platinum finish",
+            "searchCode": null
+          },
+          {
+            "code": "ATW2",
+            "friendlyDescription": "Through wall A/C",
+            "searchCode": null
+          }
+        ],
+        "availableDate": "2026-10-10T00:00:00Z",
+        "bathrooms": 1,
+        "bedrooms": 1,
+        "building": {
+          "address": "451 EAST 14TH STREET",
+          "buildingId": "338",
+          "buildingName": "451 EAST 14TH STREET",
+          "latitude": "40.73165",
+          "longitude": "-73.98032",
+          "transportationDescription": "Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.",
+          "transports": [
+            {
+              "description": "14_4-train",
+              "imageUrl": "/media/3khh00cg/4.png"
+            },
+            {
+              "description": "15_5-train",
+              "imageUrl": "/media/vk3nwm2c/5.png"
+            },
+            {
+              "description": "16_6-train",
+              "imageUrl": "/media/w45lmn1h/6.png"
+            },
+            {
+              "description": "26_R-train",
+              "imageUrl": "/media/wlrdmxwl/r.png"
+            },
+            {
+              "description": "27_W-train",
+              "imageUrl": "/media/g00l3sei/w.png"
+            },
+            {
+              "description": "22_L",
+              "imageUrl": "/media/t02dfmty/l.png"
+            },
+            {
+              "description": "30_M14",
+              "imageUrl": "/media/hvwoaov3/m14.png"
+            },
+            {
+              "description": "37_RiverFerry",
+              "imageUrl": "/media/trsfb4aw/east-river-ferry.jpg"
+            },
+            {
+              "description": "25_Q",
+              "imageUrl": "/media/ipvba2uo/q.png"
+            },
+            {
+              "description": "24_N",
+              "imageUrl": "/media/vx5fhuim/n.png"
+            },
+            {
+              "description": "35_CityBike",
+              "imageUrl": "/media/1ojhg5wj/citbike.png"
+            }
+          ]
+        },
+        "description": null,
+        "finish": "Platinum",
+        "floorplan": {
+          "floorplanSvg": "/media/k2inbnne/107.svg",
+          "staticImageUrl": null
+        },
+        "images": [],
+        "incomeRequirement": 150189.94,
+        "isFlex": false,
+        "name": "09-F",
+        "price": 4380.54,
+        "property": {
+          "commonImages": [],
+          "name": "Stuyvesant Town",
+          "propertySpk": "P~103ST"
+        },
+        "sqft": 745,
+        "style": {
+          "id": 580,
+          "name": "107"
+        },
+        "unitFloor": "09",
+        "unitRates": {
+          "12": 4380.54,
+          "24": 4380.54
+        },
+        "unitSpk": "P~NYST31~B~451~U~09-F",
+        "version": 7,
+        "virtualTourUrl": null
+      },
+      "first_seen_utc": "2026-11-04T12:15:00Z",
+      "last_seen_utc": "2026-11-04T12:19:03Z",
+      "missing_polls": 0
+    }
+  }
 }
