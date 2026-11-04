@@ -2763,5 +2763,25 @@
         "qualifies_for_auto_apply": false
       }
     ]
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-11-04T13:38:41Z",
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~330~U~07-A",
+        "apartment": "07-A",
+        "address": "330 First Avenue",
+        "bedrooms": 2,
+        "bathrooms": 1,
+        "price": 5631.0,
+        "income_requirement": 193062.86,
+        "available_date": "2026-09-22T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~330~U~07-A",
+        "first_seen_utc": "2026-11-04T13:30:00Z",
+        "last_seen_utc": "2026-11-04T13:37:39Z",
+        "listed_for_seconds": 459.0
+      }
+    ]
   }
 ]
