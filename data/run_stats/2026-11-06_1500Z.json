@@ -1,0 +1,139 @@
+{
+  "applier": null,
+  "listings_api": {
+    "connections": {
+      "kept-open connection": 6101,
+      "new connection": 36
+    },
+    "distinct_responses": 6,
+    "etag": {
+      "seen": false
+    },
+    "failures": {},
+    "headers": {
+      "access-control-allow-origin": {
+        "*": 6137
+      },
+      "connection": {
+        "close": 36,
+        "keep-alive": 6101
+      },
+      "strict-transport-security": {
+        "max-age=15724800; includeSubDomains": 6137
+      },
+      "x-cache": {
+        "CONFIG_NOCACHE": 6137
+      }
+    },
+    "headers_present": {
+      "x-azure-ref": 6137
+    },
+    "requests": 6137,
+    "response_bytes": {
+      "max": 4014,
+      "min": 42
+    },
+    "response_ms": {
+      "max": 2126.3,
+      "median": 44.3,
+      "min": 40.0,
+      "p90": 49.4,
+      "p99": 251.5
+    },
+    "statuses": {
+      "200": 6137
+    },
+    "their_clock_minus_ours_exact_s": {
+      "at_least": -0.007,
+      "at_most": 0.238,
+      "best_guess": 0.115,
+      "consistent": true
+    },
+    "their_clock_minus_ours_s": {
+      "max": -0.0,
+      "median": -0.0,
+      "min": -1.0,
+      "p90": -0.0,
+      "p99": -0.0
+    }
+  },
+  "pace": [],
+  "run": {
+    "ended_utc": "2026-11-06T15:00:00.001Z",
+    "started_utc": "2026-11-06T11:59:00.000Z"
+  },
+  "units": {
+    "P~NYPC21~B~441~U~13-A": {
+      "address": "441 East 20th Street",
+      "apartment": "13-A",
+      "first_seen_utc": "2026-11-06T13:30:00.000Z",
+      "income_requirement": 171206.73,
+      "last_seen_utc": "2026-11-06T14:59:59Z",
+      "listed_for_seconds": 5399.0,
+      "not_listed_at_utc": "2026-11-06T13:29:59.750Z",
+      "posted_vs_quarter_hour_their_clock_s": [
+        -0.14,
+        0.12
+      ],
+      "posted_within_seconds": 0.25,
+      "qualifies_for_auto_apply": false,
+      "rent": 4993.53,
+      "seen_seconds_after_quarter_hour": 0.0,
+      "still_listed_at_end": true
+    },
+    "P~NYST31~B~001~U~07-F": {
+      "address": "1 Stuyvesant Oval",
+      "apartment": "07-F",
+      "first_seen_utc": "2026-11-06T13:00:00.000Z",
+      "income_requirement": 111882.51,
+      "last_seen_utc": "2026-11-06T13:00:39Z",
+      "listed_for_seconds": 39.0,
+      "not_listed_at_utc": "2026-11-06T12:59:59.750Z",
+      "posted_vs_quarter_hour_their_clock_s": [
+        -0.14,
+        0.12
+      ],
+      "posted_within_seconds": 0.25,
+      "qualifies_for_auto_apply": false,
+      "removal_confirmed_utc": "2026-11-06T13:01:41.000Z",
+      "rent": 3263.24,
+      "seen_seconds_after_quarter_hour": 0.0
+    },
+    "P~NYST31~B~011~U~06-C": {
+      "address": "11 Stuyvesant Oval",
+      "apartment": "06-C",
+      "first_seen_utc": "2026-11-06T13:15:00.000Z",
+      "income_requirement": 118285.71,
+      "last_seen_utc": "2026-11-06T13:33:03Z",
+      "listed_for_seconds": 1083.0,
+      "not_listed_at_utc": "2026-11-06T13:14:59.750Z",
+      "posted_vs_quarter_hour_their_clock_s": [
+        -0.14,
+        0.12
+      ],
+      "posted_within_seconds": 0.25,
+      "qualifies_for_auto_apply": false,
+      "removal_confirmed_utc": "2026-11-06T13:34:05.127Z",
+      "rent": 3450.0,
+      "seen_seconds_after_quarter_hour": 0.0
+    },
+    "P~NYST31~B~545~U~0M-D": {
+      "address": "545 East 14th Street",
+      "apartment": "0M-D",
+      "first_seen_utc": "2026-11-06T12:15:00.000Z",
+      "income_requirement": 76602.86,
+      "last_seen_utc": "2026-11-06T12:16:11Z",
+      "listed_for_seconds": 71.0,
+      "not_listed_at_utc": "2026-11-06T12:14:59.750Z",
+      "posted_vs_quarter_hour_their_clock_s": [
+        -0.14,
+        0.12
+      ],
+      "posted_within_seconds": 0.25,
+      "qualifies_for_auto_apply": true,
+      "removal_confirmed_utc": "2026-11-06T12:17:13.000Z",
+      "rent": 2234.25,
+      "seen_seconds_after_quarter_hour": 0.0
+    }
+  }
+}

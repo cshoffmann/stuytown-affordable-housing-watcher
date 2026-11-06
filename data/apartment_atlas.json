@@ -1,6 +1,36 @@
 {
  "about": "Each line of apartments seen (same building, same letter = stacked, facing the same way). Built by dream_units.py from data/events.json; your notes go in data/reference/line_overrides.json.",
  "lines": {
+  "1 STUYVESANT OVAL|F": {
+   "bedrooms": 2,
+   "building": "1 STUYVESANT OVAL",
+   "complex": "Stuy Town",
+   "facing": [
+    "ENE"
+   ],
+   "facing_certain": true,
+   "facing_from": "Oval views + the building's Oval walls (OpenStreetMap)",
+   "layouts": {
+    "124": 1
+   },
+   "line": "F",
+   "looks_onto_street": false,
+   "oval_views": {
+    "no": 0,
+    "yes": 1
+   },
+   "seen": [
+    {
+     "apartment": "07-F",
+     "finish": "Blank",
+     "first_seen_utc": "2026-11-06T13:00:00Z",
+     "floor": 7,
+     "rent": 3263.24
+    }
+   ],
+   "sqft": 932,
+   "winter_sun_h": 2.7
+  },
   "11 STUYVESANT OVAL|A": {
    "bedrooms": 1,
    "building": "11 STUYVESANT OVAL",
@@ -27,6 +57,34 @@
     }
    ],
    "sqft": 771,
+   "winter_sun_h": null
+  },
+  "11 STUYVESANT OVAL|C": {
+   "bedrooms": 1,
+   "building": "11 STUYVESANT OVAL",
+   "complex": "Stuy Town",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "107": 1
+   },
+   "line": "C",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "06-C",
+     "finish": "Classic",
+     "first_seen_utc": "2026-11-06T13:15:00Z",
+     "floor": 6,
+     "rent": 3450.0
+    }
+   ],
+   "sqft": 745,
    "winter_sun_h": null
   },
   "17 STUYVESANT OVAL|H": {
@@ -227,6 +285,34 @@
    "sqft": 749,
    "winter_sun_h": null
   },
+  "441 EAST 20TH STREET|A": {
+   "bedrooms": 1,
+   "building": "441 EAST 20TH STREET",
+   "complex": "Peter Cooper Village",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "150": 1
+   },
+   "line": "A",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "13-A",
+     "finish": "Platinum",
+     "first_seen_utc": "2026-11-06T13:30:00Z",
+     "floor": 13,
+     "rent": 4993.53
+    }
+   ],
+   "sqft": 944,
+   "winter_sun_h": null
+  },
   "445 EAST 14TH STREET|A": {
    "bedrooms": 1,
    "building": "445 EAST 14TH STREET",
@@ -417,12 +503,12 @@
    "facing_certain": false,
    "facing_from": "unknown: not listed with Oval views",
    "layouts": {
-    "110": 1
+    "110": 2
    },
    "line": "D",
    "looks_onto_street": null,
    "oval_views": {
-    "no": 1,
+    "no": 2,
     "yes": 0
    },
    "seen": [
@@ -430,6 +516,13 @@
      "apartment": "0M-D",
      "finish": "Blank",
      "first_seen_utc": "2026-10-13T11:15:00Z",
+     "floor": 1,
+     "rent": 2234.25
+    },
+    {
+     "apartment": "0M-D",
+     "finish": "Blank",
+     "first_seen_utc": "2026-11-06T12:15:00Z",
      "floor": 1,
      "rent": 2234.25
     }
