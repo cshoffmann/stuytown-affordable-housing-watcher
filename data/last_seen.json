@@ -1,38 +1,53 @@
 {
   "units": {
-    "P~NYST31~B~011~U~06-C": {
+    "P~NYPC21~B~441~U~13-A": {
       "data": {
         "amenities": [
           {
-            "code": "NFF",
-            "friendlyDescription": "Natural finish wood flooring",
+            "code": "zCRRE",
+            "friendlyDescription": "Platinum finish",
             "searchCode": null
           },
           {
-            "code": "zMET",
-            "friendlyDescription": "Classic finish",
+            "code": "ATW2",
+            "friendlyDescription": "Through wall A/C",
             "searchCode": null
           },
           {
-            "code": "FS06",
-            "friendlyDescription": "6th floor",
+            "code": "PS40",
+            "friendlyDescription": "PS40 School District",
+            "searchCode": "PS40Code"
+          },
+          {
+            "code": "DTVW",
+            "friendlyDescription": "Downtown view",
+            "searchCode": "CityViews"
+          },
+          {
+            "code": "FS13",
+            "friendlyDescription": "13th floor",
             "searchCode": null
           },
           {
-            "code": "MAVM",
-            "friendlyDescription": "Renovated bathroom",
+            "code": "ELFA",
+            "friendlyDescription": "ELFA closet systems",
+            "searchCode": null
+          },
+          {
+            "code": "PWF",
+            "friendlyDescription": "Wood flooring",
             "searchCode": null
           }
         ],
-        "availableDate": "2026-10-02T00:00:00Z",
+        "availableDate": "2026-10-03T00:00:00Z",
         "bathrooms": 1,
         "bedrooms": 1,
         "building": {
-          "address": "11 STUYVESANT OVAL",
-          "buildingId": "309",
-          "buildingName": "11 STUYVESANT OVAL",
-          "latitude": "40.732468",
-          "longitude": "-73.978745",
+          "address": "441 EAST 20TH STREET",
+          "buildingId": "256",
+          "buildingName": "441 EAST 20TH STREET",
+          "latitude": "40.734543",
+          "longitude": "-73.97775",
           "transportationDescription": "Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.",
           "transports": [
             {
@@ -82,37 +97,37 @@
           ]
         },
         "description": null,
-        "finish": "Classic",
+        "finish": "Platinum",
         "floorplan": {
-          "floorplanSvg": "/media/k2inbnne/107.svg",
+          "floorplanSvg": "/media/e3el30ku/150.svg",
           "staticImageUrl": null
         },
         "images": [],
-        "incomeRequirement": 118285.71,
+        "incomeRequirement": 171206.73,
         "isFlex": false,
-        "name": "06-C",
-        "price": 3450.0,
+        "name": "13-A",
+        "price": 4993.53,
         "property": {
           "commonImages": [],
-          "name": "Stuyvesant Town",
-          "propertySpk": "P~103ST"
+          "name": "Peter Cooper Village",
+          "propertySpk": "P~102PCV"
         },
-        "sqft": 745,
+        "sqft": 944,
         "style": {
-          "id": 580,
-          "name": "107"
+          "id": 522,
+          "name": "150"
         },
-        "unitFloor": "06",
+        "unitFloor": "13",
         "unitRates": {
-          "12": 3450,
-          "24": 3450
+          "12": 4993.53,
+          "24": 4993.53
         },
-        "unitSpk": "P~NYST31~B~011~U~06-C",
-        "version": 2,
+        "unitSpk": "P~NYPC21~B~441~U~13-A",
+        "version": 3,
         "virtualTourUrl": null
       },
-      "first_seen_utc": "2026-11-06T13:15:00Z",
-      "last_seen_utc": "2026-11-06T13:29:17Z",
+      "first_seen_utc": "2026-11-06T13:30:00Z",
+      "last_seen_utc": "2026-11-06T13:34:17Z",
       "missing_polls": 0
     }
   }
