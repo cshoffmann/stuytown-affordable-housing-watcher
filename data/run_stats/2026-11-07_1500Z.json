@@ -1,0 +1,74 @@
+{
+  "applier": null,
+  "listings_api": {
+    "connections": {
+      "kept-open connection": 6104,
+      "new connection": 38
+    },
+    "distinct_responses": 1,
+    "etag": {
+      "seen": false
+    },
+    "failures": {},
+    "headers": {
+      "access-control-allow-origin": {
+        "*": 6142
+      },
+      "connection": {
+        "close": 38,
+        "keep-alive": 6104
+      },
+      "strict-transport-security": {
+        "max-age=15724800; includeSubDomains": 6142
+      },
+      "x-cache": {
+        "CONFIG_NOCACHE": 6142
+      }
+    },
+    "headers_present": {
+      "x-azure-ref": 6142
+    },
+    "requests": 6142,
+    "response_bytes": {
+      "max": 42,
+      "min": 42
+    },
+    "response_ms": {
+      "max": 566.5,
+      "median": 44.6,
+      "min": 41.7,
+      "p90": 49.4,
+      "p99": 248.4
+    },
+    "statuses": {
+      "200": 6142
+    },
+    "their_clock_minus_ours_exact_s": {
+      "at_least": -0.042,
+      "at_most": 0.249,
+      "best_guess": 0.103,
+      "consistent": true
+    },
+    "their_clock_minus_ours_s": {
+      "max": -0.0,
+      "median": -0.0,
+      "min": -0.8,
+      "p90": -0.0,
+      "p99": -0.0
+    }
+  },
+  "pace": [],
+  "run": {
+    "ended_utc": "2026-11-07T15:00:00.002Z",
+    "started_utc": "2026-11-07T11:59:00.000Z"
+  },
+  "units": {
+    "P~NYPC21~B~441~U~13-A": {
+      "apartment": "13-A",
+      "first_seen_utc": "2026-11-06T13:30:00Z",
+      "last_seen_utc": "2026-11-06T14:59:59Z",
+      "listed_for_seconds": 5399.0,
+      "removal_confirmed_utc": "2026-11-07T12:01:01.000Z"
+    }
+  }
+}

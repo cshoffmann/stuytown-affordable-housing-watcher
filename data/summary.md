@@ -1,6 +1,6 @@
 # StuyTown watcher: summary
 
-Updated Fri Nov 6, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2 bed <= $2,800**. Dream units: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10. 
+Updated Sat Nov 7, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2 bed <= $2,800**. Dream units: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10. 
 
 Map of every building and unit seen: [units.geojson](units.geojson) (GitHub draws it; tap a dot), or [on geojson.io](https://geojson.io/#data=data:text/x-url,https%3A%2F%2Fraw.githubusercontent.com%2Fcshoffmann%2Fstuytown-affordable-housing-watcher%2Fmain%2Fdata%2Funits.geojson).
 
@@ -12,6 +12,7 @@ Nothing: the latest morning went as it should.
 
 | Date | Units posted at (ET) | Qualified | Auto-apply | Checks | API median / p99 |
 | --- | --- | --- | --- | --- | --- |
+| Sat Nov 7 | none | 0 | - | 6,142 | 45 / 248 ms |
 | Fri Nov 6 | 7:15:00, 8:00:00, 8:15:00, 8:30:00 | 1 | - | 6,137 | 44 / 252 ms |
 | Thu Nov 5 | none | 0 | - | 6,144 | 41 / 247 ms |
 | Wed Nov 4 | 7:15:00, 8:00:00, 8:15:00, 8:30:00 | 1 | - | 6,142 | 42 / 253 ms |
@@ -51,7 +52,7 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 
 | Posted (ET) | Apartment | Zone | Floor | Beds | Sq ft | Rent | $/sq ft | Min. income | Finish | Layout | Features | Faces | Dream rating | Listed for | Qualified | Auto-apply |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Nov 6 8:30:00 AM | 13-A, 441 East 20th Street | 20th St front | 13 | 1 | 944 | $4,994 | $5.29 | $171,207 | Platinum | [150](floorplans/150.png) | wall A/C, PS 40 zone, Downtown view, closet system, Wood flooring |  |  | still listed | no |  |
+| Nov 6 8:30:00 AM | 13-A, 441 East 20th Street | 20th St front | 13 | 1 | 944 | $4,994 | $5.29 | $171,207 | Platinum | [150](floorplans/150.png) | wall A/C, PS 40 zone, Downtown view, closet system, Wood flooring |  |  | 90 min | no |  |
 | Nov 6 8:15:00 AM | 06-C, 11 Stuyvesant Oval | Oval | 6 | 1 | 745 | $3,450 | $4.63 | $118,286 | Classic | [107](floorplans/107.png) | wood floors, renovated bath |  |  | 18 min | no |  |
 | Nov 6 8:00:00 AM | 07-F, 1 Stuyvesant Oval | Oval | 7 | 2 | 932 | $3,263 | $3.50 | $111,883 | Blank | [124](floorplans/124.png) | stainless appliances, Oval views | ENE |  | 39.0 s | no |  |
 | Nov 6 7:15:00 AM | 0M-D, 545 East 14th Street | 14th St front | M | 1 | 764 | $2,234 | $2.92 | $76,603 | Blank | [110](floorplans/110.png) | stainless appliances |  |  | 71.0 s | yes |  |
@@ -127,7 +128,7 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 - **Posting times** (ET, all days): 7:15 ×10, 7:30 ×4, 8:00 ×6, 8:15 ×3, 8:30 ×2
 - **Units by weekday:** Mon 4, Tue 4, Wed 6, Thu 4, Fri 7
 - **How long units at or under your limit stay listed:** median 40.0 s (fastest 25.0 s, 7 units)
-- **How long units over your limit stay listed:** median 3 min (fastest 39.0 s, 7 units)
+- **How long units over your limit stay listed:** median 6 min (fastest 39.0 s, 8 units)
 - **When on the quarter hour they're posted** (their clock, s): -0.14 to +0.11, -0.14 to +0.11, -0.14 to +0.11, -0.14 to +0.11, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.12
 - **Our applications:** 2 sent (2 browser); median 1.1 s from the unit appearing to sending
 - **All auto-apply results so far:** 5 submitted
