@@ -3335,5 +3335,25 @@
         "listed_for_seconds": 1083.0
       }
     ]
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-11-07T12:01:01Z",
+    "units": [
+      {
+        "unit_id": "P~NYPC21~B~441~U~13-A",
+        "apartment": "13-A",
+        "address": "441 East 20th Street",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 4993.53,
+        "income_requirement": 171206.73,
+        "available_date": "2026-10-03T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYPC21~B~441~U~13-A",
+        "first_seen_utc": "2026-11-06T13:30:00Z",
+        "last_seen_utc": "2026-11-06T14:59:59Z",
+        "listed_for_seconds": 5399.0
+      }
+    ]
   }
 ]
