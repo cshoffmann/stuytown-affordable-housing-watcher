@@ -6,9 +6,11 @@ The live watcher, 7:00 to 10:00am ET. GitHub Actions starts it every morning
                never stops -- not for alerts, logging, git or applying.
     applier    auto_apply.Applier: browsers opened at 6:59, handed each
                check's listings FIRST; applies to qualifying units at once.
+               With auto-apply off it only records forms (nothing is sent).
     notifier   background: Pushover alerts, with their own retries.
-    logger     background: events, applications, recordings, git commits --
-               batched, and paused while an application is running.
+    logger     background: events, applications, recordings -- paused while
+               an application is running -- and ONE git commit at the end,
+               saying what was listed that day.
 
 "Is this new? Which alert?" lives in check_units.py, applying in
 auto_apply.py; this file is the timing and the wiring. docs/architecture.md
@@ -51,7 +53,6 @@ POSTING_EVERY_MINUTES = 15
 SLOWEST_POLL_SECONDS = 30  # back-off ceiling when the site asks us to slow down (its own Retry-After wins, up to 120)
 HICCUP_POLL_SECONDS = 8  # back-off ceiling for plain errors (timeouts, server errors): retried quickly
 STATUS_EVERY_SECONDS = 60  # one "still checking" log line a minute, instead of one per check
-COMMIT_EVERY_SECONDS = 300  # results are committed in batches, not on every change
 APPLIER_HEAD_START = timedelta(minutes=1)  # browsers open (and the site loaded) this long before 7:00
 WINDOW_START_HOUR = 7  # 7:00am ET
 WINDOW_END_HOUR = 10  # 10:00am ET
@@ -140,9 +141,9 @@ class Watcher:
         self.pace = pace or Pace()
         self.stats = run_stats.RunStats()
         self.checks = self.failures = 0
-        self._unsent = []  # change summaries since the last commit
+        self._new_today = []  # (time ET, unit label, rent) of each new unit, for the day's commit
         self._last_check_utc = None  # when the last good check's request went out
-        self._last_status = self._last_commit = time.monotonic()
+        self._last_status = time.monotonic()
         self._last_error = None
 
     def check(self, units: list, now: datetime | None = None, label: str | None = None) -> check_units.Changes:
@@ -154,8 +155,9 @@ class Watcher:
             apply=self.applier.dispatch if self.applier else None,
             qualifies=qualifies, notifier=self.notifier, logger=self.logger, note=dream_units.alert_note,
         )
+        for unit in changes.new:
+            self._new_today.append((f"{now_et():%H:%M}", check_units.unit_label(unit), check_units.unit_rent(unit)))
         if changes:
-            self._unsent.append(f"{now_et():%H:%M} {changes.summary()}")
             self.stats.observe_changes(changes, now, qualifies, previous=self._last_check_utc)
         self._last_check_utc = now
         return changes
@@ -240,17 +242,18 @@ class Watcher:
             self._last_status = now
             print(f"[{now_et():%H:%M:%S} ET] still checking: {self.checks} checks so far, "
                   f"{self.failures} failed, every {self.pace.interval:g}s")
-        if now - self._last_commit >= COMMIT_EVERY_SECONDS:
-            self._last_commit = now
-            self.commit_soon()
 
-    def commit_soon(self, final: bool = False) -> None:
-        """Queue a commit of everything since the last one, on the logger --
-        after the jobs already queued there, and not while an application runs."""
-        summaries, self._unsent = self._unsent, []
-        message = ("End of watch window" if final else "Listings changed") + (
-            ": " + " | ".join(summaries) if summaries else ": save state")
-        self.logger.submit(commit_and_push, message)
+    def day_message(self) -> str:
+        """The day's one commit message: 'Sun Nov 8: no new listings (6,141
+        checks)', or the count with one line per new unit."""
+        today = now_et()
+        n = len(self._new_today)
+        head = f"{today:%a %b} {today.day}: " + (f"{n} new listing{'s' if n != 1 else ''}" if n else
+                                                 "no new listings")
+        head += f" ({self.checks:,} checks" + (f", {self.failures:,} failed)" if self.failures else ")")
+        lines = [f"{at} {label}" + (f", ${rent:,.0f}" if rent is not None else "")
+                 for at, label, rent in self._new_today[:40]]
+        return head + ("\n\n" + "\n".join(lines) if lines else "")
 
     def finish(self, timeout: float = 120 + REFERENCE_BUDGET_SECONDS) -> None:
         """Let a running application finish, send what's queued, write the
@@ -260,7 +263,7 @@ class Watcher:
         self.notifier.drain(timeout)
         if self.checks:
             self.logger.submit(self._wrap_up)
-        self.commit_soon(final=True)
+        self.logger.submit(commit_and_push, self.day_message())  # the day's only commit
         self.logger.drain(timeout)
         self.notifier.drain(timeout)  # the "needs a look" alert, if any
 
@@ -311,7 +314,7 @@ def commit_and_push(message: str) -> None:
         _git("add", "--", "data")
         if _git("diff", "--cached", "--quiet", check=False).returncode == 0:
             return  # nothing to commit
-        _git("commit", "--quiet", "-m", message[:300])
+        _git("commit", "--quiet", "-m", message[:4000])
         for _ in range(3):
             if _git("push", "--quiet", check=False).returncode == 0:
                 print("   Results committed and pushed.")
@@ -343,18 +346,23 @@ def keep_schedule_alive() -> None:
 
 
 def start_applier(notifier, logger):
-    """The applier, with its browsers open -- or None if auto-apply is off or
-    can't run this morning (startup_check has already said why)."""
-    if not auto_apply.ENABLED:
+    """The applier, with its browsers open -- applying when auto-apply is on,
+    recording only (one browser, nothing ever sent) when it's off -- or None
+    if it can't run this morning (it has already said why)."""
+    if auto_apply.ENABLED:
+        profile = auto_apply._profile_for_run()
+        applier = profile and auto_apply.Applier(profile, notifier, logger)
+        what = "Auto-apply: {} browsers open"
+    else:
+        profile = auto_apply.profile_for_recording()
+        applier = profile and auto_apply.Applier(profile, notifier, logger, workers=1, record_only=True)
+        what = "Recording only (auto-apply is off): {} browser open"
+    if not applier:
         return None
-    profile = auto_apply._profile_for_run()
-    if profile is None:
-        return None
-    applier = auto_apply.Applier(profile, notifier, logger)
     logger.yield_to = applier.busy
     started = time.monotonic()
     applier.start()
-    print(f"Auto-apply: {applier.workers} browsers open and the site loaded in {time.monotonic() - started:.1f}s")
+    print(what.format(applier.workers) + f" and the site loaded in {time.monotonic() - started:.1f}s")
     return applier
 
 

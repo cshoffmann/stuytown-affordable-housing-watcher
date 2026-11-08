@@ -12,20 +12,20 @@ flowchart LR
     S["Google Cloud Scheduler<br/>6:13 am ET"] --> R["GitHub Actions run"]
     R --> C["Checker<br/>7:00–10:00"]
     C <-->|"every 2 s<br/>0.25 s at :00 :15 :30 :45"| API[("StuyTown<br/>listings API")]
-    C -->|"qualifying unit"| A["Applier<br/>(if on)"]
+    C -->|"listings"| A["Applier<br/>on: applies<br/>off: records only"]
     A -->|"application"| ST[("StuyTown")]
     C -->|"alert"| P["Pushover"]
     C -->|"every unit"| L["Logger → data/"]
-    L -->|"10:00"| W["Stats, floorplans,<br/>map, summary, commit"]
+    L -->|"10:00"| W["Stats, floorplans, map,<br/>summary, one commit"]
 ```
 
 | Time (ET) | What happens |
 | --- | --- |
 | 6:13 | Google Cloud Scheduler starts the workflow. GitHub's own schedule (6:13–9:43) is a backup. |
-| 6:59 | If auto-apply is on, two browsers open with the site already loaded. |
+| 6:59 | Browsers open with the site already loaded: two to apply if auto-apply is on, one to record if it's off. |
 | 7:00–10:00 | It checks the listings every 2 s, and every 0.25 s from 3 s before to 15 s after each quarter hour, when StuyTown posts units. The site itself says it only lists between 7 and 10 AM. |
 | New unit | The applier gets it first, then the alert goes out, then it's logged. Every unit is logged, whether it qualifies or not. |
-| 10:00 | Stats, new floorplans, the apartment atlas, the map and the summary page; then a commit. |
+| 10:00 | Stats, new floorplans, the apartment atlas, the map and the summary page, then **one commit for the day**. Its message says what was listed, e.g. "Fri Nov 6: 4 new listings (6,140 checks)" with one line per unit, or "no new listings". |
 
 ## Alerts
 
@@ -42,7 +42,11 @@ A unit **qualifies** when its rent is at or under `AUTO_APPLY_RULES` for its
 size (e.g. `1:2300, 2:2800`) and your income is at or above the unit's
 minimum. `AUTO_APPLY_MAX_RENT`, if set, covers sizes the rules don't list.
 
-- `AUTO_APPLY_MODE=off`: you get the alert and apply yourself.
+- `AUTO_APPLY_MODE=off`: you get the alert and apply yourself. It only
+  records: when the direct request isn't proven for StuyTown's current site
+  code, it fills a listed unit's form and presses SUBMIT with every request
+  held back, so nothing is sent. Direct submit is then ready the day you
+  switch on.
 - `AUTO_APPLY_MODE=on`: it applies **once per unit per day**.
   - **Direct:** the application goes straight to StuyTown's API about
     0.05 s after the unit appears. It only does this once the request

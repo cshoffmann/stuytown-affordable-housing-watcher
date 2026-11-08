@@ -289,6 +289,20 @@ class ApplierDispatchTests(unittest.TestCase):
         self.work()
         return queued
 
+    def test_with_auto_apply_off_it_only_records_until_direct_submit_is_proven(self):
+        self.applier = auto_apply.Applier(EXAMPLE_PROFILE, workers=1, record_only=True)
+        taken = self.check([unit("9F", 4380), unit("1A", 2500), unit("2B", 2900), unit("3C", 2950)])
+        self.assertEqual(taken, [])  # so the alert says "apply now"
+        self.assertEqual(self.tried, [])  # never applies
+        self.assertEqual(self.recorded, ["1A", "2B"])  # qualifying units first, two a morning
+        self.assertEqual(self.sent, [])  # recordings send no alert
+        self.assertEqual(self.applier.observations()["mode"], "recording only")
+        recorder = auto_apply.Applier(EXAMPLE_PROFILE, workers=1, record_only=True)
+        self.applier = recorder
+        with mock.patch.object(recorder.direct, "why_not", return_value=None):  # proven for the current code
+            self.assertEqual(self.check([unit("4D", 2000)]), [])
+        self.assertEqual(self.recorded, ["1A", "2B"])
+
     def test_qualifying_units_are_queued_cheapest_first_and_each_gets_one_result_message(self):
         self.check([unit("9F", 4380), unit("2B", 2900), unit("1A", 2500)])
         self.assertEqual(self.tried, ["1A", "2B"])

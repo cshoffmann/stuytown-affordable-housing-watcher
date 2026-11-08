@@ -149,6 +149,7 @@ def issues(run: dict | None) -> list:
         return []
     found = []
     applier = run.get("applier")
+    applying = applier is not None and applier.get("mode") != "recording only"
     for entry in (run.get("units") or {}).values():
         label = f"Apt {entry.get('apartment')}, {entry.get('address')}"
         done = entry.get("auto_apply")
@@ -157,7 +158,7 @@ def issues(run: dict | None) -> list:
             if status in ("failed", "incomplete", "blocked") or (
                     status == "rejected" and not any(text in detail for text in NOT_BROKEN)):
                 found.append(f"{label}: auto-apply {status} ({detail})")
-        elif applier is not None and entry.get("qualifies_for_auto_apply"):
+        elif applying and entry.get("qualifies_for_auto_apply"):
             found.append(f"{label} qualified, but auto-apply didn't try it")
     for recording in (applier or {}).get("recordings") or []:
         check = recording.get("direct_submit_check") or ""
