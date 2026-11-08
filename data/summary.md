@@ -1,6 +1,6 @@
 # StuyTown watcher: summary
 
-Updated Tue Nov 3, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2 bed <= $2,800**. Dream units: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10. 
+Updated Sun Nov 8, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2 bed <= $2,800**. Dream units: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10. 
 
 Map of every building and unit seen: [units.geojson](units.geojson) (GitHub draws it; tap a dot), or [on geojson.io](https://geojson.io/#data=data:text/x-url,https%3A%2F%2Fraw.githubusercontent.com%2Fcshoffmann%2Fstuytown-affordable-housing-watcher%2Fmain%2Fdata%2Funits.geojson).
 
@@ -12,6 +12,11 @@ Nothing: the latest morning went as it should.
 
 | Date | Units posted at (ET) | Qualified | Auto-apply | Checks | API median / p99 |
 | --- | --- | --- | --- | --- | --- |
+| Sun Nov 8 | none | 0 | - | 6,144 | 29 / 236 ms |
+| Sat Nov 7 | none | 0 | - | 6,142 | 45 / 248 ms |
+| Fri Nov 6 | 7:15:00, 8:00:00, 8:15:00, 8:30:00 | 1 | - | 6,137 | 44 / 252 ms |
+| Thu Nov 5 | none | 0 | - | 6,144 | 41 / 247 ms |
+| Wed Nov 4 | 7:15:00, 8:00:00, 8:15:00, 8:30:00 | 1 | - | 6,142 | 42 / 253 ms |
 | Tue Nov 3 | none | 0 | - | 6,132 | 74 / 279 ms |
 | Mon Nov 2 | none | 0 | - | 6,154 | 11 / 132 ms |
 | Sun Nov 1 | none | 0 | - | 6,146 | 39 / 235 ms |
@@ -48,6 +53,14 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 
 | Posted (ET) | Apartment | Zone | Floor | Beds | Sq ft | Rent | $/sq ft | Min. income | Finish | Layout | Features | Faces | Dream rating | Listed for | Qualified | Auto-apply |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Nov 6 8:30:00 AM | 13-A, 441 East 20th Street | 20th St front | 13 | 1 | 944 | $4,994 | $5.29 | $171,207 | Platinum | [150](floorplans/150.png) | wall A/C, PS 40 zone, Downtown view, closet system, Wood flooring |  |  | 90 min | no |  |
+| Nov 6 8:15:00 AM | 06-C, 11 Stuyvesant Oval | Oval | 6 | 1 | 745 | $3,450 | $4.63 | $118,286 | Classic | [107](floorplans/107.png) | wood floors, renovated bath |  |  | 18 min | no |  |
+| Nov 6 8:00:00 AM | 07-F, 1 Stuyvesant Oval | Oval | 7 | 2 | 932 | $3,263 | $3.50 | $111,883 | Blank | [124](floorplans/124.png) | stainless appliances, Oval views | ENE |  | 39.0 s | no |  |
+| Nov 6 7:15:00 AM | 0M-D, 545 East 14th Street | 14th St front | M | 1 | 764 | $2,234 | $2.92 | $76,603 | Blank | [110](floorplans/110.png) | stainless appliances |  |  | 71.0 s | yes |  |
+| Nov 4 8:30:00 AM | 07-A, 330 First Avenue | First Ave front | 7 | 2 | 967 | $5,631 | $5.82 | $193,063 | Classic | [131](floorplans/131.png) | wood floors, PS 40 zone, renovated bath |  |  | 8 min | no |  |
+| Nov 4 8:15:00 AM | 05-F, 5 Stuyvesant Oval | Oval | 5 | 1 | 745 | $2,184 | $2.93 | $74,875 | Blank | [107](floorplans/107.png) | stainless appliances |  | price match | 35.0 s | yes |  |
+| Nov 4 8:00:00 AM | 10-A, 11 Stuyvesant Oval | Oval | 10 | 1 | 771 | $4,878 | $6.33 | $167,252 | Platinum | [102](floorplans/102.png) | dishwasher, wall A/C |  |  | 79.0 s | no |  |
+| Nov 4 7:15:00 AM | 09-F, 451 East 14th Street | interior | 9 | 1 | 745 | $4,381 | $5.88 | $150,190 | Platinum | [107](floorplans/107.png) | dishwasher, wall A/C |  |  | 39 min | no |  |
 | Oct 13 8:00:00 AM | 06-D, 605 East 14th Street | 14th St front | 6 | 1 | 764 | $2,125 | $2.78 | $72,847 | Blank | [108](floorplans/108.png) | stainless appliances |  | price match | 25.0 s | yes | submitted, browser |
 | Oct 13 7:15:00 AM | 06-H, 17 Stuyvesant Oval | Oval | 6 | 1 | 764 | $2,081 | $2.72 | $71,335 | Blank | [108](floorplans/108.png) | stainless appliances |  | price match | 53.0 s | yes | submitted, browser |
 | Oct 13 7:15:00 AM | 0M-D, 545 East 14th Street | 14th St front | M | 1 | 764 | $2,234 | $2.92 | $76,603 | Blank | [110](floorplans/110.png) | stainless appliances |  |  | 81.0 s | yes | submitted, browser |
@@ -72,19 +85,22 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 
 | Building | Zone | The Oval | Walk to the L | Units seen | Cheapest 1 bed | Cheapest 2 bed | Oval views listed |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| 11 Stuyvesant Oval | Oval | windows face SE | 3.8 min | 2 | $3,450 |  |  |
+| 545 East 14th Street | 14th St front |  | 2.2 min | 2 | $2,234 |  |  |
+| 330 First Avenue | First Ave front |  | 5.5 min | 2 |  | $2,787 |  |
+| 5 Stuyvesant Oval | Oval | windows face ESE | 3.1 min | 2 | $2,184 |  |  |
+| 451 East 14th Street | interior |  | 2.2 min | 2 | $4,381 |  |  |
+| 441 East 20th Street | 20th St front |  | 7.2 min | 1 | $4,994 |  |  |
+| 1 Stuyvesant Oval | Oval | windows face ENE | 2.2 min | 1 |  | $3,263 | 1 |
 | 605 East 14th Street | 14th St front |  | 2.9 min | 1 | $2,125 |  |  |
 | 17 Stuyvesant Oval | Oval | windows face SE | 4.2 min | 1 | $2,081 |  |  |
-| 545 East 14th Street | 14th St front |  | 2.2 min | 1 | $2,234 |  |  |
 | 610 East 20th Street | 20th St front |  | 7.9 min | 1 |  |  |  |
 | 445 East 14th Street | 14th St front |  | 1.4 min | 1 | $2,203 |  |  |
 | 647 East 14th Street | interior |  | 3.6 min | 1 |  | $3,067 |  |
-| 330 First Avenue | First Ave front |  | 5.5 min | 1 |  | $2,787 |  |
 | 510 East 20th Street | 20th St front |  | 5.6 min | 1 |  | $2,644 |  |
 | 18 Stuyvesant Oval | Oval | windows face WSW | 5.2 min | 1 |  | $2,648 | 1 |
 | 405 East 14th Street | 14th St front |  | 0.8 min | 1 | $2,078 |  |  |
 | 530 East 20th Street | 20th St front |  | 6.7 min | 1 | $3,041 |  |  |
-| 5 Stuyvesant Oval | Oval | windows face ESE | 3.1 min | 1 | $2,184 |  |  |
-| 451 East 14th Street | interior |  | 2.2 min | 1 | $4,381 |  |  |
 | 455 East 14th Street | interior |  | 2.1 min | 1 | $2,033 |  |  |
 | 277 Avenue C | Avenue C front |  | 7 min | 1 |  | $4,503 |  |
 | 653 East 14th Street | interior |  | 4.8 min | 1 | $4,471 |  |  |
@@ -94,24 +110,27 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 
 | Layout | Beds | Sq ft | Seen | Rents | Rooms | Floorplan |
 | --- | --- | --- | --- | --- | --- | --- |
-| 102 | 1 | 771 | 2 | $2,203-$3,041 | living 12’0” x 18’7”, bedroom 15’0” x 12’0”, dining 9’6” x 9’4”, 4 closets | <a href="floorplans/102.png"><img src="floorplans/102.png" width="140" alt="layout 102"></a> |
+| 102 | 1 | 771 | 3 | $2,203-$4,878 | living 12’0” x 18’7”, bedroom 15’0” x 12’0”, dining 9’6” x 9’4”, 4 closets | <a href="floorplans/102.png"><img src="floorplans/102.png" width="140" alt="layout 102"></a> |
 | 105 | 1 | 790 | 1 | $4,405 | living 12’0” x 18’8”, bedroom 10’4” x 18’8”, dining 8’3” x 9’5”, 4 closets | <a href="floorplans/105.png"><img src="floorplans/105.png" width="140" alt="layout 105"></a> |
-| 107 | 1 | 745 | 3 | $2,184-$4,471 | living 12’0” x 18’8”, bedroom 10’4” x 18’8”, dining 8’2” x 9’6”, 4 closets | <a href="floorplans/107.png"><img src="floorplans/107.png" width="140" alt="layout 107"></a> |
+| 107 | 1 | 745 | 6 | $2,184-$4,471 | living 12’0” x 18’8”, bedroom 10’4” x 18’8”, dining 8’2” x 9’6”, 4 closets | <a href="floorplans/107.png"><img src="floorplans/107.png" width="140" alt="layout 107"></a> |
 | 108 | 1 | 764 | 2 | $2,081-$2,125 | living 12’1” x 18’8”, bedroom 15’0” x 12’0”, dining 9’6” x 8’1”, 4 closets | <a href="floorplans/108.png"><img src="floorplans/108.png" width="140" alt="layout 108"></a> |
-| 110 | 1 | 764 | 1 | $2,234 | living 11’11” x 18’8”, bedroom 15’0” x 12’0”, dining 9’6” x 9’4”, 4 closets | <a href="floorplans/110.png"><img src="floorplans/110.png" width="140" alt="layout 110"></a> |
+| 110 | 1 | 764 | 2 | $2,234 | living 11’11” x 18’8”, bedroom 15’0” x 12’0”, dining 9’6” x 9’4”, 4 closets | <a href="floorplans/110.png"><img src="floorplans/110.png" width="140" alt="layout 110"></a> |
 | 119 | 1 | 749 | 2 | $2,033-$2,078 | living 12’0” x 19’4”, bedroom 12’8” x 14’0”, dining 8’2” x 10’2”, 4 closets | <a href="floorplans/119.png"><img src="floorplans/119.png" width="140" alt="layout 119"></a> |
+| 150 | 1 | 944 | 1 | $4,994 | living room | dining room 255” x 151”58” x 60”, bedroom 151” x 138”, 4 closets | <a href="floorplans/150.png"><img src="floorplans/150.png" width="140" alt="layout 150"></a> |
 | 123 | 2 | 932 | 1 | $2,644 | living 12’0” x 18’8”, bedroom 15’0” x 12’0”, bedroom 2 9’2” x 14’4”, dining 8’4” x 9’6”, 5 closets | <a href="floorplans/123.png"><img src="floorplans/123.png" width="140" alt="layout 123"></a> |
-| 124 | 2 | 932 | 1 | $4,503 | living 12’0” x 18’8”, bedroom 11’11” x 15’0”, bedroom 2 9’2” x 14’3”, dining 9’6” x 8’2”, 5 closets | <a href="floorplans/124.png"><img src="floorplans/124.png" width="140" alt="layout 124"></a> |
+| 124 | 2 | 932 | 2 | $3,263-$4,503 | living 12’0” x 18’8”, bedroom 11’11” x 15’0”, bedroom 2 9’2” x 14’3”, dining 9’6” x 8’2”, 5 closets | <a href="floorplans/124.png"><img src="floorplans/124.png" width="140" alt="layout 124"></a> |
 | 125 | 2 | 948 | 1 | $2,648 | living 12’0” x 18’8”, bedroom 15’0” x 12’0”, bedroom 2 9’2” x 14’4”, dining 9’2” x 9’6”, 5 closets | <a href="floorplans/125.png"><img src="floorplans/125.png" width="140" alt="layout 125"></a> |
 | 126 | 2 | 955 | 2 | $2,787-$3,067 | living 12’0” x 18’8”, bedroom 15’2” x 12’0”, bedroom 2 9’2” x 14’4”, dining 8’4” x 9’6”, 5 closets | <a href="floorplans/126_st2bedclassic.png"><img src="floorplans/126_st2bedclassic.png" width="140" alt="layout 126"></a> |
+| 131 | 2 | 967 | 1 | $5,631 | living 12’0” x 18’8”, bedroom 11’11” x 15’0”, bedroom 2 9’3” x 14’3”, dining 8’2” x 9’6”, 5 closets | <a href="floorplans/131.png"><img src="floorplans/131.png" width="140" alt="layout 131"></a> |
 | 141 | 3 | 1148 | 1 | $5,444 | living 12’0” x 18’8”, bedroom 10’8” x 18’0”, bedroom 2 9’4” x 14’11”, bedroom 3 9’3” x 14’5”, dining 9’6” x 8’2”, 6 closets | <a href="floorplans/141.png"><img src="floorplans/141.png" width="140" alt="layout 141"></a> |
 
 ## Patterns
 
-- **Posting times** (ET, all days): 7:15 ×8, 7:30 ×4, 8:00 ×4, 8:15 ×1
-- **Units by weekday:** Mon 4, Tue 4, Wed 2, Thu 4, Fri 3
-- **How long units at or under your limit stay listed:** median 40.0 s (fastest 25.0 s, 5 units)
-- **How long units over your limit stay listed:** median 2 min (fastest 90.0 s, 2 units)
+- **Posting times** (ET, all days): 7:15 ×10, 7:30 ×4, 8:00 ×6, 8:15 ×3, 8:30 ×2
+- **Units by weekday:** Mon 4, Tue 4, Wed 6, Thu 4, Fri 7
+- **How long units at or under your limit stay listed:** median 40.0 s (fastest 25.0 s, 7 units)
+- **How long units over your limit stay listed:** median 6 min (fastest 39.0 s, 8 units)
+- **When on the quarter hour they're posted** (their clock, s): -0.14 to +0.11, -0.14 to +0.11, -0.14 to +0.11, -0.14 to +0.11, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.12
 - **Our applications:** 2 sent (2 browser); median 1.1 s from the unit appearing to sending
 - **All auto-apply results so far:** 5 submitted
 
@@ -119,28 +138,32 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 
 | Code | Means | Units |
 | --- | --- | --- |
-| IBSS | Stainless steel appliances | 12 |
-| PS40 | PS40 School District | 5 |
-| DW18 | Dishwasher | 2 |
-| NFF | Natural finish wood flooring | 2 |
-| ATW2 | Through wall A/C | 1 |
+| IBSS | Stainless steel appliances | 15 |
+| PS40 | PS40 School District | 7 |
+| ATW2 | Through wall A/C | 4 |
+| DW18 | Dishwasher | 4 |
+| NFF | Natural finish wood flooring | 4 |
+| MAVM | Renovated bathroom | 3 |
+| ELFA | ELFA closet systems | 2 |
+| VBOV | Oval Views | 2 |
 | ATW3 | 3 Through wall A/C Units | 1 |
-| ELFA | ELFA closet systems | 1 |
-| MAVM | Renovated bathroom | 1 |
+| DTVW | Downtown view | 1 |
 | OKU | Open kitchen with breakfast bar | 1 |
 | PBAC | Extra closet space | 1 |
 | PBGK | Galley kitchen | 1 |
-| VBOV | Oval Views | 1 |
-| FS06 | 6th floor | 4 |
+| PWF | Wood flooring | 1 |
+| FS06 | 6th floor | 5 |
+| zCRRE | Platinum finish | 5 |
+| zMET | Classic finish | 4 |
 | FS02 | 2nd floor | 3 |
+| FS10 | 10th floor | 3 |
 | FS03 | 3rd floor | 2 |
-| FS10 | 10th floor | 2 |
-| zCRRE | Platinum finish | 2 |
-| zMET | Classic finish | 2 |
+| FS05 | 5th floor | 2 |
+| FS07 | 7th floor | 2 |
+| FS09 | 9th floor | 2 |
+| FS0M | Main level | 2 |
 | FS01 | 1st floor | 1 |
 | FS04 | 4th Floor | 1 |
-| FS05 | 5th floor | 1 |
 | FS08 | 8th floor | 1 |
-| FS09 | 9th floor | 1 |
-| FS0M | Main level | 1 |
+| FS13 | 13th floor | 1 |
 | zROSE | Modern finish | 1 |

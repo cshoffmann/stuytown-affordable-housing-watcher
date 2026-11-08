@@ -1,0 +1,139 @@
+{
+  "applier": null,
+  "listings_api": {
+    "connections": {
+      "kept-open connection": 6104,
+      "new connection": 38
+    },
+    "distinct_responses": 5,
+    "etag": {
+      "seen": false
+    },
+    "failures": {},
+    "headers": {
+      "access-control-allow-origin": {
+        "*": 6142
+      },
+      "connection": {
+        "close": 37,
+        "keep-alive": 6105
+      },
+      "strict-transport-security": {
+        "max-age=15724800; includeSubDomains": 6142
+      },
+      "x-cache": {
+        "CONFIG_NOCACHE": 6142
+      }
+    },
+    "headers_present": {
+      "x-azure-ref": 6142
+    },
+    "requests": 6142,
+    "response_bytes": {
+      "max": 1986,
+      "min": 42
+    },
+    "response_ms": {
+      "max": 2044.7,
+      "median": 41.5,
+      "min": 30.2,
+      "p90": 54.6,
+      "p99": 252.7
+    },
+    "statuses": {
+      "200": 6142
+    },
+    "their_clock_minus_ours_exact_s": {
+      "at_least": -0.03,
+      "at_most": 0.25,
+      "best_guess": 0.11,
+      "consistent": true
+    },
+    "their_clock_minus_ours_s": {
+      "max": -0.0,
+      "median": -0.0,
+      "min": -0.8,
+      "p90": -0.0,
+      "p99": -0.0
+    }
+  },
+  "pace": [],
+  "run": {
+    "ended_utc": "2026-11-04T15:00:00.001Z",
+    "started_utc": "2026-11-04T11:59:00.000Z"
+  },
+  "units": {
+    "P~NYST31~B~005~U~05-F": {
+      "address": "5 Stuyvesant Oval",
+      "apartment": "05-F",
+      "first_seen_utc": "2026-11-04T13:15:00.000Z",
+      "income_requirement": 74875.2,
+      "last_seen_utc": "2026-11-04T13:15:35Z",
+      "listed_for_seconds": 35.0,
+      "not_listed_at_utc": "2026-11-04T13:14:59.750Z",
+      "posted_vs_quarter_hour_their_clock_s": [
+        -0.14,
+        0.11
+      ],
+      "posted_within_seconds": 0.25,
+      "qualifies_for_auto_apply": true,
+      "removal_confirmed_utc": "2026-11-04T13:16:37.000Z",
+      "rent": 2183.86,
+      "seen_seconds_after_quarter_hour": 0.0
+    },
+    "P~NYST31~B~011~U~10-A": {
+      "address": "11 Stuyvesant Oval",
+      "apartment": "10-A",
+      "first_seen_utc": "2026-11-04T13:00:00.000Z",
+      "income_requirement": 167251.55,
+      "last_seen_utc": "2026-11-04T13:01:19Z",
+      "listed_for_seconds": 79.0,
+      "not_listed_at_utc": "2026-11-04T12:59:59.750Z",
+      "posted_vs_quarter_hour_their_clock_s": [
+        -0.14,
+        0.11
+      ],
+      "posted_within_seconds": 0.25,
+      "qualifies_for_auto_apply": false,
+      "removal_confirmed_utc": "2026-11-04T13:02:21.000Z",
+      "rent": 4878.17,
+      "seen_seconds_after_quarter_hour": 0.0
+    },
+    "P~NYST31~B~330~U~07-A": {
+      "address": "330 First Avenue",
+      "apartment": "07-A",
+      "first_seen_utc": "2026-11-04T13:30:00.000Z",
+      "income_requirement": 193062.86,
+      "last_seen_utc": "2026-11-04T13:37:39Z",
+      "listed_for_seconds": 459.0,
+      "not_listed_at_utc": "2026-11-04T13:29:59.750Z",
+      "posted_vs_quarter_hour_their_clock_s": [
+        -0.14,
+        0.11
+      ],
+      "posted_within_seconds": 0.25,
+      "qualifies_for_auto_apply": false,
+      "removal_confirmed_utc": "2026-11-04T13:38:41.000Z",
+      "rent": 5631.0,
+      "seen_seconds_after_quarter_hour": 0.0
+    },
+    "P~NYST31~B~451~U~09-F": {
+      "address": "451 East 14th Street",
+      "apartment": "09-F",
+      "first_seen_utc": "2026-11-04T12:15:00.000Z",
+      "income_requirement": 150189.94,
+      "last_seen_utc": "2026-11-04T12:53:53Z",
+      "listed_for_seconds": 2333.0,
+      "not_listed_at_utc": "2026-11-04T12:14:59.750Z",
+      "posted_vs_quarter_hour_their_clock_s": [
+        -0.14,
+        0.11
+      ],
+      "posted_within_seconds": 0.25,
+      "qualifies_for_auto_apply": false,
+      "removal_confirmed_utc": "2026-11-04T12:54:55.000Z",
+      "rent": 4380.54,
+      "seen_seconds_after_quarter_hour": 0.0
+    }
+  }
+}

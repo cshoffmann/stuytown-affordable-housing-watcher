@@ -2192,5 +2192,1168 @@
         "listed_for_seconds": 25.0
       }
     ]
+  },
+  {
+    "event": "new",
+    "detected_at_utc": "2026-11-04T12:15:00Z",
+    "unit_count": 1,
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~451~U~09-F",
+        "apartment": "09-F",
+        "address": "451 East 14th Street",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 4380.54,
+        "income_requirement": 150189.94,
+        "available_date": "2026-10-10T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~451~U~09-F",
+        "data": {
+          "unitSpk": "P~NYST31~B~451~U~09-F",
+          "unitFloor": "09",
+          "name": "09-F",
+          "property": {
+            "name": "Stuyvesant Town",
+            "propertySpk": "P~103ST",
+            "commonImages": []
+          },
+          "building": {
+            "address": "451 EAST 14TH STREET",
+            "latitude": "40.73165",
+            "longitude": "-73.98032",
+            "buildingId": "338",
+            "buildingName": "451 EAST 14TH STREET",
+            "transportationDescription": "Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.",
+            "transports": [
+              {
+                "imageUrl": "/media/3khh00cg/4.png",
+                "description": "14_4-train"
+              },
+              {
+                "imageUrl": "/media/vk3nwm2c/5.png",
+                "description": "15_5-train"
+              },
+              {
+                "imageUrl": "/media/w45lmn1h/6.png",
+                "description": "16_6-train"
+              },
+              {
+                "imageUrl": "/media/wlrdmxwl/r.png",
+                "description": "26_R-train"
+              },
+              {
+                "imageUrl": "/media/g00l3sei/w.png",
+                "description": "27_W-train"
+              },
+              {
+                "imageUrl": "/media/t02dfmty/l.png",
+                "description": "22_L"
+              },
+              {
+                "imageUrl": "/media/hvwoaov3/m14.png",
+                "description": "30_M14"
+              },
+              {
+                "imageUrl": "/media/trsfb4aw/east-river-ferry.jpg",
+                "description": "37_RiverFerry"
+              },
+              {
+                "imageUrl": "/media/ipvba2uo/q.png",
+                "description": "25_Q"
+              },
+              {
+                "imageUrl": "/media/vx5fhuim/n.png",
+                "description": "24_N"
+              },
+              {
+                "imageUrl": "/media/1ojhg5wj/citbike.png",
+                "description": "35_CityBike"
+              }
+            ]
+          },
+          "finish": "Platinum",
+          "style": {
+            "id": 580,
+            "name": "107"
+          },
+          "incomeRequirement": 150189.94,
+          "bedrooms": 1,
+          "bathrooms": 1,
+          "sqft": 745,
+          "availableDate": "2026-10-10T00:00:00Z",
+          "price": 4380.54,
+          "unitRates": {
+            "12": 4380.54,
+            "24": 4380.54
+          },
+          "isFlex": false,
+          "floorplan": {
+            "floorplanSvg": "/media/k2inbnne/107.svg",
+            "staticImageUrl": null
+          },
+          "description": null,
+          "virtualTourUrl": null,
+          "version": 7,
+          "amenities": [
+            {
+              "searchCode": null,
+              "code": "DW18",
+              "friendlyDescription": "Dishwasher"
+            },
+            {
+              "searchCode": null,
+              "code": "FS09",
+              "friendlyDescription": "9th floor"
+            },
+            {
+              "searchCode": null,
+              "code": "zCRRE",
+              "friendlyDescription": "Platinum finish"
+            },
+            {
+              "searchCode": null,
+              "code": "ATW2",
+              "friendlyDescription": "Through wall A/C"
+            }
+          ],
+          "images": []
+        },
+        "qualifies_for_auto_apply": false
+      }
+    ]
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-11-04T12:54:55Z",
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~451~U~09-F",
+        "apartment": "09-F",
+        "address": "451 East 14th Street",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 4380.54,
+        "income_requirement": 150189.94,
+        "available_date": "2026-10-10T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~451~U~09-F",
+        "first_seen_utc": "2026-11-04T12:15:00Z",
+        "last_seen_utc": "2026-11-04T12:53:53Z",
+        "listed_for_seconds": 2333.0
+      }
+    ]
+  },
+  {
+    "event": "new",
+    "detected_at_utc": "2026-11-04T13:00:00Z",
+    "unit_count": 1,
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~011~U~10-A",
+        "apartment": "10-A",
+        "address": "11 Stuyvesant Oval",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 4878.17,
+        "income_requirement": 167251.55,
+        "available_date": "2026-09-25T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~011~U~10-A",
+        "data": {
+          "unitSpk": "P~NYST31~B~011~U~10-A",
+          "unitFloor": "10",
+          "name": "10-A",
+          "property": {
+            "name": "Stuyvesant Town",
+            "propertySpk": "P~103ST",
+            "commonImages": []
+          },
+          "building": {
+            "address": "11 STUYVESANT OVAL",
+            "latitude": "40.732468",
+            "longitude": "-73.978745",
+            "buildingId": "309",
+            "buildingName": "11 STUYVESANT OVAL",
+            "transportationDescription": "Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.",
+            "transports": [
+              {
+                "imageUrl": "/media/3khh00cg/4.png",
+                "description": "14_4-train"
+              },
+              {
+                "imageUrl": "/media/vk3nwm2c/5.png",
+                "description": "15_5-train"
+              },
+              {
+                "imageUrl": "/media/w45lmn1h/6.png",
+                "description": "16_6-train"
+              },
+              {
+                "imageUrl": "/media/wlrdmxwl/r.png",
+                "description": "26_R-train"
+              },
+              {
+                "imageUrl": "/media/g00l3sei/w.png",
+                "description": "27_W-train"
+              },
+              {
+                "imageUrl": "/media/t02dfmty/l.png",
+                "description": "22_L"
+              },
+              {
+                "imageUrl": "/media/rcvl4pqk/m23.png",
+                "description": "32_M23"
+              },
+              {
+                "imageUrl": "/media/trsfb4aw/east-river-ferry.jpg",
+                "description": "37_RiverFerry"
+              },
+              {
+                "imageUrl": "/media/ipvba2uo/q.png",
+                "description": "25_Q"
+              },
+              {
+                "imageUrl": "/media/vx5fhuim/n.png",
+                "description": "24_N"
+              },
+              {
+                "imageUrl": "/media/1ojhg5wj/citbike.png",
+                "description": "35_CityBike"
+              }
+            ]
+          },
+          "finish": "Platinum",
+          "style": {
+            "id": 575,
+            "name": "102"
+          },
+          "incomeRequirement": 167251.55,
+          "bedrooms": 1,
+          "bathrooms": 1,
+          "sqft": 771,
+          "availableDate": "2026-09-25T00:00:00Z",
+          "price": 4878.17,
+          "unitRates": {
+            "12": 4878.17,
+            "24": 4949.21
+          },
+          "isFlex": false,
+          "floorplan": {
+            "floorplanSvg": "/media/4xqcm3ou/102.svg",
+            "staticImageUrl": null
+          },
+          "description": null,
+          "virtualTourUrl": null,
+          "version": 5,
+          "amenities": [
+            {
+              "searchCode": null,
+              "code": "DW18",
+              "friendlyDescription": "Dishwasher"
+            },
+            {
+              "searchCode": null,
+              "code": "zCRRE",
+              "friendlyDescription": "Platinum finish"
+            },
+            {
+              "searchCode": null,
+              "code": "FS10",
+              "friendlyDescription": "10th floor"
+            },
+            {
+              "searchCode": null,
+              "code": "ATW2",
+              "friendlyDescription": "Through wall A/C"
+            }
+          ],
+          "images": []
+        },
+        "qualifies_for_auto_apply": false
+      }
+    ]
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-11-04T13:02:21Z",
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~011~U~10-A",
+        "apartment": "10-A",
+        "address": "11 Stuyvesant Oval",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 4878.17,
+        "income_requirement": 167251.55,
+        "available_date": "2026-09-25T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~011~U~10-A",
+        "first_seen_utc": "2026-11-04T13:00:00Z",
+        "last_seen_utc": "2026-11-04T13:01:19Z",
+        "listed_for_seconds": 79.0
+      }
+    ]
+  },
+  {
+    "event": "new",
+    "detected_at_utc": "2026-11-04T13:15:00Z",
+    "unit_count": 1,
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~005~U~05-F",
+        "apartment": "05-F",
+        "address": "5 Stuyvesant Oval",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 2183.86,
+        "income_requirement": 74875.2,
+        "available_date": "2026-11-14T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~005~U~05-F",
+        "data": {
+          "unitSpk": "P~NYST31~B~005~U~05-F",
+          "unitFloor": "05",
+          "name": "05-F",
+          "property": {
+            "name": "Stuyvesant Town",
+            "propertySpk": "P~103ST",
+            "commonImages": []
+          },
+          "building": {
+            "address": "5 STUYVESANT OVAL",
+            "latitude": "40.732014",
+            "longitude": "-73.97898",
+            "buildingId": "353",
+            "buildingName": "5 STUYVESANT OVAL",
+            "transportationDescription": "Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.",
+            "transports": [
+              {
+                "imageUrl": "/media/3khh00cg/4.png",
+                "description": "14_4-train"
+              },
+              {
+                "imageUrl": "/media/vk3nwm2c/5.png",
+                "description": "15_5-train"
+              },
+              {
+                "imageUrl": "/media/w45lmn1h/6.png",
+                "description": "16_6-train"
+              },
+              {
+                "imageUrl": "/media/wlrdmxwl/r.png",
+                "description": "26_R-train"
+              },
+              {
+                "imageUrl": "/media/g00l3sei/w.png",
+                "description": "27_W-train"
+              },
+              {
+                "imageUrl": "/media/t02dfmty/l.png",
+                "description": "22_L"
+              },
+              {
+                "imageUrl": "/media/hvwoaov3/m14.png",
+                "description": "30_M14"
+              },
+              {
+                "imageUrl": "/media/trsfb4aw/east-river-ferry.jpg",
+                "description": "37_RiverFerry"
+              },
+              {
+                "imageUrl": "/media/ipvba2uo/q.png",
+                "description": "25_Q"
+              },
+              {
+                "imageUrl": "/media/vx5fhuim/n.png",
+                "description": "24_N"
+              },
+              {
+                "imageUrl": "/media/1ojhg5wj/citbike.png",
+                "description": "35_CityBike"
+              }
+            ]
+          },
+          "finish": "Blank",
+          "style": {
+            "id": 580,
+            "name": "107"
+          },
+          "incomeRequirement": 74875.2,
+          "bedrooms": 1,
+          "bathrooms": 1,
+          "sqft": 745,
+          "availableDate": "2026-11-14T00:00:00Z",
+          "price": 2183.86,
+          "unitRates": {
+            "12": 2183.86,
+            "24": 2183.86
+          },
+          "isFlex": false,
+          "floorplan": {
+            "floorplanSvg": "/media/k2inbnne/107.svg",
+            "staticImageUrl": null
+          },
+          "description": null,
+          "virtualTourUrl": null,
+          "version": 4,
+          "amenities": [
+            {
+              "searchCode": null,
+              "code": "IBSS",
+              "friendlyDescription": "Stainless steel appliances"
+            },
+            {
+              "searchCode": null,
+              "code": "FS05",
+              "friendlyDescription": "5th floor"
+            }
+          ],
+          "images": []
+        },
+        "qualifies_for_auto_apply": true
+      }
+    ]
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-11-04T13:16:37Z",
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~005~U~05-F",
+        "apartment": "05-F",
+        "address": "5 Stuyvesant Oval",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 2183.86,
+        "income_requirement": 74875.2,
+        "available_date": "2026-11-14T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~005~U~05-F",
+        "first_seen_utc": "2026-11-04T13:15:00Z",
+        "last_seen_utc": "2026-11-04T13:15:35Z",
+        "listed_for_seconds": 35.0
+      }
+    ]
+  },
+  {
+    "event": "new",
+    "detected_at_utc": "2026-11-04T13:30:00Z",
+    "unit_count": 1,
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~330~U~07-A",
+        "apartment": "07-A",
+        "address": "330 First Avenue",
+        "bedrooms": 2,
+        "bathrooms": 1,
+        "price": 5631.0,
+        "income_requirement": 193062.86,
+        "available_date": "2026-09-22T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~330~U~07-A",
+        "data": {
+          "unitSpk": "P~NYST31~B~330~U~07-A",
+          "unitFloor": "07",
+          "name": "07-A",
+          "property": {
+            "name": "Stuyvesant Town",
+            "propertySpk": "P~103ST",
+            "commonImages": []
+          },
+          "building": {
+            "address": "330 FIRST AVENUE",
+            "latitude": "40.734276",
+            "longitude": "-73.980064",
+            "buildingId": "352",
+            "buildingName": "330 FIRST AVENUE",
+            "transportationDescription": "Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.",
+            "transports": [
+              {
+                "imageUrl": "/media/3khh00cg/4.png",
+                "description": "14_4-train"
+              },
+              {
+                "imageUrl": "/media/vk3nwm2c/5.png",
+                "description": "15_5-train"
+              },
+              {
+                "imageUrl": "/media/w45lmn1h/6.png",
+                "description": "16_6-train"
+              },
+              {
+                "imageUrl": "/media/wlrdmxwl/r.png",
+                "description": "26_R-train"
+              },
+              {
+                "imageUrl": "/media/g00l3sei/w.png",
+                "description": "27_W-train"
+              },
+              {
+                "imageUrl": "/media/t02dfmty/l.png",
+                "description": "22_L"
+              },
+              {
+                "imageUrl": "/media/rcvl4pqk/m23.png",
+                "description": "32_M23"
+              },
+              {
+                "imageUrl": "/media/trsfb4aw/east-river-ferry.jpg",
+                "description": "37_RiverFerry"
+              },
+              {
+                "imageUrl": "/media/ipvba2uo/q.png",
+                "description": "25_Q"
+              },
+              {
+                "imageUrl": "/media/vx5fhuim/n.png",
+                "description": "24_N"
+              },
+              {
+                "imageUrl": "/media/1ojhg5wj/citbike.png",
+                "description": "35_CityBike"
+              }
+            ]
+          },
+          "finish": "Classic",
+          "style": {
+            "id": 603,
+            "name": "131"
+          },
+          "incomeRequirement": 193062.86,
+          "bedrooms": 2,
+          "bathrooms": 1,
+          "sqft": 967,
+          "availableDate": "2026-09-22T00:00:00Z",
+          "price": 5631.0,
+          "unitRates": {
+            "12": 5631,
+            "24": 5713
+          },
+          "isFlex": false,
+          "floorplan": {
+            "floorplanSvg": "/media/qigjdmka/131.svg",
+            "staticImageUrl": null
+          },
+          "description": null,
+          "virtualTourUrl": null,
+          "version": 2,
+          "amenities": [
+            {
+              "searchCode": null,
+              "code": "NFF",
+              "friendlyDescription": "Natural finish wood flooring"
+            },
+            {
+              "searchCode": "PS40Code",
+              "code": "PS40",
+              "friendlyDescription": "PS40 School District"
+            },
+            {
+              "searchCode": null,
+              "code": "FS07",
+              "friendlyDescription": "7th floor"
+            },
+            {
+              "searchCode": null,
+              "code": "zMET",
+              "friendlyDescription": "Classic finish"
+            },
+            {
+              "searchCode": null,
+              "code": "MAVM",
+              "friendlyDescription": "Renovated bathroom"
+            }
+          ],
+          "images": []
+        },
+        "qualifies_for_auto_apply": false
+      }
+    ]
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-11-04T13:38:41Z",
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~330~U~07-A",
+        "apartment": "07-A",
+        "address": "330 First Avenue",
+        "bedrooms": 2,
+        "bathrooms": 1,
+        "price": 5631.0,
+        "income_requirement": 193062.86,
+        "available_date": "2026-09-22T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~330~U~07-A",
+        "first_seen_utc": "2026-11-04T13:30:00Z",
+        "last_seen_utc": "2026-11-04T13:37:39Z",
+        "listed_for_seconds": 459.0
+      }
+    ]
+  },
+  {
+    "event": "new",
+    "detected_at_utc": "2026-11-06T12:15:00Z",
+    "unit_count": 1,
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~545~U~0M-D",
+        "apartment": "0M-D",
+        "address": "545 East 14th Street",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 2234.25,
+        "income_requirement": 76602.86,
+        "available_date": "2026-10-24T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~545~U~0M-D",
+        "data": {
+          "unitSpk": "P~NYST31~B~545~U~0M-D",
+          "unitFloor": "0M",
+          "name": "0M-D",
+          "property": {
+            "name": "Stuyvesant Town",
+            "propertySpk": "P~103ST",
+            "commonImages": []
+          },
+          "building": {
+            "address": "545 EAST 14TH STREET",
+            "latitude": "40.729874",
+            "longitude": "-73.978195",
+            "buildingId": "349",
+            "buildingName": "545 EAST 14TH STREET",
+            "transportationDescription": "Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.",
+            "transports": [
+              {
+                "imageUrl": "/media/t02dfmty/l.png",
+                "description": "22_L"
+              },
+              {
+                "imageUrl": "/media/w4rlarll/m9.png",
+                "description": "29_M9"
+              },
+              {
+                "imageUrl": "/media/hvwoaov3/m14.png",
+                "description": "30_M14"
+              },
+              {
+                "imageUrl": "/media/trsfb4aw/east-river-ferry.jpg",
+                "description": "37_RiverFerry"
+              },
+              {
+                "imageUrl": "/media/1ojhg5wj/citbike.png",
+                "description": "35_CityBike"
+              }
+            ]
+          },
+          "finish": "Blank",
+          "style": {
+            "id": 583,
+            "name": "110"
+          },
+          "incomeRequirement": 76602.86,
+          "bedrooms": 1,
+          "bathrooms": 1,
+          "sqft": 764,
+          "availableDate": "2026-10-24T00:00:00Z",
+          "price": 2234.25,
+          "unitRates": {
+            "12": 2234.25,
+            "24": 2234.25
+          },
+          "isFlex": false,
+          "floorplan": {
+            "floorplanSvg": "/media/wycf5hbi/110.svg",
+            "staticImageUrl": null
+          },
+          "description": null,
+          "virtualTourUrl": null,
+          "version": 3,
+          "amenities": [
+            {
+              "searchCode": null,
+              "code": "IBSS",
+              "friendlyDescription": "Stainless steel appliances"
+            },
+            {
+              "searchCode": null,
+              "code": "FS0M",
+              "friendlyDescription": "Main level"
+            }
+          ],
+          "images": []
+        },
+        "qualifies_for_auto_apply": true
+      }
+    ]
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-11-06T12:17:13Z",
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~545~U~0M-D",
+        "apartment": "0M-D",
+        "address": "545 East 14th Street",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 2234.25,
+        "income_requirement": 76602.86,
+        "available_date": "2026-10-24T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~545~U~0M-D",
+        "first_seen_utc": "2026-11-06T12:15:00Z",
+        "last_seen_utc": "2026-11-06T12:16:11Z",
+        "listed_for_seconds": 71.0
+      }
+    ]
+  },
+  {
+    "event": "new",
+    "detected_at_utc": "2026-11-06T13:00:00Z",
+    "unit_count": 1,
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~001~U~07-F",
+        "apartment": "07-F",
+        "address": "1 Stuyvesant Oval",
+        "bedrooms": 2,
+        "bathrooms": 1,
+        "price": 3263.24,
+        "income_requirement": 111882.51,
+        "available_date": "2026-11-14T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~001~U~07-F",
+        "data": {
+          "unitSpk": "P~NYST31~B~001~U~07-F",
+          "unitFloor": "07",
+          "name": "07-F",
+          "property": {
+            "name": "Stuyvesant Town",
+            "propertySpk": "P~103ST",
+            "commonImages": []
+          },
+          "building": {
+            "address": "1 STUYVESANT OVAL",
+            "latitude": "40.731396",
+            "longitude": "-73.97878",
+            "buildingId": "282",
+            "buildingName": "1 STUYVESANT OVAL",
+            "transportationDescription": "Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.",
+            "transports": [
+              {
+                "imageUrl": "/media/3khh00cg/4.png",
+                "description": "14_4-train"
+              },
+              {
+                "imageUrl": "/media/vk3nwm2c/5.png",
+                "description": "15_5-train"
+              },
+              {
+                "imageUrl": "/media/w45lmn1h/6.png",
+                "description": "16_6-train"
+              },
+              {
+                "imageUrl": "/media/wlrdmxwl/r.png",
+                "description": "26_R-train"
+              },
+              {
+                "imageUrl": "/media/g00l3sei/w.png",
+                "description": "27_W-train"
+              },
+              {
+                "imageUrl": "/media/t02dfmty/l.png",
+                "description": "22_L"
+              },
+              {
+                "imageUrl": "/media/hvwoaov3/m14.png",
+                "description": "30_M14"
+              },
+              {
+                "imageUrl": "/media/trsfb4aw/east-river-ferry.jpg",
+                "description": "37_RiverFerry"
+              },
+              {
+                "imageUrl": "/media/ipvba2uo/q.png",
+                "description": "25_Q"
+              },
+              {
+                "imageUrl": "/media/vx5fhuim/n.png",
+                "description": "24_N"
+              },
+              {
+                "imageUrl": "/media/1ojhg5wj/citbike.png",
+                "description": "35_CityBike"
+              }
+            ]
+          },
+          "finish": "Blank",
+          "style": {
+            "id": 597,
+            "name": "124"
+          },
+          "incomeRequirement": 111882.51,
+          "bedrooms": 2,
+          "bathrooms": 1,
+          "sqft": 932,
+          "availableDate": "2026-11-14T00:00:00Z",
+          "price": 3263.24,
+          "unitRates": {
+            "12": 3263.24,
+            "24": 3263.24
+          },
+          "isFlex": false,
+          "floorplan": {
+            "floorplanSvg": "/media/ftzm0drw/124.svg",
+            "staticImageUrl": null
+          },
+          "description": null,
+          "virtualTourUrl": null,
+          "version": 2,
+          "amenities": [
+            {
+              "searchCode": null,
+              "code": "IBSS",
+              "friendlyDescription": "Stainless steel appliances"
+            },
+            {
+              "searchCode": null,
+              "code": "FS07",
+              "friendlyDescription": "7th floor"
+            },
+            {
+              "searchCode": null,
+              "code": "VBOV",
+              "friendlyDescription": "Oval Views"
+            }
+          ],
+          "images": []
+        },
+        "qualifies_for_auto_apply": false
+      }
+    ]
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-11-06T13:01:41Z",
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~001~U~07-F",
+        "apartment": "07-F",
+        "address": "1 Stuyvesant Oval",
+        "bedrooms": 2,
+        "bathrooms": 1,
+        "price": 3263.24,
+        "income_requirement": 111882.51,
+        "available_date": "2026-11-14T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~001~U~07-F",
+        "first_seen_utc": "2026-11-06T13:00:00Z",
+        "last_seen_utc": "2026-11-06T13:00:39Z",
+        "listed_for_seconds": 39.0
+      }
+    ]
+  },
+  {
+    "event": "new",
+    "detected_at_utc": "2026-11-06T13:15:00Z",
+    "unit_count": 1,
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~011~U~06-C",
+        "apartment": "06-C",
+        "address": "11 Stuyvesant Oval",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 3450.0,
+        "income_requirement": 118285.71,
+        "available_date": "2026-10-02T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~011~U~06-C",
+        "data": {
+          "unitSpk": "P~NYST31~B~011~U~06-C",
+          "unitFloor": "06",
+          "name": "06-C",
+          "property": {
+            "name": "Stuyvesant Town",
+            "propertySpk": "P~103ST",
+            "commonImages": []
+          },
+          "building": {
+            "address": "11 STUYVESANT OVAL",
+            "latitude": "40.732468",
+            "longitude": "-73.978745",
+            "buildingId": "309",
+            "buildingName": "11 STUYVESANT OVAL",
+            "transportationDescription": "Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.",
+            "transports": [
+              {
+                "imageUrl": "/media/3khh00cg/4.png",
+                "description": "14_4-train"
+              },
+              {
+                "imageUrl": "/media/vk3nwm2c/5.png",
+                "description": "15_5-train"
+              },
+              {
+                "imageUrl": "/media/w45lmn1h/6.png",
+                "description": "16_6-train"
+              },
+              {
+                "imageUrl": "/media/wlrdmxwl/r.png",
+                "description": "26_R-train"
+              },
+              {
+                "imageUrl": "/media/g00l3sei/w.png",
+                "description": "27_W-train"
+              },
+              {
+                "imageUrl": "/media/t02dfmty/l.png",
+                "description": "22_L"
+              },
+              {
+                "imageUrl": "/media/rcvl4pqk/m23.png",
+                "description": "32_M23"
+              },
+              {
+                "imageUrl": "/media/trsfb4aw/east-river-ferry.jpg",
+                "description": "37_RiverFerry"
+              },
+              {
+                "imageUrl": "/media/ipvba2uo/q.png",
+                "description": "25_Q"
+              },
+              {
+                "imageUrl": "/media/vx5fhuim/n.png",
+                "description": "24_N"
+              },
+              {
+                "imageUrl": "/media/1ojhg5wj/citbike.png",
+                "description": "35_CityBike"
+              }
+            ]
+          },
+          "finish": "Classic",
+          "style": {
+            "id": 580,
+            "name": "107"
+          },
+          "incomeRequirement": 118285.71,
+          "bedrooms": 1,
+          "bathrooms": 1,
+          "sqft": 745,
+          "availableDate": "2026-10-02T00:00:00Z",
+          "price": 3450.0,
+          "unitRates": {
+            "12": 3450,
+            "24": 3450
+          },
+          "isFlex": false,
+          "floorplan": {
+            "floorplanSvg": "/media/k2inbnne/107.svg",
+            "staticImageUrl": null
+          },
+          "description": null,
+          "virtualTourUrl": null,
+          "version": 2,
+          "amenities": [
+            {
+              "searchCode": null,
+              "code": "NFF",
+              "friendlyDescription": "Natural finish wood flooring"
+            },
+            {
+              "searchCode": null,
+              "code": "zMET",
+              "friendlyDescription": "Classic finish"
+            },
+            {
+              "searchCode": null,
+              "code": "FS06",
+              "friendlyDescription": "6th floor"
+            },
+            {
+              "searchCode": null,
+              "code": "MAVM",
+              "friendlyDescription": "Renovated bathroom"
+            }
+          ],
+          "images": []
+        },
+        "qualifies_for_auto_apply": false
+      }
+    ]
+  },
+  {
+    "event": "new",
+    "detected_at_utc": "2026-11-06T13:30:00Z",
+    "unit_count": 1,
+    "units": [
+      {
+        "unit_id": "P~NYPC21~B~441~U~13-A",
+        "apartment": "13-A",
+        "address": "441 East 20th Street",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 4993.53,
+        "income_requirement": 171206.73,
+        "available_date": "2026-10-03T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYPC21~B~441~U~13-A",
+        "data": {
+          "unitSpk": "P~NYPC21~B~441~U~13-A",
+          "unitFloor": "13",
+          "name": "13-A",
+          "property": {
+            "name": "Peter Cooper Village",
+            "propertySpk": "P~102PCV",
+            "commonImages": []
+          },
+          "building": {
+            "address": "441 EAST 20TH STREET",
+            "latitude": "40.734543",
+            "longitude": "-73.97775",
+            "buildingId": "256",
+            "buildingName": "441 EAST 20TH STREET",
+            "transportationDescription": "Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.",
+            "transports": [
+              {
+                "imageUrl": "/media/3khh00cg/4.png",
+                "description": "14_4-train"
+              },
+              {
+                "imageUrl": "/media/vk3nwm2c/5.png",
+                "description": "15_5-train"
+              },
+              {
+                "imageUrl": "/media/w45lmn1h/6.png",
+                "description": "16_6-train"
+              },
+              {
+                "imageUrl": "/media/wlrdmxwl/r.png",
+                "description": "26_R-train"
+              },
+              {
+                "imageUrl": "/media/g00l3sei/w.png",
+                "description": "27_W-train"
+              },
+              {
+                "imageUrl": "/media/t02dfmty/l.png",
+                "description": "22_L"
+              },
+              {
+                "imageUrl": "/media/rcvl4pqk/m23.png",
+                "description": "32_M23"
+              },
+              {
+                "imageUrl": "/media/trsfb4aw/east-river-ferry.jpg",
+                "description": "37_RiverFerry"
+              },
+              {
+                "imageUrl": "/media/ipvba2uo/q.png",
+                "description": "25_Q"
+              },
+              {
+                "imageUrl": "/media/vx5fhuim/n.png",
+                "description": "24_N"
+              },
+              {
+                "imageUrl": "/media/1ojhg5wj/citbike.png",
+                "description": "35_CityBike"
+              }
+            ]
+          },
+          "finish": "Platinum",
+          "style": {
+            "id": 522,
+            "name": "150"
+          },
+          "incomeRequirement": 171206.73,
+          "bedrooms": 1,
+          "bathrooms": 1,
+          "sqft": 944,
+          "availableDate": "2026-10-03T00:00:00Z",
+          "price": 4993.53,
+          "unitRates": {
+            "12": 4993.53,
+            "24": 4993.53
+          },
+          "isFlex": false,
+          "floorplan": {
+            "floorplanSvg": "/media/e3el30ku/150.svg",
+            "staticImageUrl": null
+          },
+          "description": null,
+          "virtualTourUrl": null,
+          "version": 3,
+          "amenities": [
+            {
+              "searchCode": null,
+              "code": "zCRRE",
+              "friendlyDescription": "Platinum finish"
+            },
+            {
+              "searchCode": null,
+              "code": "ATW2",
+              "friendlyDescription": "Through wall A/C"
+            },
+            {
+              "searchCode": "PS40Code",
+              "code": "PS40",
+              "friendlyDescription": "PS40 School District"
+            },
+            {
+              "searchCode": "CityViews",
+              "code": "DTVW",
+              "friendlyDescription": "Downtown view"
+            },
+            {
+              "searchCode": null,
+              "code": "FS13",
+              "friendlyDescription": "13th floor"
+            },
+            {
+              "searchCode": null,
+              "code": "ELFA",
+              "friendlyDescription": "ELFA closet systems"
+            },
+            {
+              "searchCode": null,
+              "code": "PWF",
+              "friendlyDescription": "Wood flooring"
+            }
+          ],
+          "images": []
+        },
+        "qualifies_for_auto_apply": false
+      }
+    ]
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-11-06T13:34:05Z",
+    "units": [
+      {
+        "unit_id": "P~NYST31~B~011~U~06-C",
+        "apartment": "06-C",
+        "address": "11 Stuyvesant Oval",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 3450.0,
+        "income_requirement": 118285.71,
+        "available_date": "2026-10-02T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~011~U~06-C",
+        "first_seen_utc": "2026-11-06T13:15:00Z",
+        "last_seen_utc": "2026-11-06T13:33:03Z",
+        "listed_for_seconds": 1083.0
+      }
+    ]
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-11-07T12:01:01Z",
+    "units": [
+      {
+        "unit_id": "P~NYPC21~B~441~U~13-A",
+        "apartment": "13-A",
+        "address": "441 East 20th Street",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 4993.53,
+        "income_requirement": 171206.73,
+        "available_date": "2026-10-03T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYPC21~B~441~U~13-A",
+        "first_seen_utc": "2026-11-06T13:30:00Z",
+        "last_seen_utc": "2026-11-06T14:59:59Z",
+        "listed_for_seconds": 5399.0
+      }
+    ]
   }
 ]

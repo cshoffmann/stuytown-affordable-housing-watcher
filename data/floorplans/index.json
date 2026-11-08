@@ -38,7 +38,8 @@
   },
   "seen_in": [
    "01-A, 530 East 20th Street",
-   "02-A, 445 East 14th Street"
+   "02-A, 445 East 14th Street",
+   "10-A, 11 Stuyvesant Oval"
   ],
   "source": "/media/4xqcm3ou/102.svg",
   "sqft": 771,
@@ -122,7 +123,8 @@
   "seen_in": [
    "02-F, 653 East 14th Street",
    "09-F, 451 East 14th Street",
-   "05-F, 5 Stuyvesant Oval"
+   "05-F, 5 Stuyvesant Oval",
+   "06-C, 11 Stuyvesant Oval"
   ],
   "source": "/media/k2inbnne/107.svg",
   "sqft": 745,
@@ -362,7 +364,8 @@
    "Master Bedroom": "11’11” x 15’0”"
   },
   "seen_in": [
-   "04-B, 277 Avenue C"
+   "04-B, 277 Avenue C",
+   "07-F, 1 Stuyvesant Oval"
   ],
   "source": "/media/ftzm0drw/124.svg",
   "sqft": 932,
@@ -485,6 +488,61 @@
   "sqft": 955,
   "svg": "126_st2bedclassic.svg"
  },
+ "131": {
+  "bathrooms": 1,
+  "bedrooms": 2,
+  "fetched_utc": "2026-11-04T15:00:00Z",
+  "labels": [
+   "Kitchen",
+   "Living Room",
+   "12’0",
+   "”",
+   "x 18’8",
+   "”",
+   "Dining Area",
+   "8’2",
+   "”",
+   "x 9’6",
+   "”",
+   "Bedroom 2",
+   "9’3",
+   "”",
+   "x 14’3",
+   "”",
+   "Closet",
+   "Closet",
+   "Closet",
+   "Closet",
+   "Closet",
+   "Master Bedroom",
+   "11’11",
+   "”",
+   "x 15’0",
+   "”",
+   "Bathroom"
+  ],
+  "layout": "131",
+  "png": "131.png",
+  "rooms": {
+   "Bathroom": "",
+   "Bedroom 2": "9’3” x 14’3”",
+   "Closet": "",
+   "Closet 2": "",
+   "Closet 3": "",
+   "Closet 4": "",
+   "Closet 5": "",
+   "Dining Area": "8’2” x 9’6”",
+   "Kitchen": "",
+   "Living Room": "12’0” x 18’8”",
+   "Master Bedroom": "11’11” x 15’0”"
+  },
+  "seen_in": [
+   "07-A, 330 First Avenue"
+  ],
+  "source": "/media/qigjdmka/131.svg",
+  "sqft": 967,
+  "svg": "131.svg"
+ },
  "141": {
   "bathrooms": 1,
   "bedrooms": 3,
@@ -541,5 +599,62 @@
   "source": "/media/1g1ffvt4/141.svg",
   "sqft": 1148,
   "svg": "141.svg"
+ },
+ "150": {
+  "bathrooms": 1,
+  "bedrooms": 1,
+  "fetched_utc": "2026-11-06T15:00:00Z",
+  "labels": [
+   "Bedroom",
+   "15",
+   "’",
+   "1",
+   "”",
+   "x 13",
+   "’",
+   "8",
+   "”",
+   "Living Room | Dining Room",
+   "25",
+   "’",
+   "5",
+   "”",
+   "x 15",
+   "’",
+   "1",
+   "”",
+   "5",
+   "’",
+   "8",
+   "”",
+   "x 6",
+   "’",
+   "0",
+   "”",
+   "Kitchen",
+   "Bathroom",
+   "Closet",
+   "Closet",
+   "Closet",
+   "Closet"
+  ],
+  "layout": "150",
+  "png": "150.png",
+  "rooms": {
+   "Bathroom": "",
+   "Bedroom": "151” x 138”",
+   "Closet": "",
+   "Closet 2": "",
+   "Closet 3": "",
+   "Closet 4": "",
+   "Kitchen": "",
+   "Living Room | Dining Room": "255” x 151”58” x 60”"
+  },
+  "seen_in": [
+   "13-A, 441 East 20th Street"
+  ],
+  "source": "/media/e3el30ku/150.svg",
+  "sqft": 944,
+  "svg": "150.svg"
  }
 }
