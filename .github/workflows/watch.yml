@@ -40,6 +40,10 @@ on:
         description: 'Refresh the map instead: buildings from OpenStreetMap, new floorplans, data/units.geojson and the summary (commits them)'
         type: boolean
         default: false
+      site_check:
+        description: "Check the site instead: open StuyTown's listings page and compare what it loads with what the watcher sees (no commits)"
+        type: boolean
+        default: false
 
 # Only one watcher at a time: a run triggered while another is going waits
 # for it instead of polling (and alerting) twice.
@@ -91,7 +95,12 @@ jobs:
           DREAM_RULES: ${{ vars.DREAM_RULES }}
           DREAM_FLOORS: ${{ vars.DREAM_FLOORS }}
           REFRESH_MAP: ${{ inputs.refresh_map }}
+          SITE_CHECK: ${{ inputs.site_check }}
         run: |
+          if [ "$SITE_CHECK" = "true" ]; then
+            python site_check.py
+            exit
+          fi
           if [ "$REFRESH_MAP" = "true" ]; then
             # The morning run does this by itself after 10:00; this is the same, now.
             python units_map.py --refresh --buildings

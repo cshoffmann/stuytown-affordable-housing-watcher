@@ -1,277 +1,143 @@
-# Architecture: before Phase 1, Phase 1, and Phase 2
+# Architecture
 
-The goal hasn't changed: **apply to every unit at or under your rent limit
-(`AUTO_APPLY_RULES`, by bedrooms) as soon as it appears.** The watcher's own logs show why speed decides it:
-the cheap units have been gone (all 3 applications taken) **15–45 seconds**
-after appearing, the fastest within 12–27 s of being seen. Phase 1 rebuilds
-the watcher so that applying always comes first, and nothing else (alerts,
-logging, git) can delay it or break it.
+**Goal:** see every listing, and apply to every qualifying unit before its 3
+application slots fill. Units are posted on the quarter hour between 7 and
+10 AM, and cheap ones have lasted 25–81 s. So the design has one rule:
+**the applier always goes first, and nothing else can slow it down or
+break it.**
 
-## Before: one loop did everything, one step at a time
-
-Every 10 seconds, a single thread ran this, in this order. Nothing checked
-for new units until the last step was done.
-
-```mermaid
-flowchart TD
-    A["Fetch the listings<br/>new connection each time, 20 s timeout"] --> B["Compare with the saved list"]
-    B --> C["Emergency alert for every new unit<br/>3 tries; if Pushover fails, the check stops here"]
-    C --> D["Save the list"]
-    D --> E["Start Chromium (cold)"]
-    E --> F["Unit page → APPLY NOW → form<br/>polled every 250 ms"]
-    F --> G["Fill, screenshot, SUBMIT"]
-    G --> H["Wait for the answer, write the recording,<br/>send 2 alerts"]
-    H --> I["Next qualifying unit (one at a time)"]
-    I --> J["Record forms of over-limit units"]
-    J --> K["Screenshot the listings page<br/>second Chromium, up to ~17 s"]
-    K --> L["Events log, updated / removed alerts"]
-    L --> M["git commit + push"]
-    M --> N["Sleep until the next 10 s tick"]
-    N --> A
-```
-
-What that cost a qualifying unit (posting → SUBMIT, typical case): **≈ 8.7 s**,
-of which ~6 s was waiting for the next check, the alert, the browser start
-and the saves. On top of that:
-
-- A Pushover outage stopped auto-apply completely, every check.
-- After a new unit, checking paused for roughly 8–20 s.
-- A second cheap unit waited for the first one's alerts and recording.
-
-## After: four workers, applying first
+## Components
 
 ```mermaid
 flowchart LR
     subgraph checker["Checker (main thread)"]
-        P["Fetch listings<br/>every 2 s, one kept-open connection,<br/>4 s timeout, backs off if the site asks"] --> D["Compare + save the list"]
+        P["Fetch listings<br/>every 2 s; every 0.25 s from :57 to :15<br/>one kept-open connection, 4 s timeout"] --> D["Compare with the saved list"]
     end
-    subgraph applier["Applier: 2 browser workers, opened at 6:59"]
-        Q[("Job queue<br/>applications first, cheapest first;<br/>recordings only when idle")] --> W1["Worker 1<br/>warm Chromium"]
-        Q --> W2["Worker 2<br/>warm Chromium"]
-        W1 --> S["Form (directly, once the address is learned)<br/>→ fill → screenshot → SUBMIT"]
-        W2 --> S
+    subgraph applier["Applier (AUTO_APPLY_MODE=on; off = records only)"]
+        R{"Request format proven<br/>for the site's current code?"}
+        R -- yes --> X["Direct submit<br/>≈ 0.05 s"]
+        R -- no --> B["Browser worker ×2<br/>warm since 6:59, ≈ 1 s"]
+        X -- "refused / answer lost" --> B
     end
-    subgraph bg["Background (never in the applier's way)"]
+    subgraph bg["Background workers"]
         N["Notifier<br/>Pushover, own retries"]
-        L["Logger<br/>events, applications, recordings,<br/>git every 5 min — waits while applying"]
+        L["Logger<br/>events, applications, recordings;<br/>waits while applying; one commit at 10:00"]
     end
-    D -- "1: listings first" --> Q
-    D -- "2: alerts" --> N
+    D -- "1: listings" --> R
+    D -- "2: alert" --> N
     D -- "3: events" --> L
-    S -- "result" --> N
-    S -- "log + recording" --> L
+    X -- "result, log" --> N
+    B -- "result, log" --> N
+    X --> L
+    B --> L
 ```
 
-One check now goes like this:
+| Worker | Job | Can it delay an application? |
+| --- | --- | --- |
+| Checker | Fetches the listings and compares them with the last answer. Never pauses for anything else | It's what finds the unit |
+| Applier | On: a direct request, or a browser that fills and submits the form; two units at once. Off: records a form only when direct submit needs proving, and never sends anything | It is the application |
+| Notifier | Pushover alerts, with retries | No: its own thread, and a Pushover failure never stops the run |
+| Logger | `data/` files and recordings as they happen; one git commit at 10:00 saying what was listed | No: it waits while an application runs |
 
-1. The **checker** fetches the listings over its kept-open connection and
-   saves the list.
-2. It hands the listings to the **applier**, before any alert is queued.
-   `dispatch()` only queues work: a qualifying unit is waiting for a browser
-   within microseconds, and the checker is free to check again 2 s later.
-3. Only then are the alerts queued for the **notifier**: Emergency for a
-   qualifying unit, normal for one that isn't. Events are queued for the
-   **logger**.
-4. A free **applier worker** opens the unit's form in a browser that has been
-   open since 6:59 with the site already loaded. It fills the form, checks
-   every field, screenshots it and presses SUBMIT. Two qualifying units are
-   applied to at the same time, one per browser.
-5. The result goes to the **notifier** (one message: success, or a separate
-   failure message) and to the **logger** (applications log, redacted
-   recording). The logger waits while any application is running, and
-   commits to git every 5 minutes instead of after every change.
+## One check
 
 ```mermaid
 sequenceDiagram
     participant C as Checker
-    participant A as Applier worker
+    participant A as Applier
     participant N as Notifier
     participant L as Logger
-    Note over C: t = 0 s: unit appears in a response
-    C->>A: dispatch(listings), queued instantly
-    C->>N: Emergency alert (qualifying unit)
-    C->>L: events.json entry
-    Note over C: keeps checking every 2 s
-    A->>A: warm browser opens the form
-    A->>A: fill + read back, screenshot
-    A->>A: SUBMIT at ≈ 2–3 s
-    A->>N: "Applied: Apt …" (normal priority)
-    A->>L: applications.json, recording
-    Note over L: waits until no application is running
-    L->>L: git commit (batched, every 5 min)
+    Note over C: t = 0: a unit appears in a response
+    C->>A: listings (queued instantly)
+    C->>N: Emergency alert, if it qualifies
+    C->>L: events.json entry (every unit)
+    Note over C: checks again 0.25–2 s later
+    A->>A: direct request (≈ 0.05 s) or browser (≈ 1 s)
+    A->>N: "Applied" / "failed, apply yourself"
+    A->>L: applications.json, redacted recording
+    Note over L: 10:00: stats, floorplans, map, summary, commit
 ```
 
-## What changed, and what it buys
+A response that isn't a list of units (an error or maintenance page) is a
+failed check, never "zero units". So a site problem can't make listed units
+look removed. If the site asks the watcher to slow down (429/403), it
+honours `Retry-After` and speeds back up gradually.
 
-| Critique item (from the review) | Before | After |
-| --- | --- | --- |
-| **High:** a Pushover failure stops auto-apply | The alert came first and could fail the whole check | The applier gets the listings first; alerts run on the notifier with their own retries. Bad Pushover keys no longer stop the watcher: it runs, and the job is marked failed at the end |
-| **High:** detection waits up to 10 s | Every 10 s, a new connection each time, 20 s timeout | Every 2 s over one kept-open connection, 4 s timeout. It backs off only if the site asks (429/403, honoring Retry-After) and returns to 2 s gradually; plain errors are retried quickly and forgotten on the first good answer |
-| **High:** everything is serial | Applying, recordings, screenshots and git all paused checking; units applied to one at a time | The checker never pauses. 2 applier workers apply in parallel. All logging and alerts happen in the background. Recordings of over-limit forms run only when no application is |
-| **Medium:** each application starts cold | Chromium launched per check; the site loaded from nothing | Each worker opens Chromium at 6:59, loads the site once and keeps it warm (reloads every 4 min when idle) |
-| **Medium:** three page steps before the form | Unit page → APPLY NOW → form, every time | The form's address is learned from the first APPLY NOW, so applications can skip the unit page. *(Removed in Phase 2: the live site showed the form is a dialog on the unit page, so there is no address to skip to. Direct submit replaces it.)* |
-| **Medium:** waits poll on a timer | APPLY NOW and the form checked every 250 ms | APPLY NOW is caught on the frame the page draws it (`wait_for_function`, `polling="raf"`); the form search runs every 50 ms |
+## Auto-apply
 
-**Removed:** the listings-page screenshot after every new unit (a second
-browser, up to ~17 s of paused checking; the `screenshots/` folder is gone),
-the "listing updated" and "no longer listed" alerts (still in `events.json`),
-the quiet "After SUBMIT" second alert, the per-change git commits and the
-log line on every check (now one status line a minute).
+**Qualifies:** rent ≤ the limit for its bedroom count (`AUTO_APPLY_RULES`,
+falling back to `AUTO_APPLY_MAX_RENT`), and your income ≥ the unit's
+minimum. Each unit is applied to at most once a day; one listed again on a
+later day is applied to again.
 
-**Alerts now**
+**Auto-apply off = recording only.** One browser opens at 6:59. While the
+direct request isn't proven for the site's current code, the first listed
+units (qualifying ones first, two a morning at most) have their form filled
+and SUBMIT pressed with every request held back in the browser. Nothing is
+sent, and the captured request proves the format. Once it's proven, nothing
+more is recorded until StuyTown updates its site.
 
-| Alert | When | Priority |
-| --- | --- | --- |
-| Qualifying StuyTown unit – auto-applying now | A new unit at or under your rent limit (and income) | **2 Emergency**, the only one that breaks through Do Not Disturb |
-| *(none)* | Any other new unit: logged in `events.json` only *(since 2026-10-19; before, a normal alert)* | |
-| Applied: Apt … | The site confirmed the application (filled form attached) | 0 normal |
-| Auto-apply failed / unconfirmed: Apt … | Anything else (page attached) | 0 normal |
+**Direct submit** (`direct_submit.py`) sends the same JSON request the site's
+form sends, to `pd-dlcore.beamliving.com/affordable-housing/create-application`.
+Its safety rules:
 
-**Expected time to SUBMIT** (posting → request sent, typical case):
-≈ 8.7 s before, about **2–3 s** now. That's 1 s average wait for the next
-check, about 0.1 s for the listings, then the form in a warm browser. On the
-fake copy of the site the applier submits about 1.0 s after being handed a
-unit, going straight to the form. The real site's page times will come from
-the first recordings in `data/apply_runs/`.
+1. The format is only learned from a request the site's own form built. That's a
+   real browser application, or a recording whose SUBMIT is held back
+   inside the browser so nothing is sent.
+2. It's saved as rules (phone format, income format, where each field comes
+   from), and rebuilding the captured request from your profile must
+   reproduce it exactly.
+3. It's tied to the site's code version (`aHUnit-js.js.v…`), re-read every
+   30 minutes. A site update switches it off until a capture proves the
+   format again.
+4. A refused or lost direct request goes to the browser. The site refuses a
+   second application to the same apartment, so nothing is sent twice.
 
-## Not in Phase 1
+## After 10:00: floorplans, ratings and the map
 
-Sending SUBMIT's request directly, without a browser, could get to about 1 s.
-It needs to see what the real SUBMIT request looks like first, and the
-recordings capture exactly that. A wrong direct request can't be taken
-back, since the site allows one application per apartment, so it waits for
-real data.
+With the applier stopped, the logger runs `units_map.refresh_all()`,
+time-boxed to 100 s:
 
-## Getting ready for Phase 2: what the live mornings will tell us
+1. **Reference data** (`reference_data.py`):
+   - It saves each new layout's floorplan: the SVG, a PNG copy and the room sizes.
+   - Once, it fetches the complexes' buildings and streets from OpenStreetMap.
+   - It casts three rays from each wall to see what the wall looks at: the Oval, a street (First Ave, 14th, 20th, 23rd, Avenue C, FDR), or the next building and how far away it is.
+   - From that and NOAA's sun model (`stuytown_geo.py`), it works out the winter sun hours at floors 2, 5, 8 and 11.
+2. **Ratings and atlas** (`dream_units.py`):
+   - A listing with Oval views (`VBOV`) faces its building's Oval wall, and so does every apartment on its line.
+   - Your `line_overrides.json` notes beat that.
+   - Without building outlines, the direction is estimated from the building's position.
+3. **The map** (`units_map.py`) writes `data/units.geojson`.
 
-Phase 1 was built against a fake copy of the site. What the real site does
-can only be measured on it, so every live morning now records what Phase 2
-needs to decide its next step. None of it is on the way to SUBMIT: anything
-that takes time is read either while nothing is being sent (recordings of
-over-limit forms), after the site has answered, or by the background logger.
+In the morning, the only dream-unit work is the alert's one-line note, and
+it runs on the notifier.
 
-| Phase 2 question | Where to look |
+## What the live site has shown
+
+| Question | Answer |
 | --- | --- |
-| How long from a unit appearing to SUBMIT, and where does the time go? | `data/run_stats/<date>.json` → `units` → `auto_apply.submit_seconds_after_first_seen`; the stages are in `data/applications.json` → `timeline` (queued, started, form found, SUBMIT pressed, first change, answer) |
-| Did we beat the other applicants? | `run_stats` → `units` → `listed_for_seconds`, and `still_listed_seconds_after_submit` for the units auto-apply went for |
-| Could SUBMIT be sent directly, without a browser (≈ 1 s faster)? | The recording's `report.json` → `analysis.submit_request`: method, address, content type, header names, the body's field names, any token-like fields or headers. `form_facts` (from the over-limit recordings) shows the form's hidden fields and whether a CAPTCHA widget is on it |
-| Does the site confirm it the way `CONFIRMATION` expects? | `report.json` → `notes.text_after_submit_new`: the lines the page gained after SUBMIT. On an "unconfirmed" result, this is what to tune the pattern from |
-| Did a field fight back (masks, reformatting)? | The `filled page 1 of the form` step → `fill_details`: per field, how its value went in and the shape it ended in (`+# ### ### ####`) |
-| Is there anti-bot protection that a faster or direct approach would trip? | `report.json` → `analysis.anti_bot` (reCAPTCHA, hCaptcha, Turnstile, Cloudflare, PerimeterX, DataDome, Akamai, Kasada, Imperva, Queue-it, F5) and `analysis.cdn`; `cookies` lists their cookies by name |
-| Could the checks be faster, or cheaper than fetching every listing? | `run_stats` → `listings_api`: response times, the caching headers (`Age` shows a CDN cache, which would mean faster checks don't see new units sooner), whether `ETag` follows the contents (then a cheap "changed?" request could work), rate-limit headers, and whether the kept-open connection holds |
-| Did the site ever push back? | `run_stats` → `listings_api.statuses` and `failures`, and `pace` for every slow-down |
-| Does the site poll for new units itself, or hold a live connection? | `run_stats` → `applier.idle_listings_page`: the requests the idle listings page made on its own, per minute, and its WebSockets. A cheaper or faster endpoint would show up here |
-| Is the warm browser worth it, and how fast does the form page load? | `run_stats` → `applier.browser_ready_seconds`; `report.json` → `notes.page_facts` (load times, the slowest requests, the framework) |
+| When are units posted? | Only on the quarter hour: 7:15, 7:30, 8:00 and 8:15 so far. The site says it lists only between 7 and 10 AM |
+| How long do they last? | 25–81 s for units around $2,100–2,800; longer for expensive ones |
+| What decides who's first? | When the request arrives. We were first on 08-B (Oct 12) with a request 1.2 s after the unit appeared |
+| Anti-bot protection? | None: no CAPTCHA, token or challenge |
+| The listings API? | `units.stuytown.com/api/ah-units`, the same call the site's page makes. Every answer is a 200 in ~50–75 ms, with no cache and no rate-limit headers. An empty list is 42 bytes |
+| Does the site push updates? | No. The page doesn't poll or hold a live connection, so polling is the only way |
 
-## Phase 2: what the first live mornings showed, and what changed
+## Health
 
-Two applications went out on 2026-10-12, and one was the first of its
-unit's three. The recordings and the morning's stats answered most of the
-open questions:
+- **Red X / "Run failed" email:** the run still watches all morning, but
+  something needs fixing. The log's first lines say what, e.g. Pushover
+  keys, or a Pushover account with no active device.
+- **"Needs a look"** at the top of `data/summary.md`: a failed application,
+  a qualifying unit not tried, the API pushing back, the site's code
+  changing.
+- **Check the site** (Run workflow button, `site_check.py`): opens the
+  listings page in a browser and confirms it calls the same API and sees
+  the same units.
 
-| Question | What the data showed |
-| --- | --- |
-| When are units posted? | Always on a quarter hour: 7:15, 7:30, 8:00 and 8:15 on every morning recorded (2026-10-06 to 10-12), seen by the first check at or after it |
-| How fast did we apply? | Unit seen → SUBMIT in **1.0–1.2 s**. About 0.75 s of that was loading the unit page (its HTML alone took 0.3 s); the form filled in 0.15 s, plus a 0.12 s screenshot before SUBMIT |
-| How fast are the others? | Each cheap unit had its 3 applications within ~40 s. **We were first on 08-B** (7:15, request out 1.2 s after the unit appeared) but not on 02-A (8:00, out 1.1 s after): someone got in under 1.1 s |
-| What decides the order? | On 08-B the site's server took 5.9 s to process our application (`submittedOn` 11:15:06.76) and we were still first. So the order seems to follow when requests *arrive*, not when the server finishes them: sending sooner is what counts |
-| Anti-bot protection? | **None.** No CAPTCHA, no token in the request, no challenge. The site accepted a browser that announces itself as `HeadlessChrome`. (A `__cf_bm` cookie came from the font service, not StuyTown; the analysis now says which site set each cookie) |
-| What does SUBMIT send? | One JSON `POST` to `pd-dlcore.beamliving.com/affordable-housing/create-application` with a `Subscription-Key` header. The address, key, success and error messages and field limits are all in the unit page's own settings (`"applyForm"`) |
-| What does the site answer? | `{"token", "status": "Created", "submittedOn", ...}`. At 7:15 the answer took **5.9 s** (busy server); at 8:00 it took 0.6 s |
-| Why "unconfirmed" both times? | The success text uses a curly apostrophe (`We’ve sent a link…`), which the confirmation pattern didn't allow, so both waited the full 30 s |
-| The listings API? | Median 45 ms, p99 0.26 s, 5,400 requests and every one a 200. Azure Front Door with no caching (`x-cache: CONFIG_NOCACHE`), no ETag and no rate-limit headers. The server closes a kept-open connection after about 120 requests. Its clock matches ours |
-| Does the site poll on its own? | No: the idle listings page made no requests and held no live connection |
-| Privacy | Two leaks in the committed recordings: the income, sent back as a bare number, and the application's token. Both are fixed, and redaction now goes by JSON key as well as by text |
+## Threads, not asyncio
 
-```mermaid
-flowchart LR
-    subgraph checker["Checker"]
-        P["Every 2 s, and every 0.25 s from :57 to :15<br/>around each quarter hour"] --> D["Compare + save"]
-    end
-    D -- "1: listings first" --> R{"Request format proven<br/>for the site's current code?"}
-    R -- "yes" --> X["Direct submit<br/>own thread, warm connection<br/>≈ 0.05 s after the unit is seen"]
-    R -- "no" --> B["Browser worker<br/>unit page → APPLY NOW → fill → SUBMIT<br/>≈ 1 s"]
-    X -- "refused / answer lost" --> B
-    B -- "the site's own request" --> L["Learn + check the format<br/>(rule names only)"]
-    REC["Recording of an over-limit unit:<br/>filled, SUBMIT pressed,<br/>every request held back"] --> L
-    L --> R
-    X --> N["Result → notifier, logger"]
-    B --> N
-```
-
-**Direct submit's safety rules** (`direct_submit.py`):
-
-1. The format is only ever learned from a request the site's **own form**
-   built: a real browser application, or a recording whose SUBMIT is held
-   back inside the browser (page routes stop every non-GET request, and
-   service workers are blocked so nothing can go around them).
-2. It's saved as **rule names**: the phone format, the income format,
-   where the building address and `version` come from. Rebuilding the
-   captured request from the profile with those rules must reproduce it
-   exactly. Anything it can't explain, such as a new field, leaves the
-   browser in charge.
-3. It's tied to the **version of the site's code** (`aHUnit-js.js.v…`),
-   re-read from a unit page every 30 minutes. A deploy switches direct
-   submit off until a capture proves the format again.
-4. A **refused or lost** direct request is handed to the browser. The site
-   itself refuses a second application to an apartment, so a request that
-   did go through can't be duplicated. That case is reported as
-   "unconfirmed, most likely went through".
-
-**Other Phase 2 changes:**
-- The browser path takes its result from the API's answer, including
-  `submittedOn`, the time on the site's clock, which is what ranks applicants.
-- Its screenshot is taken after SUBMIT instead of before.
-- The listings connection is renewed just before each burst of checks.
-- The run stats record when each unit was posted, to within a check.
-
-**Expected now:** about 0.1–0.3 s from posting to the request reaching the
-API, compared with about 1.1 s on 2026-10-12 and about 8.7 s before Phase 1.
-On busy mornings the server's own processing (5.9 s at 7:15) can matter
-more than any of this, and `site_received_seconds_after_first_seen` in the
-stats will show it.
-
-**Still to learn from the next live mornings:**
-- What the API answers for "already applied" and "unit full", so that
-  `interpret()` can name them from the status code too.
-- Whether `version` is the unit's version or always 1. The first capture
-  from a unit whose version isn't 1 settles it; until then direct submit
-  only runs for units where both readings agree.
-- More rankings like 08-B's, to confirm the order follows arrival (one
-  morning says so). Your email from StuyTown says which number you were.
-
-## Dream units, floorplans and the map
-
-None of this runs while units can appear. At 10:00, after `applier.stop()`,
-the logger runs `units_map.refresh_all()` (time-boxed to 100 s) before the
-summary is written:
-
-1. `reference_data.py` saves the floorplan of any layout seen for the first
-   time: the SVG the site's page loads (from `affordable-housing.stuytown.com/media/…`),
-   a PNG copy drawn by Chromium, and the room labels. The first morning, it
-   also fetches the complexes' buildings and streets from OpenStreetMap
-   (Overpass). It casts three rays out of each wall to find what that wall
-   looks at: the Oval, a perimeter street (First Ave, 14th, 20th, 23rd,
-   Avenue C, FDR), or the next building and how far away it is. From that
-   and NOAA's sun model it works out the winter sun hours at floors 2, 5, 8
-   and 11.
-2. `dream_units.py` rebuilds the apartment atlas and rates each unit.
-   - A listing with Oval views (`VBOV`) faces its building's Oval wall(s),
-     and so does every apartment on its line.
-   - With no building outlines yet, the direction is straight at the Oval's
-     middle from the building's position, and is marked estimated.
-   - Your `line_overrides.json` notes beat both.
-3. `units_map.py` writes `data/units.geojson`.
-
-In the morning, the only new work is the alert's dream note. It's worked
-out on the notifier thread from files already on disk, never on the checker
-or the applier.
-
-## Threads, and why not asyncio
-
-Playwright's objects belong to the thread that created them, and the
-form-filling code is synchronous and well tested. So each applier worker is
-a thread that owns its own browser. The checker, the notifier and the
-logger are plain threads joined by queues. Every cross-thread hand-off is a
-queue put that never blocks, and every background job runs in its own
-try/except, so a failure there can't reach the checker or the applier.
+Playwright's objects belong to the thread that made them, and the form code
+is synchronous. So each browser worker is a thread that owns its browser. The
+checker, notifier and logger are plain threads joined by queues that never
+block, and every background job runs in its own try/except.

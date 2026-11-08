@@ -141,22 +141,28 @@ class CheckerTests(unittest.TestCase):
         self.assertTrue(stats["units"][FAKE_UNITS["5A"]["unitSpk"]]["still_listed_at_end"])
         self.assertEqual(stats["applier"], {"workers": 0})
 
-    def test_results_are_committed_in_batches(self):
+    def test_one_commit_a_day_says_what_was_listed(self):
         inline = background.Worker("inline", inline=True)
         commits = []
         watcher = watch_loop.Watcher(FakeApplier(), inline, inline)
-        with mock.patch.object(watch_loop, "commit_and_push", commits.append), mock.patch("builtins.print"):
+        at_815 = datetime(2026, 11, 6, 8, 15, tzinfo=watch_loop._eastern())
+        with mock.patch.object(watch_loop, "commit_and_push", commits.append), mock.patch("builtins.print"), \
+                mock.patch.object(watch_loop, "now_et", return_value=at_815):
             watcher.check([FAKE_UNITS["5A"]])
             watcher.check([FAKE_UNITS["5A"]])
             watcher.check([FAKE_UNITS["5A"], FAKE_UNITS["12C"]])
-            self.assertEqual(commits, [])  # nothing yet: one commit per batch, not per change
-            with mock.patch.object(watch_loop, "COMMIT_EVERY_SECONDS", 0):
-                watcher._housekeeping()
+            watcher._housekeeping()
+            self.assertEqual(commits, [])  # nothing during the morning
+            watcher.checks = 3
             watcher.finish()
-        self.assertEqual(len(commits), 2)
-        self.assertIn("NEW: Apt 5A", commits[0])
-        self.assertIn("NEW: Apt 12C", commits[0])
-        self.assertTrue(commits[1].startswith("End of watch window"))
+        self.assertEqual(len(commits), 1)
+        self.assertTrue(commits[0].startswith("Fri Nov 6: 2 new listings (3 checks)\n\n08:15 Apt 5A, 287 Avenue C, $1,873"),
+                        commits[0])
+        self.assertIn("08:15 Apt 12C", commits[0])
+        quiet = watch_loop.Watcher(FakeApplier(), inline, inline)
+        quiet.checks, quiet.failures = 6141, 2
+        with mock.patch.object(watch_loop, "now_et", return_value=at_815):
+            self.assertEqual(quiet.day_message(), "Fri Nov 6: no new listings (6,141 checks, 2 failed)")
 
 
 class BurstTests(unittest.TestCase):

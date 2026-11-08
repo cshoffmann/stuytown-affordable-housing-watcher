@@ -23,7 +23,11 @@ it every check's listings FIRST, before any alert or log is even queued:
 
 Repository variables control it:
 
-    AUTO_APPLY_MODE      on | off (default). Off = auto-apply does nothing at all.
+    AUTO_APPLY_MODE      on | off (default). Off = recording only: nothing is ever
+                         sent. While the request format isn't proven for the
+                         site's current code, a listed unit's form is filled and
+                         SUBMIT pressed with every request held back, so direct
+                         submit is ready the day auto-apply goes on.
     AUTO_APPLY_RULES     rent limits by bedrooms, $/month: "1:2200, 2:2700"
                          (0 = studio). A unit whose bedroom count isn't listed
                          falls back to AUTO_APPLY_MAX_RENT, or doesn't qualify.
@@ -160,7 +164,7 @@ PHONE_KEYS = ("cell_phone", "work_phone")
 # they arrive, so it's worth being early again. An attempt that crashed or
 # couldn't press SUBMIT (so nothing was sent) gets one more try that day.
 MAX_FAILED_ATTEMPTS_PER_UNIT = 2
-MAX_FORM_RECORDINGS_PER_RUN = 2  # over-limit units whose (unfilled) form gets recorded
+MAX_FORM_RECORDINGS_PER_RUN = 2  # forms recorded per morning (SUBMIT held back: nothing is sent)
 APPLY_WORKERS = 2  # browsers kept open, so two qualifying units are applied to at once
 WARM_REFRESH_SECONDS = 240  # an idle worker reloads the site this often, to keep its connections open
 DIRECT_SUBMIT = True  # send straight to the API once the request format is proven (direct_submit.py)
@@ -321,7 +325,9 @@ def startup_check() -> None:
     if _MODE_SETTING and not ENABLED and _MODE_SETTING != "off":
         print(f"WARNING: AUTO_APPLY_MODE={_MODE_SETTING!r} isn't on or off -- treating it as off.")
     if not ENABLED:
-        print("Auto-apply: off (set the AUTO_APPLY_MODE repository variable to on to turn it on)")
+        _profile_if_any()  # masks the profile in the log, for the recordings
+        print("Auto-apply: off -- recording only: forms are recorded when direct submit needs proving, "
+              "and nothing is ever sent (set AUTO_APPLY_MODE to on to apply)")
         return
     if RULE_PROBLEMS:
         print(f"WARNING: AUTO_APPLY_RULES: couldn't read {', '.join(RULE_PROBLEMS)!r} "
@@ -334,6 +340,19 @@ def startup_check() -> None:
 
 
 # ------------------------------------------------- which units to apply to
+
+
+def profile_for_recording() -> dict | None:
+    """Auto-apply off: the profile, to fill forms that are recorded and never
+    sent. None, with a log line, when there isn't a usable one."""
+    try:
+        profile = load_profile()
+    except ProfileError as e:
+        print(f"Recording: off this run ({e})")
+        return None
+    if profile is None:
+        print(f"Recording: off this run (no applicant profile in {PROFILE_ENV})")
+    return profile
 
 
 def skip_reason(unit: dict, profile: dict) -> str | None:
@@ -539,8 +558,9 @@ class Applier:
     break an application."""
 
     def __init__(self, profile: dict, notifier=None, logger=None, workers: int = APPLY_WORKERS,
-                 runs_dir: str | None = None):
+                 runs_dir: str | None = None, record_only: bool = False):
         self.profile = profile
+        self.record_only = record_only  # auto-apply off: only ever records, never applies
         self.notifier = notifier or background.Worker("notifier-inline", inline=True)
         self.logger = logger or background.Worker("logger-inline", inline=True)
         self.workers = workers
@@ -583,8 +603,12 @@ class Applier:
         maintain.start()
         self._threads.append(maintain)
         reason = self.direct.why_not()
-        print("   Direct submit: " + ("ready -- qualifying units go straight to StuyTown's API"
-                                       if reason is None else f"not yet ({reason}); the browser applies"))
+        if self.record_only:
+            print("   Direct submit: " + ("ready -- nothing to record" if reason is None else
+                                           f"not yet ({reason}); the next listed unit's form gets recorded"))
+        else:
+            print("   Direct submit: " + ("ready -- qualifying units go straight to StuyTown's API"
+                                           if reason is None else f"not yet ({reason}); the browser applies"))
         deadline = time.monotonic() + wait_seconds
         for _ in range(self.workers):
             if not self._started.acquire(timeout=max(0.0, deadline - time.monotonic())):
@@ -598,7 +622,7 @@ class Applier:
             try:
                 if self.direct.stale():
                     self.direct.refresh_config(_a_known_unit())
-                if _near_posting_time():
+                if _near_posting_time() and not self.record_only:
                     self.direct.keep_warm()
             except Exception as e:
                 print(f"   WARNING: direct submit upkeep failed: {type(e).__name__}: {e}")
@@ -625,6 +649,7 @@ class Applier:
     def observations(self) -> dict:
         """For the morning's run stats (run_stats.py): no personal details."""
         return {
+            "mode": "recording only" if self.record_only else "applying",
             "workers": self.workers,
             "browser_ready_seconds": list(self._ready_seconds),
             "direct_submit": self.direct.observations(),
@@ -640,7 +665,9 @@ class Applier:
         that qualifies and isn't already handled or in progress (cheapest
         first): a direct submit on its own thread, or a browser job. Also a
         recording for an over-limit unit or two. Returns the units taken.
-        Never waits."""
+        Never waits. In recording-only mode it never applies."""
+        if self.record_only:
+            return self._record_if_needed(units)
         queued = []
         with self._lock:
             for unit in units:
@@ -670,6 +697,23 @@ class Applier:
                 self._browser_job(unit)
                 print(f"   Auto-apply: applying to {check_units.unit_label(unit)} now (browser: {prepared})")
         return queued
+
+    def _record_if_needed(self, units: list) -> list:
+        """Auto-apply off: while direct submit isn't proven for the site's
+        current code, record a listed unit's form -- filled, SUBMIT pressed,
+        every request held back, so nothing is sent -- qualifying units
+        first. Takes no unit, so the alert says "apply now"."""
+        if not units or self.direct.why_not() is None:
+            return []
+        with self._lock:
+            for unit in sorted(units, key=lambda u: skip_reason(u, self.profile) is not None):
+                uid = check_units.unit_id(unit)
+                if uid in self._recorded or len(self._recorded) >= MAX_FORM_RECORDINGS_PER_RUN:
+                    continue
+                self._recorded.add(uid)
+                self._jobs.put((1, 0.0, next(self._order), "record", unit))
+                print(f"   Recording the form of {check_units.unit_label(unit)} (auto-apply is off: nothing is sent)")
+        return []
 
     def _browser_job(self, unit: dict) -> None:
         self._jobs.put((0, check_units.unit_rent(unit) or 0.0, next(self._order), "apply", unit))
@@ -766,6 +810,9 @@ class Applier:
                 self._jobs.task_done()
                 return False
             try:
+                if kind == "apply" and self.record_only:  # never: dispatch doesn't queue these
+                    print("   WARNING: an application job reached a recording-only applier; dropped")
+                    continue
                 if kind == "record":
                     with self._lock:
                         allowed = not self._in_flight and not self._recording
