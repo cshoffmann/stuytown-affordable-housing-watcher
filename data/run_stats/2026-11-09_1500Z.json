@@ -1,0 +1,130 @@
+{
+  "applier": {
+    "browser_ready_seconds": [
+      2.75
+    ],
+    "direct_submit": {
+      "format_rules": {
+        "buildingAddress": "capitalized",
+        "cellPhone": "digits",
+        "householdSize": "text",
+        "totalAnnualEarnings": "whole",
+        "version": "the unit's",
+        "workPhone": "digits"
+      },
+      "format_site_version": "639298134278405526",
+      "ready": true,
+      "site_version": "639298134278405526",
+      "verified_utc": "2026-11-09T12:15:01.450Z",
+      "why_not": null
+    },
+    "idle_listings_page": {
+      "errors": {},
+      "loads": 45,
+      "requests_on_its_own": [],
+      "watched_minutes": 173.2,
+      "websockets": {}
+    },
+    "mode": "recording only",
+    "profile_warnings": [],
+    "recordings": [
+      {
+        "apartment": "13-A",
+        "detail": "couldn't find the APPLY NOW button on the unit page",
+        "direct_submit_check": "no request captured",
+        "status": "failed",
+        "unit_id": "P~NYPC21~B~441~U~13-A"
+      },
+      {
+        "apartment": "08-B",
+        "detail": "form recorded and the site's request captured; nothing was sent",
+        "direct_submit_check": "learned the site's request (code v639298134278405526); qualifying units now go direct",
+        "status": "recorded",
+        "unit_id": "P~NYST31~B~330~U~08-B"
+      }
+    ],
+    "workers": 1
+  },
+  "listings_api": {
+    "connections": {
+      "kept-open connection": 6116,
+      "new connection": 36
+    },
+    "distinct_responses": 2,
+    "etag": {
+      "seen": false
+    },
+    "failures": {},
+    "headers": {
+      "access-control-allow-origin": {
+        "*": 6152
+      },
+      "connection": {
+        "close": 36,
+        "keep-alive": 6116
+      },
+      "strict-transport-security": {
+        "max-age=15724800; includeSubDomains": 6152
+      },
+      "x-cache": {
+        "CONFIG_NOCACHE": 6152
+      }
+    },
+    "headers_present": {
+      "x-azure-ref": 6152
+    },
+    "requests": 6152,
+    "response_bytes": {
+      "max": 1849,
+      "min": 42
+    },
+    "response_ms": {
+      "max": 584.6,
+      "median": 17.5,
+      "min": 13.7,
+      "p90": 24.3,
+      "p99": 146.0
+    },
+    "statuses": {
+      "200": 6152
+    },
+    "their_clock_minus_ours_exact_s": {
+      "at_least": -0.014,
+      "at_most": 0.227,
+      "best_guess": 0.106,
+      "consistent": true
+    },
+    "their_clock_minus_ours_s": {
+      "max": -0.0,
+      "median": -0.0,
+      "min": -0.9,
+      "p90": -0.0,
+      "p99": -0.0
+    }
+  },
+  "pace": [],
+  "run": {
+    "ended_utc": "2026-11-09T15:00:00.086Z",
+    "started_utc": "2026-11-09T11:59:03.235Z"
+  },
+  "units": {
+    "P~NYST31~B~330~U~08-B": {
+      "address": "330 First Avenue",
+      "apartment": "08-B",
+      "first_seen_utc": "2026-11-09T12:15:00.000Z",
+      "income_requirement": 95555.66,
+      "last_seen_utc": "2026-11-09T12:15:23Z",
+      "listed_for_seconds": 23.0,
+      "not_listed_at_utc": "2026-11-09T12:14:59.750Z",
+      "posted_vs_quarter_hour_their_clock_s": [
+        -0.14,
+        0.11
+      ],
+      "posted_within_seconds": 0.25,
+      "qualifies_for_auto_apply": true,
+      "removal_confirmed_utc": "2026-11-09T12:16:25.000Z",
+      "rent": 2787.04,
+      "seen_seconds_after_quarter_hour": 0.0
+    }
+  }
+}

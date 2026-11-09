@@ -1,0 +1,374 @@
+{
+  "started_utc": "2026-11-09T11:59:03Z",
+  "seconds": 20.443,
+  "outcome": {
+    "status": "failed",
+    "detail": "couldn't find the APPLY NOW button on the unit page",
+    "seconds": 20.42,
+    "form_url": "",
+    "fields_filled": [],
+    "problems": [],
+    "site_messages": [],
+    "form_fields": [],
+    "timeline": {}
+  },
+  "steps": [
+    {
+      "t": 0.037,
+      "step": "opening the unit page",
+      "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYPC21~B~441~U~13-A"
+    },
+    {
+      "t": 20.381,
+      "step": "no APPLY NOW button",
+      "page_url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYPC21~B~441~U~13-A",
+      "buttons": [
+        {
+          "tag": "a",
+          "type": null,
+          "text": "",
+          "href": "/",
+          "disabled": false,
+          "class": "bC_gw"
+        },
+        {
+          "tag": "a",
+          "type": null,
+          "text": "ELIGIBILITY",
+          "href": "/eligibility/",
+          "disabled": false,
+          "class": null
+        },
+        {
+          "tag": "a",
+          "type": null,
+          "text": "FAQS",
+          "href": "/faqs/",
+          "disabled": false,
+          "class": null
+        },
+        {
+          "tag": "a",
+          "type": null,
+          "text": "AVAILABILITY",
+          "href": "/apartments/",
+          "disabled": false,
+          "class": null
+        },
+        {
+          "tag": "a",
+          "type": null,
+          "text": "here",
+          "href": "/apartments/",
+          "disabled": false,
+          "class": null
+        },
+        {
+          "tag": "a",
+          "type": null,
+          "text": "212.253.3680",
+          "href": "tel:+12122533680",
+          "disabled": false,
+          "class": null
+        },
+        {
+          "tag": "a",
+          "type": null,
+          "text": "stuytownlottery@stuytown.com",
+          "href": "mailto:stuytownlottery@stuytown.com",
+          "disabled": false,
+          "class": null
+        },
+        {
+          "tag": "a",
+          "type": null,
+          "text": "Sign Up for Future Lottery Opportunities",
+          "href": "https://beamliving.us19.list-manage.com/subscribe?u=0a88f9e997dbee32a8616087c&id=0066cf53d8",
+          "disabled": false,
+          "class": null
+        },
+        {
+          "tag": "a",
+          "type": null,
+          "text": "Terms of Use",
+          "href": "https://www.beamliving.com/terms-of-use",
+          "disabled": false,
+          "class": null
+        },
+        {
+          "tag": "a",
+          "type": null,
+          "text": "Reasonable Accommodation Info",
+          "href": "https://www.beamliving.com/accommodations",
+          "disabled": false,
+          "class": null
+        },
+        {
+          "tag": "a",
+          "type": null,
+          "text": "Privacy Policy",
+          "href": "https://www.beamliving.com/privacy",
+          "disabled": false,
+          "class": null
+        },
+        {
+          "tag": "a",
+          "type": null,
+          "text": "NYS Housing and Anti-Discrimination Notice",
+          "href": "https://uxp-pd-cms-gmfqdagrdcdrd0gk.a02.azurefd.net/media/ugcfiua2/nys-housing-doc.png",
+          "disabled": false,
+          "class": null
+        },
+        {
+          "tag": "a",
+          "type": null,
+          "text": "Web Accessibility Certification",
+          "href": "https://www.stuytown.com/web-accessibility-certification/",
+          "disabled": false,
+          "class": null
+        },
+        {
+          "tag": "button",
+          "type": null,
+          "text": "COOKIE PREFERENCES",
+          "href": null,
+          "disabled": false,
+          "class": "Z_gF"
+        }
+      ]
+    }
+  ],
+  "notes": {
+    "unit": {
+      "unit_id": "P~NYPC21~B~441~U~13-A",
+      "apartment": "13-A",
+      "address": "441 East 20th Street",
+      "bedrooms": 1,
+      "bathrooms": 1,
+      "price": 4993.53,
+      "income_requirement": 171206.73,
+      "available_date": "2026-10-03T00:00:00Z",
+      "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYPC21~B~441~U~13-A"
+    },
+    "kind": "recording: the form recorded, then filled and SUBMIT pressed with every outgoing request blocked -- nothing was sent",
+    "page_facts": {
+      "frameworks": {
+        "next": false,
+        "nuxt": false,
+        "react": true,
+        "angular": false,
+        "vue": false,
+        "jquery": false,
+        "gatsby": false,
+        "svelte": false
+      },
+      "generator": null,
+      "timing_ms": {
+        "response_start": 66,
+        "dom_content_loaded": 284,
+        "load": 299,
+        "page_kb": 401,
+        "since_navigation": 20344
+      },
+      "resources_by_type": {
+        "link": {
+          "count": 3,
+          "kb": 44,
+          "slowest_ms": 41
+        },
+        "script": {
+          "count": 5,
+          "kb": 381,
+          "slowest_ms": 61
+        },
+        "css": {
+          "count": 6,
+          "kb": 6,
+          "slowest_ms": 46
+        },
+        "img": {
+          "count": 4,
+          "kb": 0,
+          "slowest_ms": 8
+        },
+        "fetch": {
+          "count": 1,
+          "kb": 0,
+          "slowest_ms": 42
+        }
+      },
+      "slowest_resources": [
+        {
+          "url": "https://affordable-housing.stuytown.com/sb/common-js.js.v639298134278405526",
+          "type": "script",
+          "ms": 61,
+          "started_ms": 72
+        },
+        {
+          "url": "https://fonts.googleapis.com/css",
+          "type": "css",
+          "ms": 46,
+          "started_ms": 104
+        },
+        {
+          "url": "https://affordable-housing.stuytown.com/sb/aHUnit-js.js.v639298134278405526",
+          "type": "script",
+          "ms": 45,
+          "started_ms": 72
+        },
+        {
+          "url": "https://units.stuytown.com/api/ah-units/P~NYPC21~B~441~U~13-A",
+          "type": "fetch",
+          "ms": 42,
+          "started_ms": 269
+        },
+        {
+          "url": "https://affordable-housing.stuytown.com/sb/vendor-css.css.v639298134278405526",
+          "type": "link",
+          "ms": 41,
+          "started_ms": 72
+        },
+        {
+          "url": "https://affordable-housing.stuytown.com/static/js/853.20b52ae9.chunk.js",
+          "type": "script",
+          "ms": 37,
+          "started_ms": 237
+        },
+        {
+          "url": "https://fonts.googleapis.com/css2",
+          "type": "css",
+          "ms": 35,
+          "started_ms": 104
+        },
+        {
+          "url": "https://affordable-housing.stuytown.com/static/css/853.acebe1db.chunk.css",
+          "type": "link",
+          "ms": 33,
+          "started_ms": 236
+        }
+      ],
+      "service_worker": false,
+      "local_storage_keys": [],
+      "session_storage_keys": [],
+      "cookies_visible_to_scripts": []
+    },
+    "direct_submit_check": "no request captured"
+  },
+  "console": [
+    {
+      "t": 0.122,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.31,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.31,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.311,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.314,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.315,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.318,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.319,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.326,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.362,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.371,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.377,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    }
+  ],
+  "navigations": [
+    {
+      "t": 0.111,
+      "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYPC21~B~441~U~13-A"
+    }
+  ],
+  "websockets": [],
+  "cookies": [
+    {
+      "name": "INGRESSCOOKIE",
+      "domain": "affordable-housing.stuytown.com",
+      "path": "/",
+      "http_only": true,
+      "secure": true,
+      "same_site": "Lax",
+      "expires_in_days": null,
+      "value_length": 57
+    },
+    {
+      "name": "__cf_bm",
+      "domain": ".fonts.net",
+      "path": "/",
+      "http_only": true,
+      "secure": true,
+      "same_site": "None",
+      "expires_in_days": 0.0,
+      "value_length": 199
+    }
+  ],
+  "pages_kept": "kept: the first time the site's code v639298134278405526 was seen",
+  "files": [
+    "1_unit_page.html",
+    "network.json"
+  ],
+  "analysis": {
+    "submit_request": null,
+    "requests_after_submit": [],
+    "script_hosts": {
+      "affordable-housing.stuytown.com": 3,
+      "global.ketchcdn.com": 1,
+      "www.googletagmanager.com": 1
+    },
+    "anti_bot": {
+      "cloudflare_bot_check": [
+        "cookies: __cf_bm (set by .fonts.net)"
+      ]
+    },
+    "cdn": {
+      "azure_front_door": [
+        "requests",
+        "pages",
+        "headers"
+      ]
+    }
+  }
+}

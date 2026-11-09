@@ -237,12 +237,12 @@
    "facing_certain": false,
    "facing_from": "unknown: not listed with Oval views",
    "layouts": {
-    "126": 1
+    "126": 2
    },
    "line": "B",
    "looks_onto_street": null,
    "oval_views": {
-    "no": 1,
+    "no": 2,
     "yes": 0
    },
    "seen": [
@@ -250,6 +250,13 @@
      "apartment": "08-B",
      "finish": "Blank",
      "first_seen_utc": "2026-10-12T11:15:00Z",
+     "floor": 8,
+     "rent": 2787.04
+    },
+    {
+     "apartment": "08-B",
+     "finish": "Blank",
+     "first_seen_utc": "2026-11-09T12:15:00Z",
      "floor": 8,
      "rent": 2787.04
     }

@@ -1,17 +1,18 @@
 # StuyTown watcher: summary
 
-Updated Sun Nov 8, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2 bed <= $2,800**. Dream units: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10. 
+Updated Mon Nov 9, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2 bed <= $2,800**. Dream units: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10. Direct submit: **ready**.
 
 Map of every building and unit seen: [units.geojson](units.geojson) (GitHub draws it; tap a dot), or [on geojson.io](https://geojson.io/#data=data:text/x-url,https%3A%2F%2Fraw.githubusercontent.com%2Fcshoffmann%2Fstuytown-affordable-housing-watcher%2Fmain%2Fdata%2Funits.geojson).
 
 ## Needs a look
 
-Nothing: the latest morning went as it should.
+- Couldn't open the form of Apt 13-A (couldn't find the APPLY NOW button on the unit page): the site may have changed
 
 ## Mornings
 
 | Date | Units posted at (ET) | Qualified | Auto-apply | Checks | API median / p99 |
 | --- | --- | --- | --- | --- | --- |
+| Mon Nov 9 | 7:15:00 | 1 | - | 6,152 | 18 / 146 ms |
 | Sun Nov 8 | none | 0 | - | 6,144 | 29 / 236 ms |
 | Sat Nov 7 | none | 0 | - | 6,142 | 45 / 248 ms |
 | Fri Nov 6 | 7:15:00, 8:00:00, 8:15:00, 8:30:00 | 1 | - | 6,137 | 44 / 252 ms |
@@ -53,6 +54,7 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 
 | Posted (ET) | Apartment | Zone | Floor | Beds | Sq ft | Rent | $/sq ft | Min. income | Finish | Layout | Features | Faces | Dream rating | Listed for | Qualified | Auto-apply |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Nov 9 7:15:00 AM | 08-B, 330 First Avenue | First Ave front | 8 | 2 | 955 | $2,787 | $2.92 | $95,556 | Blank | [126](floorplans/126_st2bedclassic.png) | PS 40 zone, stainless appliances |  |  | 23.0 s | yes |  |
 | Nov 6 8:30:00 AM | 13-A, 441 East 20th Street | 20th St front | 13 | 1 | 944 | $4,994 | $5.29 | $171,207 | Platinum | [150](floorplans/150.png) | wall A/C, PS 40 zone, Downtown view, closet system, Wood flooring |  |  | 90 min | no |  |
 | Nov 6 8:15:00 AM | 06-C, 11 Stuyvesant Oval | Oval | 6 | 1 | 745 | $3,450 | $4.63 | $118,286 | Classic | [107](floorplans/107.png) | wood floors, renovated bath |  |  | 18 min | no |  |
 | Nov 6 8:00:00 AM | 07-F, 1 Stuyvesant Oval | Oval | 7 | 2 | 932 | $3,263 | $3.50 | $111,883 | Blank | [124](floorplans/124.png) | stainless appliances, Oval views | ENE |  | 39.0 s | no |  |
@@ -85,9 +87,9 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 
 | Building | Zone | The Oval | Walk to the L | Units seen | Cheapest 1 bed | Cheapest 2 bed | Oval views listed |
 | --- | --- | --- | --- | --- | --- | --- | --- |
+| 330 First Avenue | First Ave front |  | 5.5 min | 3 |  | $2,787 |  |
 | 11 Stuyvesant Oval | Oval | windows face SE | 3.8 min | 2 | $3,450 |  |  |
 | 545 East 14th Street | 14th St front |  | 2.2 min | 2 | $2,234 |  |  |
-| 330 First Avenue | First Ave front |  | 5.5 min | 2 |  | $2,787 |  |
 | 5 Stuyvesant Oval | Oval | windows face ESE | 3.1 min | 2 | $2,184 |  |  |
 | 451 East 14th Street | interior |  | 2.2 min | 2 | $4,381 |  |  |
 | 441 East 20th Street | 20th St front |  | 7.2 min | 1 | $4,994 |  |  |
@@ -120,17 +122,17 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 | 123 | 2 | 932 | 1 | $2,644 | living 12’0” x 18’8”, bedroom 15’0” x 12’0”, bedroom 2 9’2” x 14’4”, dining 8’4” x 9’6”, 5 closets | <a href="floorplans/123.png"><img src="floorplans/123.png" width="140" alt="layout 123"></a> |
 | 124 | 2 | 932 | 2 | $3,263-$4,503 | living 12’0” x 18’8”, bedroom 11’11” x 15’0”, bedroom 2 9’2” x 14’3”, dining 9’6” x 8’2”, 5 closets | <a href="floorplans/124.png"><img src="floorplans/124.png" width="140" alt="layout 124"></a> |
 | 125 | 2 | 948 | 1 | $2,648 | living 12’0” x 18’8”, bedroom 15’0” x 12’0”, bedroom 2 9’2” x 14’4”, dining 9’2” x 9’6”, 5 closets | <a href="floorplans/125.png"><img src="floorplans/125.png" width="140" alt="layout 125"></a> |
-| 126 | 2 | 955 | 2 | $2,787-$3,067 | living 12’0” x 18’8”, bedroom 15’2” x 12’0”, bedroom 2 9’2” x 14’4”, dining 8’4” x 9’6”, 5 closets | <a href="floorplans/126_st2bedclassic.png"><img src="floorplans/126_st2bedclassic.png" width="140" alt="layout 126"></a> |
+| 126 | 2 | 955 | 3 | $2,787-$3,067 | living 12’0” x 18’8”, bedroom 15’2” x 12’0”, bedroom 2 9’2” x 14’4”, dining 8’4” x 9’6”, 5 closets | <a href="floorplans/126_st2bedclassic.png"><img src="floorplans/126_st2bedclassic.png" width="140" alt="layout 126"></a> |
 | 131 | 2 | 967 | 1 | $5,631 | living 12’0” x 18’8”, bedroom 11’11” x 15’0”, bedroom 2 9’3” x 14’3”, dining 8’2” x 9’6”, 5 closets | <a href="floorplans/131.png"><img src="floorplans/131.png" width="140" alt="layout 131"></a> |
 | 141 | 3 | 1148 | 1 | $5,444 | living 12’0” x 18’8”, bedroom 10’8” x 18’0”, bedroom 2 9’4” x 14’11”, bedroom 3 9’3” x 14’5”, dining 9’6” x 8’2”, 6 closets | <a href="floorplans/141.png"><img src="floorplans/141.png" width="140" alt="layout 141"></a> |
 
 ## Patterns
 
-- **Posting times** (ET, all days): 7:15 ×10, 7:30 ×4, 8:00 ×6, 8:15 ×3, 8:30 ×2
-- **Units by weekday:** Mon 4, Tue 4, Wed 6, Thu 4, Fri 7
-- **How long units at or under your limit stay listed:** median 40.0 s (fastest 25.0 s, 7 units)
+- **Posting times** (ET, all days): 7:15 ×11, 7:30 ×4, 8:00 ×6, 8:15 ×3, 8:30 ×2
+- **Units by weekday:** Mon 5, Tue 4, Wed 6, Thu 4, Fri 7
+- **How long units at or under your limit stay listed:** median 40.0 s (fastest 23.0 s, 8 units)
 - **How long units over your limit stay listed:** median 6 min (fastest 39.0 s, 8 units)
-- **When on the quarter hour they're posted** (their clock, s): -0.14 to +0.11, -0.14 to +0.11, -0.14 to +0.11, -0.14 to +0.11, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.12
+- **When on the quarter hour they're posted** (their clock, s): -0.14 to +0.11, -0.14 to +0.11, -0.14 to +0.11, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.11
 - **Our applications:** 2 sent (2 browser); median 1.1 s from the unit appearing to sending
 - **All auto-apply results so far:** 5 submitted
 
@@ -138,8 +140,8 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 
 | Code | Means | Units |
 | --- | --- | --- |
-| IBSS | Stainless steel appliances | 15 |
-| PS40 | PS40 School District | 7 |
+| IBSS | Stainless steel appliances | 16 |
+| PS40 | PS40 School District | 8 |
 | ATW2 | Through wall A/C | 4 |
 | DW18 | Dishwasher | 4 |
 | NFF | Natural finish wood flooring | 4 |
@@ -160,10 +162,10 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 | FS03 | 3rd floor | 2 |
 | FS05 | 5th floor | 2 |
 | FS07 | 7th floor | 2 |
+| FS08 | 8th floor | 2 |
 | FS09 | 9th floor | 2 |
 | FS0M | Main level | 2 |
 | FS01 | 1st floor | 1 |
 | FS04 | 4th Floor | 1 |
-| FS08 | 8th floor | 1 |
 | FS13 | 13th floor | 1 |
 | zROSE | Modern finish | 1 |
