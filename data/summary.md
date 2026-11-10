@@ -1,17 +1,19 @@
 # StuyTown watcher: summary
 
-Updated Mon Nov 9, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2 bed <= $2,800**. Dream units: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10. Direct submit: **ready**.
+Updated Tue Nov 10, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2 bed <= $2,800**. Dream units: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10. Direct submit: not ready (the site's code changed since the request was checked (v639298134278405526)).
 
 Map of every building and unit seen: [units.geojson](units.geojson) (GitHub draws it; tap a dot), or [on geojson.io](https://geojson.io/#data=data:text/x-url,https%3A%2F%2Fraw.githubusercontent.com%2Fcshoffmann%2Fstuytown-affordable-housing-watcher%2Fmain%2Fdata%2Funits.geojson).
 
 ## Needs a look
 
-- Couldn't open the form of Apt 13-A (couldn't find the APPLY NOW button on the unit page): the site may have changed
+- Couldn't open the form of Apt 08-B (TimeoutError: Locator.click: Timeout 15000ms exceeded.): the site may have changed
+- StuyTown changed its site code; direct submit is off until a recording proves the request again (the site's code changed since the request was checked (v639298134278405526))
 
 ## Mornings
 
 | Date | Units posted at (ET) | Qualified | Auto-apply | Checks | API median / p99 |
 | --- | --- | --- | --- | --- | --- |
+| Tue Nov 10 | none | 0 | - | 6,136 | 71 / 329 ms |
 | Mon Nov 9 | 7:15:00 | 1 | - | 6,152 | 18 / 146 ms |
 | Sun Nov 8 | none | 0 | - | 6,144 | 29 / 236 ms |
 | Sat Nov 7 | none | 0 | - | 6,142 | 45 / 248 ms |
