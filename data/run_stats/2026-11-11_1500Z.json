@@ -1,0 +1,104 @@
+{
+  "applier": {
+    "browser_ready_seconds": [
+      1.5
+    ],
+    "direct_submit": {
+      "format_rules": {
+        "buildingAddress": "capitalized",
+        "cellPhone": "digits",
+        "householdSize": "text",
+        "totalAnnualEarnings": "whole",
+        "version": "the unit's",
+        "workPhone": "digits"
+      },
+      "format_site_version": "639298134278405526",
+      "ready": false,
+      "site_version": "639298937513594692",
+      "verified_utc": "2026-11-09T12:15:01.450Z",
+      "why_not": "the site's code changed since the request was checked (v639298134278405526)"
+    },
+    "idle_listings_page": {
+      "errors": {},
+      "loads": 46,
+      "requests_on_its_own": [],
+      "watched_minutes": 172.8,
+      "websockets": {}
+    },
+    "mode": "recording only",
+    "profile_warnings": [],
+    "recordings": [
+      {
+        "apartment": "08-B",
+        "detail": "TimeoutError: Locator.click: Timeout 15000ms exceeded.",
+        "direct_submit_check": "no request captured",
+        "status": "failed",
+        "unit_id": "P~NYST31~B~330~U~08-B"
+      }
+    ],
+    "workers": 1
+  },
+  "listings_api": {
+    "connections": {
+      "kept-open connection": 6095,
+      "new connection": 37
+    },
+    "distinct_responses": 1,
+    "etag": {
+      "seen": false
+    },
+    "failures": {},
+    "headers": {
+      "access-control-allow-origin": {
+        "*": 6132
+      },
+      "connection": {
+        "close": 36,
+        "keep-alive": 6096
+      },
+      "strict-transport-security": {
+        "max-age=15724800; includeSubDomains": 6132
+      },
+      "x-cache": {
+        "CONFIG_NOCACHE": 6132
+      }
+    },
+    "headers_present": {
+      "x-azure-ref": 6132
+    },
+    "requests": 6132,
+    "response_bytes": {
+      "max": 42,
+      "min": 42
+    },
+    "response_ms": {
+      "max": 1294.0,
+      "median": 75.0,
+      "min": 70.7,
+      "p90": 79.4,
+      "p99": 281.4
+    },
+    "statuses": {
+      "200": 6132
+    },
+    "their_clock_minus_ours_exact_s": {
+      "at_least": -0.019,
+      "at_most": 0.25,
+      "best_guess": 0.116,
+      "consistent": true
+    },
+    "their_clock_minus_ours_s": {
+      "max": -0.0,
+      "median": -0.1,
+      "min": -0.8,
+      "p90": -0.1,
+      "p99": -0.1
+    }
+  },
+  "pace": [],
+  "run": {
+    "ended_utc": "2026-11-11T15:00:01.097Z",
+    "started_utc": "2026-11-11T11:59:02.359Z"
+  },
+  "units": {}
+}

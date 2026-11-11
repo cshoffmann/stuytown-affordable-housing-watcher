@@ -1,0 +1,150 @@
+{
+  "started_utc": "2026-11-11T11:59:02Z",
+  "seconds": 15.782,
+  "outcome": {
+    "status": "failed",
+    "detail": "TimeoutError: Locator.click: Timeout 15000ms exceeded.",
+    "seconds": 15.76,
+    "form_url": "",
+    "fields_filled": [],
+    "problems": [],
+    "site_messages": [],
+    "form_fields": [],
+    "timeline": {}
+  },
+  "steps": [
+    {
+      "t": 0.035,
+      "step": "opening the unit page",
+      "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~330~U~08-B"
+    },
+    {
+      "t": 0.699,
+      "step": "APPLY NOW button visible",
+      "text": "APPLY NOW",
+      "page_url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~330~U~08-B"
+    },
+    {
+      "t": 15.725,
+      "step": "crashed",
+      "error": "TimeoutError: Locator.click: Timeout 15000ms exceeded.\nCall log:\n  - waiting for locator(\"[data-autoapply-apply]\").first\n"
+    }
+  ],
+  "notes": {
+    "unit": {
+      "unit_id": "P~NYST31~B~330~U~08-B",
+      "apartment": "08-B",
+      "address": "330 First Avenue",
+      "bedrooms": 2,
+      "bathrooms": 1,
+      "price": 2787.04,
+      "income_requirement": 95555.66,
+      "available_date": "2026-12-05T00:00:00Z",
+      "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~330~U~08-B"
+    },
+    "kind": "recording: the form recorded, then filled and SUBMIT pressed with every outgoing request blocked -- nothing was sent",
+    "direct_submit_check": "no request captured"
+  },
+  "console": [
+    {
+      "t": 0.18,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.635,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.635,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.635,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.637,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.642,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.642,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.643,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "t": 0.644,
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    }
+  ],
+  "navigations": [
+    {
+      "t": 0.166,
+      "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~330~U~08-B"
+    }
+  ],
+  "websockets": [],
+  "cookies": [
+    {
+      "name": "INGRESSCOOKIE",
+      "domain": "affordable-housing.stuytown.com",
+      "path": "/",
+      "http_only": true,
+      "secure": true,
+      "same_site": "Lax",
+      "expires_in_days": null,
+      "value_length": 57
+    },
+    {
+      "name": "__cf_bm",
+      "domain": ".fonts.net",
+      "path": "/",
+      "http_only": true,
+      "secure": true,
+      "same_site": "None",
+      "expires_in_days": 0.0,
+      "value_length": 199
+    }
+  ],
+  "pages_kept": "kept: the outcome was failed",
+  "files": [
+    "1_unit_page.html",
+    "network.json"
+  ],
+  "analysis": {
+    "submit_request": null,
+    "requests_after_submit": [],
+    "script_hosts": {
+      "affordable-housing.stuytown.com": 3,
+      "global.ketchcdn.com": 1,
+      "www.googletagmanager.com": 1
+    },
+    "anti_bot": {
+      "cloudflare_bot_check": [
+        "cookies: __cf_bm (set by .fonts.net)"
+      ]
+    },
+    "cdn": {
+      "azure_front_door": [
+        "requests",
+        "pages",
+        "headers"
+      ]
+    }
+  }
+}
