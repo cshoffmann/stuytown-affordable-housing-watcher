@@ -1,18 +1,18 @@
 # StuyTown watcher: summary
 
-Updated Wed Nov 11, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2 bed <= $2,800**. Dream units: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10. Direct submit: not ready (the site's code changed since the request was checked (v639298134278405526)).
+Updated Thu Nov 12, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2 bed <= $2,800**. Dream units: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10. Direct submit: **ready**.
 
 Map of every building and unit seen: [units.geojson](units.geojson) (GitHub draws it; tap a dot), or [on geojson.io](https://geojson.io/#data=data:text/x-url,https%3A%2F%2Fraw.githubusercontent.com%2Fcshoffmann%2Fstuytown-affordable-housing-watcher%2Fmain%2Fdata%2Funits.geojson).
 
 ## Needs a look
 
 - Couldn't open the form of Apt 08-B (TimeoutError: Locator.click: Timeout 15000ms exceeded.): the site may have changed
-- StuyTown changed its site code; direct submit is off until a recording proves the request again (the site's code changed since the request was checked (v639298134278405526))
 
 ## Mornings
 
 | Date | Units posted at (ET) | Qualified | Auto-apply | Checks | API median / p99 |
 | --- | --- | --- | --- | --- | --- |
+| Thu Nov 12 | 7:15:00 | 0 | - | 6,135 | 70 / 281 ms |
 | Wed Nov 11 | none | 0 | - | 6,132 | 75 / 281 ms |
 | Tue Nov 10 | none | 0 | - | 6,136 | 71 / 329 ms |
 | Mon Nov 9 | 7:15:00 | 1 | - | 6,152 | 18 / 146 ms |
@@ -57,6 +57,7 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 
 | Posted (ET) | Apartment | Zone | Floor | Beds | Sq ft | Rent | $/sq ft | Min. income | Finish | Layout | Features | Faces | Dream rating | Listed for | Qualified | Auto-apply |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Nov 12 7:15:00 AM | 10-C, 285 Avenue C | Oval | 10 | 1 | 745 | $4,181 | $5.61 | $143,352 | Modern | [107](floorplans/107.png) |  |  |  | 44 min | no |  |
 | Nov 9 7:15:00 AM | 08-B, 330 First Avenue | First Ave front | 8 | 2 | 955 | $2,787 | $2.92 | $95,556 | Blank | [126](floorplans/126_st2bedclassic.png) | PS 40 zone, stainless appliances |  |  | 23.0 s | yes |  |
 | Nov 6 8:30:00 AM | 13-A, 441 East 20th Street | 20th St front | 13 | 1 | 944 | $4,994 | $5.29 | $171,207 | Platinum | [150](floorplans/150.png) | wall A/C, PS 40 zone, Downtown view, closet system, Wood flooring |  |  | 90 min | no |  |
 | Nov 6 8:15:00 AM | 06-C, 11 Stuyvesant Oval | Oval | 6 | 1 | 745 | $3,450 | $4.63 | $118,286 | Classic | [107](floorplans/107.png) | wood floors, renovated bath |  |  | 18 min | no |  |
@@ -95,6 +96,7 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 | 545 East 14th Street | 14th St front |  | 2.2 min | 2 | $2,234 |  |  |
 | 5 Stuyvesant Oval | Oval | windows face ESE | 3.1 min | 2 | $2,184 |  |  |
 | 451 East 14th Street | interior |  | 2.2 min | 2 | $4,381 |  |  |
+| 285 Avenue C | Oval | windows face WNW | 6.8 min | 1 | $4,181 |  |  |
 | 441 East 20th Street | 20th St front |  | 7.2 min | 1 | $4,994 |  |  |
 | 1 Stuyvesant Oval | Oval | windows face ENE | 2.2 min | 1 |  | $3,263 | 1 |
 | 605 East 14th Street | 14th St front |  | 2.9 min | 1 | $2,125 |  |  |
@@ -117,7 +119,7 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 | --- | --- | --- | --- | --- | --- | --- |
 | 102 | 1 | 771 | 3 | $2,203-$4,878 | living 12’0” x 18’7”, bedroom 15’0” x 12’0”, dining 9’6” x 9’4”, 4 closets | <a href="floorplans/102.png"><img src="floorplans/102.png" width="140" alt="layout 102"></a> |
 | 105 | 1 | 790 | 1 | $4,405 | living 12’0” x 18’8”, bedroom 10’4” x 18’8”, dining 8’3” x 9’5”, 4 closets | <a href="floorplans/105.png"><img src="floorplans/105.png" width="140" alt="layout 105"></a> |
-| 107 | 1 | 745 | 6 | $2,184-$4,471 | living 12’0” x 18’8”, bedroom 10’4” x 18’8”, dining 8’2” x 9’6”, 4 closets | <a href="floorplans/107.png"><img src="floorplans/107.png" width="140" alt="layout 107"></a> |
+| 107 | 1 | 745 | 7 | $2,184-$4,471 | living 12’0” x 18’8”, bedroom 10’4” x 18’8”, dining 8’2” x 9’6”, 4 closets | <a href="floorplans/107.png"><img src="floorplans/107.png" width="140" alt="layout 107"></a> |
 | 108 | 1 | 764 | 2 | $2,081-$2,125 | living 12’1” x 18’8”, bedroom 15’0” x 12’0”, dining 9’6” x 8’1”, 4 closets | <a href="floorplans/108.png"><img src="floorplans/108.png" width="140" alt="layout 108"></a> |
 | 110 | 1 | 764 | 2 | $2,234 | living 11’11” x 18’8”, bedroom 15’0” x 12’0”, dining 9’6” x 9’4”, 4 closets | <a href="floorplans/110.png"><img src="floorplans/110.png" width="140" alt="layout 110"></a> |
 | 119 | 1 | 749 | 2 | $2,033-$2,078 | living 12’0” x 19’4”, bedroom 12’8” x 14’0”, dining 8’2” x 10’2”, 4 closets | <a href="floorplans/119.png"><img src="floorplans/119.png" width="140" alt="layout 119"></a> |
@@ -131,11 +133,11 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 
 ## Patterns
 
-- **Posting times** (ET, all days): 7:15 ×11, 7:30 ×4, 8:00 ×6, 8:15 ×3, 8:30 ×2
-- **Units by weekday:** Mon 5, Tue 4, Wed 6, Thu 4, Fri 7
+- **Posting times** (ET, all days): 7:15 ×12, 7:30 ×4, 8:00 ×6, 8:15 ×3, 8:30 ×2
+- **Units by weekday:** Mon 5, Tue 4, Wed 6, Thu 5, Fri 7
 - **How long units at or under your limit stay listed:** median 40.0 s (fastest 23.0 s, 8 units)
-- **How long units over your limit stay listed:** median 6 min (fastest 39.0 s, 8 units)
-- **When on the quarter hour they're posted** (their clock, s): -0.14 to +0.11, -0.14 to +0.11, -0.14 to +0.11, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.11
+- **How long units over your limit stay listed:** median 8 min (fastest 39.0 s, 9 units)
+- **When on the quarter hour they're posted** (their clock, s): -0.14 to +0.11, -0.14 to +0.11, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.11, -0.15 to +0.10
 - **Our applications:** 2 sent (2 browser); median 1.1 s from the unit appearing to sending
 - **All auto-apply results so far:** 5 submitted
 
@@ -159,16 +161,16 @@ Dream: 1 bed <= $2,200, 2 bed <= $2,700; floors 5-10; Oval views; windows facing
 | PWF | Wood flooring | 1 |
 | FS06 | 6th floor | 5 |
 | zCRRE | Platinum finish | 5 |
+| FS10 | 10th floor | 4 |
 | zMET | Classic finish | 4 |
 | FS02 | 2nd floor | 3 |
-| FS10 | 10th floor | 3 |
 | FS03 | 3rd floor | 2 |
 | FS05 | 5th floor | 2 |
 | FS07 | 7th floor | 2 |
 | FS08 | 8th floor | 2 |
 | FS09 | 9th floor | 2 |
 | FS0M | Main level | 2 |
+| zROSE | Modern finish | 2 |
 | FS01 | 1st floor | 1 |
 | FS04 | 4th Floor | 1 |
 | FS13 | 13th floor | 1 |
-| zROSE | Modern finish | 1 |

@@ -1,0 +1,130 @@
+{
+  "applier": {
+    "browser_ready_seconds": [
+      1.05
+    ],
+    "direct_submit": {
+      "format_rules": {
+        "buildingAddress": "capitalized",
+        "cellPhone": "digits",
+        "householdSize": "text",
+        "totalAnnualEarnings": "whole",
+        "version": "the unit's",
+        "workPhone": "digits"
+      },
+      "format_site_version": "639298937513594692",
+      "ready": true,
+      "site_version": "639298937513594692",
+      "verified_utc": "2026-11-12T12:15:02.598Z",
+      "why_not": null
+    },
+    "idle_listings_page": {
+      "errors": {},
+      "loads": 45,
+      "requests_on_its_own": [],
+      "watched_minutes": 172.9,
+      "websockets": {}
+    },
+    "mode": "recording only",
+    "profile_warnings": [],
+    "recordings": [
+      {
+        "apartment": "08-B",
+        "detail": "TimeoutError: Locator.click: Timeout 15000ms exceeded.",
+        "direct_submit_check": "no request captured",
+        "status": "failed",
+        "unit_id": "P~NYST31~B~330~U~08-B"
+      },
+      {
+        "apartment": "10-C",
+        "detail": "form recorded and the site's request captured; nothing was sent",
+        "direct_submit_check": "learned the site's request (code v639298937513594692); qualifying units now go direct",
+        "status": "recorded",
+        "unit_id": "P~NYST31~B~285~U~10-C"
+      }
+    ],
+    "workers": 1
+  },
+  "listings_api": {
+    "connections": {
+      "kept-open connection": 6099,
+      "new connection": 36
+    },
+    "distinct_responses": 2,
+    "etag": {
+      "seen": false
+    },
+    "failures": {},
+    "headers": {
+      "access-control-allow-origin": {
+        "*": 6135
+      },
+      "connection": {
+        "close": 36,
+        "keep-alive": 6099
+      },
+      "strict-transport-security": {
+        "max-age=15724800; includeSubDomains": 6135
+      },
+      "x-cache": {
+        "CONFIG_NOCACHE": 6135
+      }
+    },
+    "headers_present": {
+      "x-azure-ref": 6135
+    },
+    "requests": 6135,
+    "response_bytes": {
+      "max": 1359,
+      "min": 42
+    },
+    "response_ms": {
+      "max": 918.5,
+      "median": 70.4,
+      "min": 66.5,
+      "p90": 75.6,
+      "p99": 280.7
+    },
+    "statuses": {
+      "200": 6135
+    },
+    "their_clock_minus_ours_exact_s": {
+      "at_least": -0.032,
+      "at_most": 0.235,
+      "best_guess": 0.101,
+      "consistent": true
+    },
+    "their_clock_minus_ours_s": {
+      "max": -0.0,
+      "median": -0.1,
+      "min": -0.9,
+      "p90": -0.1,
+      "p99": -0.1
+    }
+  },
+  "pace": [],
+  "run": {
+    "ended_utc": "2026-11-12T15:00:00.273Z",
+    "started_utc": "2026-11-12T11:59:01.554Z"
+  },
+  "units": {
+    "P~NYST31~B~285~U~10-C": {
+      "address": "285 Avenue C",
+      "apartment": "10-C",
+      "first_seen_utc": "2026-11-12T12:15:00.000Z",
+      "income_requirement": 143352.34,
+      "last_seen_utc": "2026-11-12T12:59:15Z",
+      "listed_for_seconds": 2655.0,
+      "not_listed_at_utc": "2026-11-12T12:14:59.750Z",
+      "posted_vs_quarter_hour_their_clock_s": [
+        -0.15,
+        0.1
+      ],
+      "posted_within_seconds": 0.25,
+      "qualifies_for_auto_apply": false,
+      "removal_confirmed_utc": "2026-11-12T13:00:17.000Z",
+      "rent": 4181.11,
+      "seen_seconds_after_quarter_hour": 0.0
+    }
+  }
+}

@@ -201,6 +201,34 @@
    "sqft": 932,
    "winter_sun_h": null
   },
+  "285 AVENUE C|C": {
+   "bedrooms": 1,
+   "building": "285 AVENUE C",
+   "complex": "Stuy Town",
+   "facing": [],
+   "facing_certain": false,
+   "facing_from": "unknown: not listed with Oval views",
+   "layouts": {
+    "107": 1
+   },
+   "line": "C",
+   "looks_onto_street": null,
+   "oval_views": {
+    "no": 1,
+    "yes": 0
+   },
+   "seen": [
+    {
+     "apartment": "10-C",
+     "finish": "Modern",
+     "first_seen_utc": "2026-11-12T12:15:00Z",
+     "floor": 10,
+     "rent": 4181.11
+    }
+   ],
+   "sqft": 745,
+   "winter_sun_h": null
+  },
   "330 FIRST AVENUE|A": {
    "bedrooms": 2,
    "building": "330 FIRST AVENUE",
