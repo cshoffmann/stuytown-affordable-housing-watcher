@@ -1,0 +1,96 @@
+{
+  "applier": {
+    "browser_ready_seconds": [
+      2.68
+    ],
+    "direct_submit": {
+      "format_rules": {
+        "buildingAddress": "capitalized",
+        "cellPhone": "digits",
+        "householdSize": "text",
+        "totalAnnualEarnings": "whole",
+        "version": "the unit's",
+        "workPhone": "digits"
+      },
+      "format_site_version": "639298937513594692",
+      "ready": true,
+      "site_version": "639298937513594692",
+      "verified_utc": "2026-11-12T12:15:02.598Z",
+      "why_not": null
+    },
+    "idle_listings_page": {
+      "errors": {},
+      "loads": 46,
+      "requests_on_its_own": [],
+      "watched_minutes": 172.9,
+      "websockets": {}
+    },
+    "mode": "recording only",
+    "profile_warnings": [],
+    "recordings": [],
+    "workers": 1
+  },
+  "listings_api": {
+    "connections": {
+      "kept-open connection": 6115,
+      "new connection": 39
+    },
+    "distinct_responses": 1,
+    "etag": {
+      "seen": false
+    },
+    "failures": {},
+    "headers": {
+      "access-control-allow-origin": {
+        "*": 6154
+      },
+      "connection": {
+        "close": 39,
+        "keep-alive": 6115
+      },
+      "strict-transport-security": {
+        "max-age=15724800; includeSubDomains": 6154
+      },
+      "x-cache": {
+        "CONFIG_NOCACHE": 6154
+      }
+    },
+    "headers_present": {
+      "x-azure-ref": 6154
+    },
+    "requests": 6154,
+    "response_bytes": {
+      "max": 42,
+      "min": 42
+    },
+    "response_ms": {
+      "max": 512.1,
+      "median": 17.9,
+      "min": 13.7,
+      "p90": 25.3,
+      "p99": 115.8
+    },
+    "statuses": {
+      "200": 6154
+    },
+    "their_clock_minus_ours_exact_s": {
+      "at_least": -0.014,
+      "at_most": 0.25,
+      "best_guess": 0.118,
+      "consistent": true
+    },
+    "their_clock_minus_ours_s": {
+      "max": -0.0,
+      "median": -0.0,
+      "min": -0.9,
+      "p90": -0.0,
+      "p99": -0.0
+    }
+  },
+  "pace": [],
+  "run": {
+    "ended_utc": "2026-11-13T15:00:00.372Z",
+    "started_utc": "2026-11-13T11:59:04.559Z"
+  },
+  "units": {}
+}
