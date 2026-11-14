@@ -36,10 +36,6 @@ on:
         description: 'Test auto-apply instead: fill + submit a FAKE form with your APPLICANT_PROFILE secret, screenshot to your phone'
         type: boolean
         default: false
-      refresh_map:
-        description: 'Refresh the map instead: buildings from OpenStreetMap, new floorplans, data/units.geojson and the summary (commits them)'
-        type: boolean
-        default: false
       site_check:
         description: "Check the site instead: open StuyTown's listings page and compare what it loads with what the watcher sees (no commits)"
         type: boolean
@@ -60,9 +56,9 @@ jobs:
     # Earliest possible start (6:00) to 10:00 is 4 hours, plus setup.
     timeout-minutes: 270
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -91,21 +87,10 @@ jobs:
           AUTO_APPLY_RULES: ${{ vars.AUTO_APPLY_RULES }}
           AUTO_APPLY_MAX_RENT: ${{ vars.AUTO_APPLY_MAX_RENT }}
           AUTO_APPLY_SELFTEST: ${{ inputs.auto_apply_selftest }}
-          # Dream units (dream_units.py): highlighted only. Unset = 1:2200, 2:2700 and floors 5-10.
-          DREAM_RULES: ${{ vars.DREAM_RULES }}
-          DREAM_FLOORS: ${{ vars.DREAM_FLOORS }}
-          REFRESH_MAP: ${{ inputs.refresh_map }}
           SITE_CHECK: ${{ inputs.site_check }}
         run: |
           if [ "$SITE_CHECK" = "true" ]; then
             python site_check.py
-            exit
-          fi
-          if [ "$REFRESH_MAP" = "true" ]; then
-            # The morning run does this by itself after 10:00; this is the same, now.
-            python units_map.py --refresh --buildings
-            python summary.py > /dev/null
-            python -c "import watch_loop; watch_loop.commit_and_push('Refresh the map, buildings and floorplans')"
             exit
           fi
           if [ "$AUTO_APPLY_SELFTEST" = "true" ]; then
@@ -126,7 +111,7 @@ jobs:
 
       - name: Upload the test run's output (fake morning, or the auto-apply self-test's redacted recording)
         if: ${{ always() && (inputs.fake_morning || inputs.auto_apply_selftest) }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: test-output
           path: tests/output/

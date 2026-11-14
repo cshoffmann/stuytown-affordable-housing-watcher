@@ -9,18 +9,16 @@ read on GitHub (or your phone) -- rewritten at the end of every morning.
                    pushing back, direct submit unable to learn the request ...
     Mornings       one line per morning: when units were posted, how many
                    qualified, what auto-apply did, how the API held up
-    Dream units    the units that were (or nearly were) a dream (dream_units.py)
-    Units          every unit seen (newest first): posted, where, floor, size,
-                   rent, finish, layout, features, which way it faces, its
-                   dream rating, how long it stayed listed, what auto-apply did
-    Buildings      each building seen: zone, Oval side, walk to the L, rents
-    Layouts        each layout seen, with its floorplan
+    Units          every unit seen (newest first): posted, floor, size, rent,
+                   finish, layout, features, how long it stayed listed, what
+                   auto-apply did
+    Layouts        each layout seen, with its floorplan and room sizes
     Patterns       posting times, how long units last, how fast we are
     Feature codes  what the listings' feature codes mean
 
 It's built from data/events.json (every unit since the watcher started),
 data/run_stats/ (each morning's measurements), data/applications.json and
-the reference data (data/reference/, data/floorplans/). Nothing personal is
+data/floorplans/. Nothing personal is
 in any of them, so nothing personal is in this.
 
     python summary.py      # rebuild data/summary.md from what's in data/
@@ -29,6 +27,7 @@ in any of them, so nothing personal is in this.
 import glob
 import json
 import os
+import re
 import statistics
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
@@ -148,6 +147,11 @@ def issues(run: dict | None) -> list:
     if not run:
         return []
     found = []
+    problem = (run.get("alerts") or {}).get("problem")
+    if problem:
+        found.append(f"Alerts can't reach your phone: {problem}. If Pushover says \"no active devices\", open "
+                     "the Pushover app and buy it after its trial (or re-enable your device at pushover.net), "
+                     "then Run workflow with \"Send a [TEST] alert\". The run is marked failed until then")
     applier = run.get("applier")
     applying = applier is not None and applier.get("mode") != "recording only"
     for entry in (run.get("units") or {}).values():
@@ -168,7 +172,7 @@ def issues(run: dict | None) -> list:
         elif "unexpected" in check or "couldn't rebuild" in check:
             found.append(f"Direct submit couldn't learn the site's request (Apt {recording.get('apartment')}): {check}")
     direct = (applier or {}).get("direct_submit") or {}
-    if "code changed" in (direct.get("why_not") or ""):
+    if "code changed" in (direct.get("why_not") or "") and applying:  # while off, the next rehearsal re-proves it
         found.append(f"StuyTown changed its site code; direct submit is off until a recording proves the request "
                      f"again ({direct['why_not']})")
     if applier is not None and not applier.get("browser_ready_seconds"):
@@ -191,15 +195,10 @@ def issues(run: dict | None) -> list:
 def render(events: list, stats: list, applications: dict, max_rent: float | None = None,
            now: datetime | None = None, rules: dict | None = None) -> str:
     import auto_apply
-    import dream_units
 
     now = (now or datetime.now(timezone.utc)).astimezone(NEW_YORK)
     limits = (rules or {}, max_rent)
     rows = sightings(events, stats)
-    reference = {"buildings": dream_units.load_buildings(), "atlas": dream_units.build_atlas(events),
-                 "overrides": dream_units.load_overrides()}
-    for row in rows:
-        row["rating"] = dream_units.rate(row["data"], **reference) if row["data"] else None
     latest = stats[-1] if stats else None
     direct = ((latest or {}).get("applier") or {}).get("direct_submit") or {}
     limit = auto_apply.limits_text(rules or {}, max_rent) or "not set"
@@ -207,12 +206,10 @@ def render(events: list, stats: list, applications: dict, max_rent: float | None
         "# StuyTown watcher: summary",
         "",
         f"Updated {now:%a %b %-d, %-I:%M %p} ET. Auto-apply rent limits: **{limit}**. "
-        f"Dream units: {dream_units.settings_text()}. "
         + ("Direct submit: **ready**." if direct.get("ready") else
            f"Direct submit: not ready ({direct['why_not']})." if direct.get("why_not") else ""),
         "",
-        f"Map of every building and unit seen: [units.geojson](units.geojson) (GitHub draws it; tap a dot), "
-        f"or [on geojson.io]({MAP_VIEWER}).",
+        "One line per morning: [daily_log.md](daily_log.md).",
         "",
         "## Needs a look",
         "",
@@ -248,13 +245,11 @@ def render(events: list, stats: list, applications: dict, max_rent: float | None
             f"{api['requests']:,}" if api.get("requests") else "-",
             f"{ms['median']:.0f} / {ms['p99']:.0f} ms" if ms else "-"))
 
-    lines += ["", "## Dream units", ""] + dream_section(rows)
-
     cutoff = now.date().toordinal() - UNITS_SHOWN_DAYS
     lines += ["", f"## Units (last {UNITS_SHOWN_DAYS} days, newest first)", "",
-              "| Posted (ET) | Apartment | Zone | Floor | Beds | Sq ft | Rent | $/sq ft | Min. income | Finish "
-              "| Layout | Features | Faces | Dream rating | Listed for | Qualified | Auto-apply |",
-              "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+              "| Posted (ET) | Apartment | Floor | Beds | Sq ft | Rent | $/sq ft | Min. income | Finish "
+              "| Layout | Features | Listed for | Qualified | Auto-apply |",
+              "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     for row in rows:
         if not row["posted"] or row["posted"].date().toordinal() < cutoff:
             continue
@@ -268,7 +263,6 @@ def render(events: list, stats: list, applications: dict, max_rent: float | None
             *unit_detail_cells(row),
             listed, "yes" if _qualifies(row, limits) else "no", _auto_apply_text(row, applications)]) + " |")
 
-    lines += ["", "## Buildings", ""] + buildings_section(rows, reference["buildings"])
     lines += ["", "## Layouts", ""] + layouts_section(rows)
     lines += ["", "## Patterns", ""] + patterns(rows, stats, applications, limits)
     lines += ["", "## Feature codes", ""] + feature_codes_section(rows)
@@ -287,13 +281,11 @@ def _qualifies(row: dict, limits) -> bool:
     return bool(limit and row.get("rent") is not None and row["rent"] <= limit)
 
 
-MAP_VIEWER = ("https://geojson.io/#data=data:text/x-url,https%3A%2F%2Fraw.githubusercontent.com%2Fcshoffmann"
-              "%2Fstuytown-affordable-housing-watcher%2Fmain%2Fdata%2Funits.geojson")
 FLOORPLANS_FROM_SUMMARY = "floorplans"  # data/floorplans, relative to data/summary.md
 
 
 def _floorplan_file(data: dict, kind: str = "png") -> str | None:
-    import reference_data
+    import floorplans as reference_data
 
     layout = str((data.get("style") or {}).get("name") or "")
     path = (data.get("floorplan") or {}).get("floorplanSvg")
@@ -303,98 +295,48 @@ def _floorplan_file(data: dict, kind: str = "png") -> str | None:
     return name if os.path.exists(os.path.join(reference_data.FLOORPLANS_DIR, name)) else None
 
 
-def unit_cells(row: dict) -> list:
-    """Zone, floor, beds, sq ft, rent, $/sq ft."""
-    import dream_units
-    import stuytown_geo as geo
+FEATURE_NAMES = {
+    "VBOV": "Oval views", "OKU": "open kitchen", "PBGK": "galley kitchen", "DW18": "dishwasher",
+    "IBSS": "stainless appliances", "NFF": "wood floors", "MAVM": "renovated bath", "ELFA": "closet system",
+    "PBAC": "extra closet", "ATW2": "wall A/C", "ATW3": "3 wall A/Cs", "PS40": "PS 40 zone",
+}
 
-    data = row["data"]
-    rent = row["rent"]
+
+def finish_name(unit: dict) -> str:
+    """'Classic' -- the API gives a name, or (in some answers) {"name": "Classic", ...}."""
+    finish = unit.get("finish")
+    if isinstance(finish, dict):
+        finish = finish.get("name") or finish.get("searchCode")
+    return str(finish or "")
+
+
+def features(unit: dict) -> list:
+    """['Oval views', 'dishwasher', ...]: short names, without floor and finish codes."""
+    found = []
+    for a in unit.get("amenities") or []:
+        code = str(a.get("code") or "")
+        if re.fullmatch(r"FS\w\w", code) or code.startswith("z"):
+            continue
+        found.append(FEATURE_NAMES.get(code) or str(a.get("friendlyDescription") or code))
+    return found
+
+
+def unit_cells(row: dict) -> list:
+    """Floor, beds, sq ft, rent, $/sq ft."""
+    data, rent = row["data"], row["rent"]
     sqft = data.get("sqft")
-    zone = dream_units.building_info(data).get("zone", "") if data else ""
-    floor = str(data.get("unitFloor") or "").lstrip("0") or (str(geo.floor_number(data) or "") if data else "")
-    return [zone, floor or "?",
-            str(row["beds"]) if row["beds"] is not None else "?", str(sqft or "?"),
+    floor = str(data.get("unitFloor") or "").lstrip("0") or str(row.get("apartment") or "").split("-")[0].lstrip("0")
+    return [floor or "?", str(row["beds"]) if row["beds"] is not None else "?", str(sqft or "?"),
             f"${rent:,.0f}" if rent else "?", f"${rent / sqft:.2f}" if rent and sqft else "?"]
 
 
 def unit_detail_cells(row: dict) -> list:
-    """Finish, layout (linked to its floorplan), features, faces, dream rating."""
-    import dream_units
-
-    data, rating = row["data"], row.get("rating") or {}
+    """Finish, layout (linked to its floorplan), features."""
+    data = row["data"]
     layout = str((data.get("style") or {}).get("name") or "")
     plan = _floorplan_file(data) or _floorplan_file(data, "svg")
-    face = rating.get("facing") or {}
-    faces = ("/".join(face.get("compass") or []) + ("" if face.get("certain") else "?")) if face.get("compass") else ""
-    tier = rating.get("tier")
-    return [dream_units.finish_name(data),
-            f"[{layout}]({FLOORPLANS_FROM_SUMMARY}/{plan})" if plan else layout,
-            ", ".join(dream_units.features(data)), faces,
-            f"**{tier}**" if tier in ("dream", "possible dream") else (tier or "")]
-
-
-def dream_section(rows: list) -> list:
-    import dream_units
-
-    good = [r for r in rows if (r.get("rating") or {}).get("tier") in ("dream", "possible dream", "almost",
-                                                                      "great light")]
-    out = [f"Dream: {dream_units.settings_text()}; Oval views; windows facing E, ESE, SE, S or SW (the north side "
-           "of the Oval). Highlighted only -- auto-apply follows its own rules. Set with the DREAM_RULES and DREAM_FLOORS "
-           "repository variables.", ""]
-    if not good:
-        matches = sum(1 for r in rows if (r.get("rating") or {}).get("tier") == "price match")
-        return out + [f"None yet. {matches} unit{'s' if matches != 1 else ''} matched the dream rent "
-                      "but not the rest (see Units)."]
-    out += ["| Posted (ET) | Apartment | Rent | Beds | Floor | Faces | Rating | Why |",
-            "| --- | --- | --- | --- | --- | --- | --- | --- |"]
-    order = {t: i for i, t in enumerate(dream_units.TIERS)}
-    for r in sorted(good, key=lambda r: (order[r["rating"]["tier"]], -(r["posted"].timestamp() if r["posted"] else 0))):
-        rating = r["rating"]
-        out.append(f"| {r['posted']:%b %-d %-I:%M %p} | {r['apartment']}, {r['address']} | "
-                   f"${r['rent']:,.0f} | {r['beds']} | {rating['floor']} | {'/'.join(rating['facing']['compass'])} | "
-                   f"{rating['tier']} | {rating['why']} |")
-    return out
-
-
-def buildings_section(rows: list, buildings: dict | None) -> list:
-    import dream_units
-
-    out = []
-    if buildings:
-        sunny = sorted({a for fp in buildings.get("footprints", []) for a in fp.get("addresses", [])
-                        if any(w.get("faces_oval") and dream_units.sunny(w) for w in fp.get("walls", []))},
-                       key=lambda a: (a.split(" ", 1)[-1], int(a.split()[0]) if a.split()[0].isdigit() else 0))
-        out += ["**Buildings whose Oval windows get sun** (OpenStreetMap; gold on the map): "
-                + (", ".join(" ".join(w.capitalize() for w in a.split()) for a in sunny) or "none found"), ""]
-    else:
-        out += ["Building outlines and wall directions aren't fetched yet: they come with the next morning's "
-                "wrap-up, or run the workflow with **refresh_map** ticked.", ""]
-    by_building = defaultdict(list)
-    for r in rows:
-        if r["data"]:
-            by_building[r["address"]].append(r)
-    out += ["| Building | Zone | The Oval | Walk to the L | Units seen | Cheapest 1 bed | Cheapest 2 bed | "
-            "Oval views listed |", "| --- | --- | --- | --- | --- | --- | --- | --- |"]
-    for address, group in sorted(by_building.items(), key=lambda item: -len(item[1])):
-        info = dream_units.building_info(group[0]["data"], buildings)
-        side = info.get("oval_side") or {}
-        if info.get("oval_walls"):
-            oval = f"windows face {'/'.join(info['oval_walls'])}"
-        elif info.get("zone") == "Oval" and side:
-            oval = f"on its {side['side']} side, so facing {side['faces_compass']} (estimated)"
-        else:
-            oval = ""
-
-        def cheapest(beds):
-            rents = [r["rent"] for r in group if r["beds"] == beds and r["rent"]]
-            return f"${min(rents):,.0f}" if rents else ""
-
-        views = sum(1 for r in group if dream_units.OVAL_VIEWS in dream_units.codes(r["data"]))
-        walk = info.get("walk_to_l")
-        out.append(f"| {address} | {info.get('zone', '')} | {oval} | {f'{walk[0]:g} min' if walk else ''} | "
-                   f"{len(group)} | {cheapest(1)} | {cheapest(2)} | {views or ''} |")
-    return out
+    return [finish_name(data), f"[{layout}]({FLOORPLANS_FROM_SUMMARY}/{plan})" if plan else layout,
+            ", ".join(features(data))]
 
 
 def layouts_section(rows: list) -> list:
@@ -404,7 +346,7 @@ def layouts_section(rows: list) -> list:
             layouts[str((r["data"].get("style") or {}).get("name") or "?")].append(r)
     if not layouts:
         return ["None seen yet."]
-    import reference_data
+    import floorplans as reference_data
 
     index = reference_data.read_json(os.path.join(reference_data.FLOORPLANS_DIR, "index.json"), {}) or {}
     out = ["| Layout | Beds | Sq ft | Seen | Rents | Rooms | Floorplan |", "| --- | --- | --- | --- | --- | --- | --- |"]

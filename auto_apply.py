@@ -23,11 +23,12 @@ it every check's listings FIRST, before any alert or log is even queued:
 
 Repository variables control it:
 
-    AUTO_APPLY_MODE      on | off (default). Off = recording only: nothing is ever
-                         sent. While the request format isn't proven for the
-                         site's current code, a listed unit's form is filled and
-                         SUBMIT pressed with every request held back, so direct
-                         submit is ready the day auto-apply goes on.
+    AUTO_APPLY_MODE      on | off (default). Off = rehearsal only: nothing is ever
+                         sent. Each morning the first listed unit's form is
+                         filled and SUBMIT pressed with every request held back
+                         (a second unit too while the request format isn't
+                         proven for the site's current code), so the applying
+                         path stays tested and direct submit stays ready.
     AUTO_APPLY_RULES     rent limits by bedrooms, $/month: "1:2200, 2:2700"
                          (0 = studio). A unit whose bedroom count isn't listed
                          falls back to AUTO_APPLY_MAX_RENT, or doesn't qualify.
@@ -326,8 +327,8 @@ def startup_check() -> None:
         print(f"WARNING: AUTO_APPLY_MODE={_MODE_SETTING!r} isn't on or off -- treating it as off.")
     if not ENABLED:
         _profile_if_any()  # masks the profile in the log, for the recordings
-        print("Auto-apply: off -- recording only: forms are recorded when direct submit needs proving, "
-              "and nothing is ever sent (set AUTO_APPLY_MODE to on to apply)")
+        print("Auto-apply: off -- rehearsal only: the first listed unit's form is filled and SUBMIT pressed "
+              "with every request held back, so nothing is sent (set AUTO_APPLY_MODE to on to apply)")
         return
     if RULE_PROBLEMS:
         print(f"WARNING: AUTO_APPLY_RULES: couldn't read {', '.join(RULE_PROBLEMS)!r} "
@@ -593,7 +594,7 @@ class Applier:
             thread.start()
             self._threads.append(thread)
         self.direct.refresh_config(_a_known_unit())
-        known = _last_listed_unit()
+        known = None if self.record_only else _last_listed_unit()  # rehearsals use units listed right now
         if self.direct.why_not() and known is not None:
             # Before 7:00 nothing is listed, but the last unit seen may still
             # have its page and form: a recording of it (SUBMIT held back,
@@ -699,16 +700,18 @@ class Applier:
         return queued
 
     def _record_if_needed(self, units: list) -> list:
-        """Auto-apply off: while direct submit isn't proven for the site's
-        current code, record a listed unit's form -- filled, SUBMIT pressed,
-        every request held back, so nothing is sent -- qualifying units
-        first. Takes no unit, so the alert says "apply now"."""
-        if not units or self.direct.why_not() is None:
+        """Auto-apply off: rehearse on a unit listed right now -- fill its
+        form, press SUBMIT with every request held back, so nothing is sent.
+        The first listed unit every morning (qualifying units first), and a
+        second one while direct submit isn't proven for the site's current
+        code. Takes no unit, so the alert says "apply now"."""
+        if not units:
             return []
         with self._lock:
             for unit in sorted(units, key=lambda u: skip_reason(u, self.profile) is not None):
                 uid = check_units.unit_id(unit)
-                if uid in self._recorded or len(self._recorded) >= MAX_FORM_RECORDINGS_PER_RUN:
+                wanted = 1 if self.direct.why_not() is None else MAX_FORM_RECORDINGS_PER_RUN
+                if uid in self._recorded or len(self._recorded) >= wanted:
                     continue
                 self._recorded.add(uid)
                 self._jobs.put((1, 0.0, next(self._order), "record", unit))

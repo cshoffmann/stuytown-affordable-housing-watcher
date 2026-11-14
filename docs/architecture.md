@@ -11,9 +11,9 @@ break it.**
 ```mermaid
 flowchart LR
     subgraph checker["Checker (main thread)"]
-        P["Fetch listings<br/>every 2 s; every 0.25 s from :57 to :15<br/>one kept-open connection, 4 s timeout"] --> D["Compare with the saved list"]
+        P["Fetch listings<br/>off: every 10 s<br/>on: every 2 s; every 0.25 s from :57 to :15<br/>one kept-open connection, 4 s timeout"] --> D["Compare with the saved list"]
     end
-    subgraph applier["Applier (AUTO_APPLY_MODE=on; off = records only)"]
+    subgraph applier["Applier (on: applies; off: rehearses)"]
         R{"Request format proven<br/>for the site's current code?"}
         R -- yes --> X["Direct submit<br/>≈ 0.05 s"]
         R -- no --> B["Browser worker ×2<br/>warm since 6:59, ≈ 1 s"]
@@ -21,7 +21,7 @@ flowchart LR
     end
     subgraph bg["Background workers"]
         N["Notifier<br/>Pushover, own retries"]
-        L["Logger<br/>events, applications, recordings;<br/>waits while applying; one commit at 10:00"]
+        L["Logger<br/>events, applications;<br/>waits while applying; one commit at 10:00"]
     end
     D -- "1: listings" --> R
     D -- "2: alert" --> N
@@ -35,7 +35,7 @@ flowchart LR
 | Worker | Job | Can it delay an application? |
 | --- | --- | --- |
 | Checker | Fetches the listings and compares them with the last answer. Never pauses for anything else | It's what finds the unit |
-| Applier | On: a direct request, or a browser that fills and submits the form; two units at once. Off: records a form only when direct submit needs proving, and never sends anything | It is the application |
+| Applier | On: a direct request, or a browser that fills and submits the form; two units at once. Off: one browser rehearses on the first listed unit each morning (SUBMIT held back, nothing sent) | It is the application |
 | Notifier | Pushover alerts, with retries | No: its own thread, and a Pushover failure never stops the run |
 | Logger | `data/` files and recordings as they happen; one git commit at 10:00 saying what was listed | No: it waits while an application runs |
 
@@ -55,7 +55,7 @@ sequenceDiagram
     A->>A: direct request (≈ 0.05 s) or browser (≈ 1 s)
     A->>N: "Applied" / "failed, apply yourself"
     A->>L: applications.json, redacted recording
-    Note over L: 10:00: stats, floorplans, map, summary, commit
+    Note over L: 10:00: daily log, stats, floorplans, summary, commit
 ```
 
 A response that isn't a list of units (an error or maintenance page) is a
@@ -70,12 +70,7 @@ falling back to `AUTO_APPLY_MAX_RENT`), and your income ≥ the unit's
 minimum. Each unit is applied to at most once a day; one listed again on a
 later day is applied to again.
 
-**Auto-apply off = recording only.** One browser opens at 6:59. While the
-direct request isn't proven for the site's current code, the first listed
-units (qualifying ones first, two a morning at most) have their form filled
-and SUBMIT pressed with every request held back in the browser. Nothing is
-sent, and the captured request proves the format. Once it's proven, nothing
-more is recorded until StuyTown updates its site.
+**Auto-apply off = collect and rehearse.** The checker polls every 10 s with no bursts, and each day's units (apartment, beds, rent) go into `data/daily_log.md` and the day's commit. One browser opens at 6:59 and, on the first unit listed each morning (qualifying ones first), fills the form and presses SUBMIT with every request held back in the browser: nothing is sent, the applying path is tested daily, and the captured request keeps direct submit proven. A second unit is rehearsed too while the request isn't proven for the site's current code.
 
 **Direct submit** (`direct_submit.py`) sends the same JSON request the site's
 form sends, to `pd-dlcore.beamliving.com/affordable-housing/create-application`.
@@ -93,24 +88,13 @@ Its safety rules:
 4. A refused or lost direct request goes to the browser. The site refuses a
    second application to the same apartment, so nothing is sent twice.
 
-## After 10:00: floorplans, ratings and the map
+## After 10:00
 
-With the applier stopped, the logger runs `units_map.refresh_all()`,
-time-boxed to 100 s:
-
-1. **Reference data** (`reference_data.py`):
-   - It saves each new layout's floorplan: the SVG, a PNG copy and the room sizes.
-   - Once, it fetches the complexes' buildings and streets from OpenStreetMap.
-   - It casts three rays from each wall to see what the wall looks at: the Oval, a street (First Ave, 14th, 20th, 23rd, Avenue C, FDR), or the next building and how far away it is.
-   - From that and NOAA's sun model (`stuytown_geo.py`), it works out the winter sun hours at floors 2, 5, 8 and 11.
-2. **Ratings and atlas** (`dream_units.py`):
-   - A listing with Oval views (`VBOV`) faces its building's Oval wall, and so does every apartment on its line.
-   - Your `line_overrides.json` notes beat that.
-   - Without building outlines, the direction is estimated from the building's position.
-3. **The map** (`units_map.py`) writes `data/units.geojson`.
-
-In the morning, the only dream-unit work is the alert's one-line note, and
-it runs on the notifier.
+With the applier stopped, the logger writes the morning's stats and its line
+in `data/daily_log.md`, fetches the floorplan of any new layout
+(`floorplans.py`: SVG, a PNG copy, room sizes), deletes recordings older
+than 30 days (git history keeps them), rebuilds `data/summary.md` and makes
+the day's one commit.
 
 ## What the live site has shown
 

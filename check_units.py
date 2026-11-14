@@ -482,7 +482,7 @@ def process_snapshot(units: list, now: datetime | None = None, label: str = "", 
          the rent limit, income high enough) get an alert, an Emergency one;
          with no qualifies, every new unit does. Every unit, qualifying or
          not, goes in the events log. note(unit) adds a line to the alert
-         (the dream-unit rating); it runs on the notifier, not here.
+         (a one-line note); it runs on the notifier, not here.
 
     Without notifier/logger (tests, the fake morning) the jobs run inline."""
     now = now or datetime.now(timezone.utc)

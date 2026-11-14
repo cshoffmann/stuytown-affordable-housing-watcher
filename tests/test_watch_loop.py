@@ -22,13 +22,12 @@ from unittest import mock
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
+import apply_recorder  # noqa: E402
 import background  # noqa: E402
 import check_units  # noqa: E402
-import dream_units  # noqa: E402
-import reference_data  # noqa: E402
+import floorplans  # noqa: E402
 import run_stats  # noqa: E402
 import summary  # noqa: E402
-import units_map  # noqa: E402
 import watch_loop  # noqa: E402
 
 FAKE_UNITS = json.loads((REPO_ROOT / "tests" / "fixtures" / "fake_units.json").read_text(encoding="utf-8"))
@@ -92,13 +91,10 @@ class CheckerTests(unittest.TestCase):
             (run_stats, "RUN_STATS_DIR", f"{tmp.name}/run_stats"),
             (summary, "SUMMARY_FILE", f"{tmp.name}/summary.md"),
             # The wrap-up's map and floorplans: a temp folder, and no network.
-            (reference_data, "BUILDINGS_FILE", f"{tmp.name}/reference/buildings.json"),
-            (reference_data, "FLOORPLANS_DIR", f"{tmp.name}/floorplans"),
-            (reference_data, "fetch_osm", mock.Mock(side_effect=OSError("offline"))),
-            (reference_data, "fetch_floorplan", mock.Mock(side_effect=OSError("offline"))),
-            (dream_units, "ATLAS_FILE", f"{tmp.name}/apartment_atlas.json"),
-            (dream_units, "OVERRIDES_FILE", f"{tmp.name}/reference/line_overrides.json"),
-            (units_map, "MAP_FILE", f"{tmp.name}/units.geojson"),
+            (floorplans, "FLOORPLANS_DIR", f"{tmp.name}/floorplans"),
+            (apply_recorder, "RUNS_DIR", f"{tmp.name}/apply_runs"),
+            (floorplans, "fetch_floorplan", mock.Mock(side_effect=OSError("offline"))),
+            (watch_loop, "DAILY_LOG_FILE", f"{tmp.name}/daily_log.md"),
         ]:
             patcher = mock.patch.object(target, name, value)
             patcher.start()
@@ -156,13 +152,26 @@ class CheckerTests(unittest.TestCase):
             watcher.checks = 3
             watcher.finish()
         self.assertEqual(len(commits), 1)
-        self.assertTrue(commits[0].startswith("Fri Nov 6: 2 new listings (3 checks)\n\n08:15 Apt 5A, 287 Avenue C, $1,873"),
+        self.assertTrue(commits[0].startswith("Fri Nov 6: 2 new listings (3 checks)\n\n08:15 Apt 5A, 287 Avenue C, 2 bed, $1,873"),
                         commits[0])
+        log = Path(watch_loop.DAILY_LOG_FILE).read_text()
+        self.assertIn("| Fri 2026-11-06 | 2 | 08:15 Apt 5A, 287 Avenue C, 2 bed, $1,873; 08:15 Apt 12C", log)
         self.assertIn("08:15 Apt 12C", commits[0])
         quiet = watch_loop.Watcher(FakeApplier(), inline, inline)
         quiet.checks, quiet.failures = 6141, 2
         with mock.patch.object(watch_loop, "now_et", return_value=at_815):
             self.assertEqual(quiet.day_message(), "Fri Nov 6: no new listings (6,141 checks, 2 failed)")
+
+
+class CollectingTests(unittest.TestCase):
+    def test_with_auto_apply_off_it_checks_every_10_s_and_never_bursts(self):
+        inline = background.Worker("inline", inline=True)
+        watcher = watch_loop.Watcher(None, inline, inline, pace=watch_loop.Pace(watch_loop.COLLECT_POLL_SECONDS),
+                                     bursts=False)
+        at_quarter = datetime(2026, 10, 13, 7, 14, 59, tzinfo=watch_loop._eastern())
+        with mock.patch.object(watch_loop, "now_et", return_value=at_quarter), \
+                mock.patch.object(watch_loop.time, "monotonic", return_value=1000.0):
+            self.assertEqual(watcher._next_check(1000.0), 1010.0)
 
 
 class BurstTests(unittest.TestCase):
