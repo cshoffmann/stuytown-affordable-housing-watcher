@@ -1,0 +1,99 @@
+{
+  "alerts": {
+    "problem": "Pushover rejected the request (HTTP 400): {\"user\":\"valid, but has no active devices\",\"devices\":[],\"group\":0,\"licenses\":[],\"errors\":[\"user is valid but has no active devices\"],\"status\":0,\"request\":\"e7c310ca-195c-414a-9ab4-0f06a211e83f\"}"
+  },
+  "applier": {
+    "browser_ready_seconds": [
+      0.65
+    ],
+    "direct_submit": {
+      "format_rules": {
+        "buildingAddress": "capitalized",
+        "cellPhone": "digits",
+        "householdSize": "text",
+        "totalAnnualEarnings": "whole",
+        "version": "the unit's",
+        "workPhone": "digits"
+      },
+      "format_site_version": "639298937513594692",
+      "ready": true,
+      "site_version": "639298937513594692",
+      "verified_utc": "2026-11-12T12:15:02.598Z",
+      "why_not": null
+    },
+    "idle_listings_page": {
+      "errors": {},
+      "loads": 46,
+      "requests_on_its_own": [],
+      "watched_minutes": 173.0,
+      "websockets": {}
+    },
+    "mode": "recording only",
+    "profile_warnings": [],
+    "recordings": [],
+    "workers": 1
+  },
+  "listings_api": {
+    "connections": {
+      "kept-open connection": 1038,
+      "new connection": 42
+    },
+    "distinct_responses": 1,
+    "etag": {
+      "seen": false
+    },
+    "failures": {},
+    "headers": {
+      "access-control-allow-origin": {
+        "*": 1080
+      },
+      "connection": {
+        "close": 41,
+        "keep-alive": 1039
+      },
+      "strict-transport-security": {
+        "max-age=15724800; includeSubDomains": 1080
+      },
+      "x-cache": {
+        "CONFIG_NOCACHE": 1080
+      }
+    },
+    "headers_present": {
+      "x-azure-ref": 1080
+    },
+    "requests": 1080,
+    "response_bytes": {
+      "max": 42,
+      "min": 42
+    },
+    "response_ms": {
+      "max": 1217.3,
+      "median": 17.9,
+      "min": 14.5,
+      "p90": 33.1,
+      "p99": 229.9
+    },
+    "statuses": {
+      "200": 1080
+    },
+    "their_clock_minus_ours_exact_s": {
+      "at_least": -0.015,
+      "at_most": 0.996,
+      "best_guess": 0.49,
+      "consistent": true
+    },
+    "their_clock_minus_ours_s": {
+      "max": -0.0,
+      "median": -0.0,
+      "min": -0.3,
+      "p90": -0.0,
+      "p99": -0.0
+    }
+  },
+  "pace": [],
+  "run": {
+    "ended_utc": "2026-11-14T15:00:00.513Z",
+    "started_utc": "2026-11-14T11:59:00.959Z"
+  },
+  "units": {}
+}
