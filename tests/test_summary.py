@@ -107,7 +107,7 @@ class SummaryPageTests(unittest.TestCase):
         events[0]["units"][0]["bedrooms"] = 2
         page = summary.render(events, [], {}, rules={1: 2200.0, 2: 2700.0},
                               now=datetime(2026, 10, 12, 14, 0, tzinfo=timezone.utc))
-        self.assertIn("Auto-apply rent limits: **1 bed <= $2,200, 2 bed <= $2,700**", page)
+        self.assertIn("Auto-apply rent limits: **1 bed <= $2,200, 2+ bed <= $2,700**", page)
         self.assertIn("| Mon Oct 12 | 7:15:00 | 1 |", page)
 
     def test_floorplans_and_room_sizes_are_on_the_page(self):

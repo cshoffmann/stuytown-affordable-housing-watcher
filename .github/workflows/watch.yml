@@ -29,7 +29,7 @@ on:
         type: boolean
         default: false
       fake_morning:
-        description: 'Test the alerts instead: replay a fake morning (fake units, real [TEST] alerts; no commits)'
+        description: 'Test instead: replay a fake morning through the real code (fake units, no alerts, no commits)'
         type: boolean
         default: false
       auto_apply_selftest:

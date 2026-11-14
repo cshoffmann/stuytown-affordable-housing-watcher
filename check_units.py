@@ -469,34 +469,31 @@ _INLINE = background.Worker("inline", inline=True)
 
 
 def process_snapshot(units: list, now: datetime | None = None, label: str = "", apply=None,
-                     qualifies=None, notifier=None, logger=None, note=None) -> Changes:
+                     qualifies=None, notifier=None, logger=None) -> Changes:
     """One check: compare the listings with the saved state, save it, and act
     on what changed -- in order of what matters:
 
       1. apply(units): the applier gets the listings before anything else
          (auto_apply.Applier.dispatch -- it only queues work, so this is fast,
          and returns the units it took on).
-      2. Alerts go to the notifier, and the events log to the logger -- both
-         background workers, so neither can delay the next check or an
-         application. Only units that qualify (qualifies(unit): at or under
-         the rent limit, income high enough) get an alert, an Emergency one;
-         with no qualifies, every new unit does. Every unit, qualifying or
-         not, goes in the events log. note(unit) adds a line to the alert
-         (a one-line note); it runs on the notifier, not here.
+      2. The events log goes to the logger, a background worker, so it can't
+         delay the next check or an application. Every unit goes in it,
+         marked with whether it qualifies (qualifies(unit): at or under its
+         rent limit, income high enough). No alert is sent here: the only
+         alert is the applier's, after an application went in.
 
     Without notifier/logger (tests, the fake morning) the jobs run inline."""
     now = now or datetime.now(timezone.utc)
     stamp = now.strftime("%Y-%m-%dT%H:%M:%SZ")
-    notifier, logger = notifier or _INLINE, logger or _INLINE
+    logger = logger or _INLINE
     previous = load_state()
     next_state, changes = diff_units(previous, units, stamp)
     if next_state != previous:
         save_state(next_state)
 
-    queued = []  # the units the applier took on
     if apply:
         try:
-            queued = list(apply(units) or [])
+            apply(units)  # it only queues work, and returns the units it took on
         except Exception as e:
             print(f"   WARNING: handing the listings to the applier failed: {e}")
 
@@ -504,12 +501,6 @@ def process_snapshot(units: list, now: datetime | None = None, label: str = "", 
         print(f"[{label or stamp}] {changes.listed} listed - {changes.summary()}")
     if changes.new:
         qualifying = [u for u in changes.new if qualifies is None or _safe_bool(qualifies, u)]
-        if qualifying:
-            # "auto-applying now" only when the applier really took it on (it
-            # won't, say, for a unit it already applied to before a re-listing).
-            taken = {unit_id(u) for u in queued}
-            notifier.submit(send_qualifying_alert, qualifying,
-                            all(unit_id(u) in taken for u in qualifying), note)
         logger.submit(record_event, {
             "event": "new",
             "detected_at_utc": stamp,
@@ -571,28 +562,6 @@ def record_event(event: dict) -> None:
 
 
 # ------------------------------------------------------------------ alerts
-
-
-def send_qualifying_alert(units: list, auto_applying: bool, note=None) -> bool:
-    """Build and send the qualifying alert (on the notifier)."""
-    return background.notify_with_retries(notify, qualifying_alert(units, auto_applying, note))
-
-
-def qualifying_alert(units: list, auto_applying: bool, note=None) -> dict:
-    """Emergency: a unit at or under your rent limit. The only alert that
-    breaks through Do Not Disturb."""
-    action = "auto-applying now" if auto_applying else "apply now"
-    if len(units) == 1:
-        title = f"Qualifying StuyTown unit - {action}"
-        url, url_title = unit_url(units[0]), "Open this unit"
-    else:
-        title = f"{len(units)} qualifying StuyTown units - {action}"
-        url, url_title = LISTINGS_URL, "Open all listings"
-    footer = ("Auto-apply is on: you'll get the result in a separate message."
-              if auto_applying else "Auto-apply isn't applying to it: apply yourself. "
-              "Each unit closes after 3 applications.")
-    message = _fit([_linked_line(u, note) for u in units], footer=footer)
-    return {"title": title, "message": message, "url": url, "url_title": url_title, "priority": 2}
 
 
 def _linked_line(unit: dict, note=None) -> str:

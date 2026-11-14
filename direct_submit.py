@@ -12,7 +12,7 @@ It's only used while it's PROVEN to send exactly what the site's form would:
      field limits) along with the version of the site's code
      (".../aHUnit-js.js.v639262698149509707").
   2. The request the site's form builds is captured -- from a real browser
-     application, or from a recording of an over-limit unit's form, filled
+     application, or from a recording of a unit's form, filled
      in and SUBMIT pressed with every outgoing request blocked, so nothing
      is sent. From it, the format is learned: how phones and the income are
      written, where the building address comes from, what "version" is.

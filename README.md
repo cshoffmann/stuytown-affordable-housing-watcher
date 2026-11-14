@@ -1,8 +1,8 @@
 # StuyTown / PCV Affordable Housing Watcher
 
-Watches StuyTown's affordable-housing listings every morning, records every
-unit, alerts you to the ones that fit, and can apply for you within a
-second. It runs free on GitHub Actions; nothing runs on your computer. The
+Watches StuyTown's affordable-housing listings every morning and records
+every unit. With auto-apply on, it applies to the ones that fit within a
+second and tells you when it did. It runs free on GitHub Actions; nothing runs on your computer. The
 design in more depth: [docs/architecture.md](docs/architecture.md).
 
 ## How it works
@@ -12,9 +12,9 @@ flowchart LR
     S["Google Cloud Scheduler<br/>6:13 am ET"] --> R["GitHub Actions run"]
     R --> C["Checker<br/>7:00–10:00"]
     C <-->|"off: every 10 s<br/>on: every 2 s, 0.25 s at :00 :15 :30 :45"| API[("StuyTown<br/>listings API")]
-    C -->|"listings"| A["Applier<br/>on: applies<br/>off: rehearses, sends nothing"]
-    A -->|"application"| ST[("StuyTown")]
-    C -->|"alert"| P["Pushover"]
+    C -->|"listings"| A["Applier<br/>on: applies<br/>off: fills the form, never submits"]
+    A -->|"application (on only)"| ST[("StuyTown")]
+    A -->|"'Applied' alert (on only)"| P["Pushover"]
     C -->|"every unit"| L["Logger → data/"]
     L -->|"10:00"| W["Daily log, stats, floorplans,<br/>summary, one commit"]
 ```
@@ -24,31 +24,38 @@ flowchart LR
 | 6:13 | Google Cloud Scheduler starts the workflow. GitHub's own schedule (6:13–9:43) is a backup. |
 | 6:59 | Browsers open with the site already loaded: two to apply if auto-apply is on, one to rehearse if it's off. |
 | 7:00–10:00 | **Auto-apply off (collecting data):** it checks every 10 s. The shortest listing so far lasted 25 s, so none are missed. **On:** every 2 s, and every 0.25 s from 3 s before to 15 s after each quarter hour, when StuyTown posts units. The site says it only lists between 7 and 10 AM. |
-| New unit | The applier gets it first, then the alert goes out, then it's logged. Every unit is logged, whether it qualifies or not. |
+| New unit | The applier gets it first, then it's logged. Every unit is logged, whether it qualifies or not. |
 | 10:00 | A line in [`data/daily_log.md`](data/daily_log.md) (units, beds, rent), stats, new floorplans and the summary page, then **one commit for the day**. Its message says what was listed, e.g. "Fri Nov 6: 4 new listings (6,140 checks)" with one line per unit, or "no new listings". |
 
 ## Alerts
 
-| You get | When |
+| Auto-apply | You get |
 | --- | --- |
-| **Emergency** "Qualifying StuyTown unit – apply now" (or "auto-applying now") | A new unit within your rent limit and income. It breaks through Do Not Disturb |
-| "Applied: Apt …" / "Auto-apply failed …" | Auto-apply is on and has a result |
-| Nothing | Any other unit (logged only) |
-| GitHub email "Run failed" | Something needs fixing, e.g. Pushover keys or the site. The run still watches all morning; it's marked failed at the end |
+| **Off** | **No alerts at all.** Every unit is still logged. |
+| **On** | One **high-priority** "Applied: Apt …" alert per application that went in, with the unit's address, rent, beds and baths, minimum income, floor, size, finish and layout, and the filled-in form. Nothing for units it didn't apply to (they're logged), and nothing if an application didn't go through (that's on the summary page). |
+
+A GitHub "Run failed" email means something needs fixing (e.g. with
+auto-apply on, Pushover keys that can't reach your phone). The run still
+watches all morning.
 
 ## Rent limits and auto-apply
 
-A unit **qualifies** when its rent is at or under `AUTO_APPLY_RULES` for its
-size (e.g. `1:2300, 2:2800`) and your income is at or above the unit's
-minimum. `AUTO_APPLY_MAX_RENT`, if set, covers sizes the rules don't list.
+A unit **qualifies** when its rent is at or under the limit for its bedrooms
+and your income is at or above the unit's minimum. `AUTO_APPLY_RULES` sets the
+limits: `1:2300` means **1 bedroom or more for $2,300 or less**;
+`1:2300, 2:2800` gives 2+ bedrooms their own limit. `AUTO_APPLY_MAX_RENT`, if
+set, covers smaller units (studios).
 
-- `AUTO_APPLY_MODE=off`: you get the alert and apply yourself. It still **rehearses**: each morning it fills
-  the first listed unit's form and presses SUBMIT with every request held back, so nothing is sent but the
-  applying path stays tested and ready.
-- `AUTO_APPLY_MODE=on`: it applies **once per unit per day**.
+- `AUTO_APPLY_MODE=off`: nothing is ever submitted and no alerts are sent. It
+  **rehearses**: the first unit listed each morning gets its form opened and
+  filled in from your profile, and every field is checked. **SUBMIT is never
+  pressed.** If StuyTown changes the form, the summary page says so the next
+  morning.
+- `AUTO_APPLY_MODE=on`: it applies to every qualifying unit, **once per unit
+  per day**.
   - **Direct:** the application goes straight to StuyTown's API about
-    0.05 s after the unit appears. It only does this once the request
-    format has been proven against the site's current code.
+    0.1 s after the unit appears, once the request format has been proven
+    against the site's current code.
   - **Browser:** otherwise it fills and submits the form in a warm browser,
     in about 1 s. That's also how the format gets proven.
 - Then finish the detailed application StuyTown emails you **within 24
@@ -78,7 +85,7 @@ Settings → Secrets and variables → Actions.
 | Setting | What it is |
 | --- | --- |
 | Variable `AUTO_APPLY_MODE` | `on` or `off` |
-| Variable `AUTO_APPLY_RULES` | Rent limits by bedrooms, $/month, inclusive: `1:2300, 2:2800` (`studio:` works too) |
+| Variable `AUTO_APPLY_RULES` | Rent limits by bedrooms, $/month, inclusive: `1:2300` = 1+ bedrooms at $2,300 or less; `1:2300, 2:2800` gives 2+ beds their own limit |
 | Variable `AUTO_APPLY_MAX_RENT` | Optional: one limit for sizes the rules don't list |
 | Secret `APPLICANT_PROFILE` | Your details as one JSON document (`applicant_profile.example.json` shows every key). Keep a copy: GitHub never shows it again |
 | Secrets `PUSHOVER_TOKEN`, `PUSHOVER_USER` | Pushover app token and user key |
@@ -90,7 +97,7 @@ Cloud Scheduler job.
 
 1. **Pushover:** create an application for an API token; note your user
    key; add both as secrets. Buy the app after its 30-day trial, and allow
-   Emergency alerts through Focus / Do Not Disturb.
+   high-priority alerts through Focus / Do Not Disturb.
 2. **GitHub token** for the 6:13 start: Settings → Developer settings →
    Fine-grained tokens, this repo only, **Actions: Read and write**, longest
    expiry. Set a reminder to renew it.
@@ -117,7 +124,7 @@ Runs that wait behind the main one and then cancel themselves are normal.
 | --- | --- |
 | *minutes* | A short live run |
 | *Send a [TEST] alert* | Proves the Pushover keys work |
-| *Test the alerts* | A fake morning |
+| *Test the alerts* | A fake morning through the real code (sends no alerts) |
 | *Test auto-apply* | The real applier against a fake form, with your profile |
 | *Check the site* | Compares StuyTown's own listings page with what the watcher sees |
 
