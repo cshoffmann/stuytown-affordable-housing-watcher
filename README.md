@@ -11,8 +11,8 @@ design in more depth: [docs/architecture.md](docs/architecture.md).
 flowchart LR
     S["Google Cloud Scheduler<br/>6:13 am ET"] --> R["GitHub Actions run"]
     R --> C["Checker<br/>7:00–10:00"]
-    C <-->|"every 2 s<br/>0.25 s at :00 :15 :30 :45"| API[("StuyTown<br/>listings API")]
-    C -->|"listings"| A["Applier<br/>on: applies<br/>off: records only"]
+    C <-->|"off: every 10 s<br/>on: every 2 s, 0.25 s at :00 :15 :30 :45"| API[("StuyTown<br/>listings API")]
+    C -->|"listings"| A["Applier<br/>on: applies<br/>off: rehearses, sends nothing"]
     A -->|"application"| ST[("StuyTown")]
     C -->|"alert"| P["Pushover"]
     C -->|"every unit"| L["Logger → data/"]
@@ -22,10 +22,10 @@ flowchart LR
 | Time (ET) | What happens |
 | --- | --- |
 | 6:13 | Google Cloud Scheduler starts the workflow. GitHub's own schedule (6:13–9:43) is a backup. |
-| 6:59 | Browsers open with the site already loaded: two to apply if auto-apply is on, one to record if it's off. |
-| 7:00–10:00 | It checks the listings every 2 s, and every 0.25 s from 3 s before to 15 s after each quarter hour, when StuyTown posts units. The site itself says it only lists between 7 and 10 AM. |
+| 6:59 | Browsers open with the site already loaded: two to apply if auto-apply is on, one to rehearse if it's off. |
+| 7:00–10:00 | **Auto-apply off (collecting data):** it checks every 10 s. The shortest listing so far lasted 25 s, so none are missed. **On:** every 2 s, and every 0.25 s from 3 s before to 15 s after each quarter hour, when StuyTown posts units. The site says it only lists between 7 and 10 AM. |
 | New unit | The applier gets it first, then the alert goes out, then it's logged. Every unit is logged, whether it qualifies or not. |
-| 10:00 | Stats, new floorplans, the apartment atlas, the map and the summary page, then **one commit for the day**. Its message says what was listed, e.g. "Fri Nov 6: 4 new listings (6,140 checks)" with one line per unit, or "no new listings". |
+| 10:00 | A line in [`data/daily_log.md`](data/daily_log.md) (units, beds, rent), stats, the summary page and map, then **one commit for the day**. Its message says what was listed, e.g. "Fri Nov 6: 4 new listings (6,140 checks)" with one line per unit, or "no new listings". |
 
 ## Alerts
 
@@ -42,11 +42,9 @@ A unit **qualifies** when its rent is at or under `AUTO_APPLY_RULES` for its
 size (e.g. `1:2300, 2:2800`) and your income is at or above the unit's
 minimum. `AUTO_APPLY_MAX_RENT`, if set, covers sizes the rules don't list.
 
-- `AUTO_APPLY_MODE=off`: you get the alert and apply yourself. It only
-  records: when the direct request isn't proven for StuyTown's current site
-  code, it fills a listed unit's form and presses SUBMIT with every request
-  held back, so nothing is sent. Direct submit is then ready the day you
-  switch on.
+- `AUTO_APPLY_MODE=off`: you get the alert and apply yourself. It still **rehearses**: each morning it fills
+  the first listed unit's form and presses SUBMIT with every request held back, so nothing is sent but the
+  applying path stays tested and ready.
 - `AUTO_APPLY_MODE=on`: it applies **once per unit per day**.
   - **Direct:** the application goes straight to StuyTown's API about
     0.05 s after the unit appears. It only does this once the request
@@ -104,6 +102,7 @@ anything for details.
 
 | File | What's in it |
 | --- | --- |
+| [`data/daily_log.md`](data/daily_log.md) | One line per morning: how many units, and each one's apartment, beds and rent |
 | [`data/summary.md`](data/summary.md) | **Start here.** What needs a look, each morning, dream units, every unit (zone, floor, size, rent, finish, layout, features, facing, rating, how long it lasted), buildings, layouts with floorplans, patterns |
 | [`data/units.geojson`](data/units.geojson) | The map |
 | `data/events.json` | Every unit ever seen, with the full listing, and every change and removal |

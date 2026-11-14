@@ -168,7 +168,7 @@ def issues(run: dict | None) -> list:
         elif "unexpected" in check or "couldn't rebuild" in check:
             found.append(f"Direct submit couldn't learn the site's request (Apt {recording.get('apartment')}): {check}")
     direct = (applier or {}).get("direct_submit") or {}
-    if "code changed" in (direct.get("why_not") or ""):
+    if "code changed" in (direct.get("why_not") or "") and applying:  # while off, the next rehearsal re-proves it
         found.append(f"StuyTown changed its site code; direct submit is off until a recording proves the request "
                      f"again ({direct['why_not']})")
     if applier is not None and not applier.get("browser_ready_seconds"):

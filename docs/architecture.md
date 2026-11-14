@@ -11,9 +11,9 @@ break it.**
 ```mermaid
 flowchart LR
     subgraph checker["Checker (main thread)"]
-        P["Fetch listings<br/>every 2 s; every 0.25 s from :57 to :15<br/>one kept-open connection, 4 s timeout"] --> D["Compare with the saved list"]
+        P["Fetch listings<br/>off: every 10 s<br/>on: every 2 s; every 0.25 s from :57 to :15<br/>one kept-open connection, 4 s timeout"] --> D["Compare with the saved list"]
     end
-    subgraph applier["Applier (AUTO_APPLY_MODE=on; off = records only)"]
+    subgraph applier["Applier (on: applies; off: rehearses)"]
         R{"Request format proven<br/>for the site's current code?"}
         R -- yes --> X["Direct submit<br/>≈ 0.05 s"]
         R -- no --> B["Browser worker ×2<br/>warm since 6:59, ≈ 1 s"]
@@ -21,7 +21,7 @@ flowchart LR
     end
     subgraph bg["Background workers"]
         N["Notifier<br/>Pushover, own retries"]
-        L["Logger<br/>events, applications, recordings;<br/>waits while applying; one commit at 10:00"]
+        L["Logger<br/>events, applications;<br/>waits while applying; one commit at 10:00"]
     end
     D -- "1: listings" --> R
     D -- "2: alert" --> N
@@ -35,7 +35,7 @@ flowchart LR
 | Worker | Job | Can it delay an application? |
 | --- | --- | --- |
 | Checker | Fetches the listings and compares them with the last answer. Never pauses for anything else | It's what finds the unit |
-| Applier | On: a direct request, or a browser that fills and submits the form; two units at once. Off: records a form only when direct submit needs proving, and never sends anything | It is the application |
+| Applier | On: a direct request, or a browser that fills and submits the form; two units at once. Off: one browser rehearses on the first listed unit each morning (SUBMIT held back, nothing sent) | It is the application |
 | Notifier | Pushover alerts, with retries | No: its own thread, and a Pushover failure never stops the run |
 | Logger | `data/` files and recordings as they happen; one git commit at 10:00 saying what was listed | No: it waits while an application runs |
 
@@ -70,12 +70,7 @@ falling back to `AUTO_APPLY_MAX_RENT`), and your income ≥ the unit's
 minimum. Each unit is applied to at most once a day; one listed again on a
 later day is applied to again.
 
-**Auto-apply off = recording only.** One browser opens at 6:59. While the
-direct request isn't proven for the site's current code, the first listed
-units (qualifying ones first, two a morning at most) have their form filled
-and SUBMIT pressed with every request held back in the browser. Nothing is
-sent, and the captured request proves the format. Once it's proven, nothing
-more is recorded until StuyTown updates its site.
+**Auto-apply off = collect and rehearse.** The checker polls every 10 s with no bursts, and each day's units (apartment, beds, rent) go into `data/daily_log.md` and the day's commit. One browser opens at 6:59 and, on the first unit listed each morning (qualifying ones first), fills the form and presses SUBMIT with every request held back in the browser: nothing is sent, the applying path is tested daily, and the captured request keeps direct submit proven. A second unit is rehearsed too while the request isn't proven for the site's current code.
 
 **Direct submit** (`direct_submit.py`) sends the same JSON request the site's
 form sends, to `pd-dlcore.beamliving.com/affordable-housing/create-application`.

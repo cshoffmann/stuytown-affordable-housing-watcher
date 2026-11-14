@@ -6,7 +6,10 @@ The live watcher, 7:00 to 10:00am ET. GitHub Actions starts it every morning
                never stops -- not for alerts, logging, git or applying.
     applier    auto_apply.Applier: browsers opened at 6:59, handed each
                check's listings FIRST; applies to qualifying units at once.
-               With auto-apply off it only records forms (nothing is sent).
+               With auto-apply off it checks every COLLECT_POLL_SECONDS and
+               only rehearses: one browser fills the first listed unit's
+               form each morning and presses SUBMIT with every request held
+               back, so nothing is sent but the applying path stays tested.
     notifier   background: Pushover alerts, with their own retries.
     logger     background: events, applications, recordings -- paused while
                an application is running -- and ONE git commit at the end,
@@ -42,7 +45,9 @@ import run_stats
 import summary
 import units_map
 
-POLL_INTERVAL_SECONDS = 2  # every check is one small request; cheap units have been gone in 15-45s
+POLL_INTERVAL_SECONDS = 2  # auto-apply on: every check is one small request; cheap units go in 25-81 s
+COLLECT_POLL_SECONDS = 10  # auto-apply off (collecting data): no bursts; the shortest listing so far lasted 25 s
+DAILY_LOG_FILE = "data/daily_log.md"
 # StuyTown posts units on the quarter hour (7:15, 7:30, 8:00, 8:15 in every
 # morning recorded so far, to the second). Around each quarter hour the
 # checks are much closer together, with one landing exactly on it.
@@ -134,14 +139,16 @@ class Watcher:
     """The checker, and the wiring between it, the applier and the two
     background workers."""
 
-    def __init__(self, applier=None, notifier=None, logger=None, pace: Pace | None = None):
+    def __init__(self, applier=None, notifier=None, logger=None, pace: Pace | None = None,
+                 bursts: bool = True):
         self.applier = applier
+        self.bursts = bursts  # faster checks around each quarter hour (auto-apply on only)
         self.notifier = notifier or background.Worker("notifier")
         self.logger = logger or background.Worker("logger", yield_to=applier.busy if applier else None)
         self.pace = pace or Pace()
         self.stats = run_stats.RunStats()
         self.checks = self.failures = 0
-        self._new_today = []  # (time ET, unit label, rent) of each new unit, for the day's commit
+        self._new_today = []  # (time ET, unit label, rent, bedrooms) of each new unit, for the day's log
         self._last_check_utc = None  # when the last good check's request went out
         self._last_status = time.monotonic()
         self._last_error = None
@@ -156,20 +163,22 @@ class Watcher:
             qualifies=qualifies, notifier=self.notifier, logger=self.logger, note=dream_units.alert_note,
         )
         for unit in changes.new:
-            self._new_today.append((f"{now_et():%H:%M}", check_units.unit_label(unit), check_units.unit_rent(unit)))
+            self._new_today.append((f"{now_et():%H:%M}", check_units.unit_label(unit), check_units.unit_rent(unit),
+                                    unit.get("bedrooms")))
         if changes:
             self.stats.observe_changes(changes, now, qualifies, previous=self._last_check_utc)
         self._last_check_utc = now
         return changes
 
     def run_until(self, end: datetime) -> None:
-        print(f"Checking every {self.pace.normal:g}s (every {BURST_POLL_SECONDS:g}s around each quarter hour) "
-              f"until {end:%H:%M} ET -- {check_units.LISTINGS_URL}")
+        print(f"Checking every {self.pace.normal:g}s"
+              + (f" (every {BURST_POLL_SECONDS:g}s around each quarter hour)" if self.bursts else "")
+              + f" until {end:%H:%M} ET -- {check_units.LISTINGS_URL}")
         client = check_units.ListingsClient()
         next_check = time.monotonic()
         in_burst = False
         while now_et() < end:
-            bursting = burst_slot(now_et()) is not None and self.pace.interval <= self.pace.normal
+            bursting = self.bursts and burst_slot(now_et()) is not None and self.pace.interval <= self.pace.normal
             if bursting and not in_burst:
                 client.renew()  # a fresh connection for the burst
             in_burst = bursting
@@ -213,7 +222,7 @@ class Watcher:
         BURST_POLL_SECONDS lined up on the quarter hour itself. Never faster
         while the site is asking us to slow down."""
         now, mono = now_et(), time.monotonic()
-        if self.pace.interval > self.pace.normal:
+        if self.pace.interval > self.pace.normal or not self.bursts:
             return previous + self.pace.interval
         slot = burst_slot(now)
         if slot is not None:
@@ -251,9 +260,24 @@ class Watcher:
         head = f"{today:%a %b} {today.day}: " + (f"{n} new listing{'s' if n != 1 else ''}" if n else
                                                  "no new listings")
         head += f" ({self.checks:,} checks" + (f", {self.failures:,} failed)" if self.failures else ")")
-        lines = [f"{at} {label}" + (f", ${rent:,.0f}" if rent is not None else "")
-                 for at, label, rent in self._new_today[:40]]
+        lines = [f"{at} {label}, {_beds(beds)}" + (f", ${rent:,.0f}" if rent is not None else "")
+                 for at, label, rent, beds in self._new_today[:40]]
         return head + ("\n\n" + "\n".join(lines) if lines else "")
+
+    def write_daily_log(self, path: str | None = None) -> None:
+        """Add today's line to data/daily_log.md: how many units, and each
+        one's apartment, beds and rent."""
+        path = path or DAILY_LOG_FILE
+        today = now_et()
+        units = "; ".join(f"{at} {label}, {_beds(beds)}" + (f", ${rent:,.0f}" if rent is not None else "")
+                          for at, label, rent, beds in self._new_today) or "none"
+        row = f"| {today:%a %Y-%m-%d} | {len(self._new_today)} | {units} |\n"
+        if not os.path.exists(path):
+            with open(path, "w", encoding="utf-8") as f:
+                f.write("# Daily log\n\nOne line per morning: units listed between 7 and 10 AM.\n\n"
+                        "| Day | New units | Units (time ET, apartment, beds, rent) |\n| --- | --- | --- |\n")
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(row)
 
     def finish(self, timeout: float = 120 + REFERENCE_BUDGET_SECONDS) -> None:
         """Let a running application finish, send what's queued, write the
@@ -275,6 +299,7 @@ class Watcher:
         that needs a look goes on the page and in the log -- not to your
         phone: alerts are only for qualifying units."""
         self.stats.write(self.applier, check_units.load_state())
+        self.write_daily_log()
         for line in units_map.refresh_all(budget_seconds=REFERENCE_BUDGET_SECONDS):
             print(f"   {line}")
         text = summary.write(auto_apply.MAX_RENT, rules=auto_apply.RENT_RULES)
@@ -347,7 +372,7 @@ def keep_schedule_alive() -> None:
 
 def start_applier(notifier, logger):
     """The applier, with its browsers open -- applying when auto-apply is on,
-    recording only (one browser, nothing ever sent) when it's off -- or None
+    rehearsing only (one browser, nothing ever sent) when it's off -- or None
     if it can't run this morning (it has already said why)."""
     if auto_apply.ENABLED:
         profile = auto_apply._profile_for_run()
@@ -356,7 +381,7 @@ def start_applier(notifier, logger):
     else:
         profile = auto_apply.profile_for_recording()
         applier = profile and auto_apply.Applier(profile, notifier, logger, workers=1, record_only=True)
-        what = "Recording only (auto-apply is off): {} browser open"
+        what = "Rehearsal only (auto-apply is off): {} browser open"
     if not applier:
         return None
     logger.yield_to = applier.busy
@@ -364,6 +389,10 @@ def start_applier(notifier, logger):
     applier.start()
     print(what.format(applier.workers) + f" and the site loaded in {time.monotonic() - started:.1f}s")
     return applier
+
+
+def _beds(beds) -> str:
+    return "?" if beds is None else "studio" if beds == 0 else f"{beds} bed"
 
 
 def _sleep_until(when: datetime) -> None:
@@ -422,7 +451,10 @@ def main(argv=None) -> int:
     notifier = background.Worker("notifier")
     logger = background.Worker("logger")
     applier = start_applier(notifier, logger)
-    watcher = Watcher(applier, notifier, logger)
+    if auto_apply.ENABLED:
+        watcher = Watcher(applier, notifier, logger)
+    else:  # collecting data and rehearsing: a lighter pace, no bursts
+        watcher = Watcher(applier, notifier, logger, pace=Pace(normal=COLLECT_POLL_SECONDS), bursts=False)
     if start is not None:
         _sleep_until(start)
     try:
