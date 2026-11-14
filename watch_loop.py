@@ -37,13 +37,13 @@ import time
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
+import apply_recorder
 import auto_apply
 import background
 import check_units
-import dream_units
 import run_stats
 import summary
-import units_map
+import floorplans
 
 POLL_INTERVAL_SECONDS = 2  # auto-apply on: every check is one small request; cheap units go in 25-81 s
 COLLECT_POLL_SECONDS = 10  # auto-apply off (collecting data): no bursts; the shortest listing so far lasted 25 s
@@ -69,8 +69,7 @@ MAX_WAIT_BEFORE_WINDOW = timedelta(hours=1)
 # this many days without one, the watcher commits a tiny heartbeat file.
 KEEPALIVE_AFTER_DAYS = 45
 HEARTBEAT_FILE = "data/heartbeat.json"
-# After the window: floorplans, the map's buildings, the atlas and the map
-# get this long (they only start once the applier has stopped).
+# After the window: new floorplans get this long (only once the applier has stopped).
 REFERENCE_BUDGET_SECONDS = 100
 
 
@@ -160,7 +159,7 @@ class Watcher:
         changes = check_units.process_snapshot(
             units, now=now, label=label or f"{now_et():%H:%M:%S} ET",
             apply=self.applier.dispatch if self.applier else None,
-            qualifies=qualifies, notifier=self.notifier, logger=self.logger, note=dream_units.alert_note,
+            qualifies=qualifies, notifier=self.notifier, logger=self.logger,
         )
         for unit in changes.new:
             self._new_today.append((f"{now_et():%H:%M}", check_units.unit_label(unit), check_units.unit_rent(unit),
@@ -292,16 +291,16 @@ class Watcher:
         self.notifier.drain(timeout)  # the "needs a look" alert, if any
 
     def _wrap_up(self) -> None:
-        """The morning's stats; new floorplans, the map's buildings, the
-        apartment atlas and the map (units_map.refresh_all -- only now, with
-        the applier stopped, so none of it can slow an application); and the
-        summary page (also shown on the GitHub Actions run's page). Anything
-        that needs a look goes on the page and in the log -- not to your
-        phone: alerts are only for qualifying units."""
+        """After the window, with the applier stopped: the morning's stats,
+        today's line in the daily log, any new floorplans, and the summary
+        page (also shown on the GitHub Actions run's page). Anything that
+        needs a look goes on the page and in the log, not to your phone."""
         self.stats.write(self.applier, check_units.load_state())
         self.write_daily_log()
-        for line in units_map.refresh_all(budget_seconds=REFERENCE_BUDGET_SECONDS):
-            print(f"   {line}")
+        print(f"   {floorplans.refresh(budget_seconds=REFERENCE_BUDGET_SECONDS)}")
+        pruned = apply_recorder.prune_runs()
+        if pruned:
+            print(f"   recordings: {pruned} older than {apply_recorder.KEEP_RUNS_DAYS} days deleted")
         text = summary.write(auto_apply.MAX_RENT, rules=auto_apply.RENT_RULES)
         summary.github_step_summary(text)
         found = summary.issues(self.stats.last_summary)
@@ -411,9 +410,6 @@ def main(argv=None) -> int:
 
     # First, so the applicant profile is masked in the log before anything else prints.
     auto_apply.startup_check()
-    print(f"Dream units (highlighted, never applied to by themselves): {dream_units.settings_text()}")
-    for warning in dream_units.startup_warnings():
-        print(f"WARNING: {warning} -- using the rest")
     print(f"Pushover credentials loaded: {bool(check_units.PUSHOVER_TOKEN and check_units.PUSHOVER_USER)}")
     pushover_problem = None
     if os.environ.get("GITHUB_ACTIONS") == "true":
@@ -455,6 +451,7 @@ def main(argv=None) -> int:
         watcher = Watcher(applier, notifier, logger)
     else:  # collecting data and rehearsing: a lighter pace, no bursts
         watcher = Watcher(applier, notifier, logger, pace=Pace(normal=COLLECT_POLL_SECONDS), bursts=False)
+    watcher.stats.alerts_problem = pushover_problem
     if start is not None:
         _sleep_until(start)
     try:

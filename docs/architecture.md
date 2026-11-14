@@ -55,7 +55,7 @@ sequenceDiagram
     A->>A: direct request (≈ 0.05 s) or browser (≈ 1 s)
     A->>N: "Applied" / "failed, apply yourself"
     A->>L: applications.json, redacted recording
-    Note over L: 10:00: stats, floorplans, map, summary, commit
+    Note over L: 10:00: daily log, stats, floorplans, summary, commit
 ```
 
 A response that isn't a list of units (an error or maintenance page) is a
@@ -88,24 +88,13 @@ Its safety rules:
 4. A refused or lost direct request goes to the browser. The site refuses a
    second application to the same apartment, so nothing is sent twice.
 
-## After 10:00: floorplans, ratings and the map
+## After 10:00
 
-With the applier stopped, the logger runs `units_map.refresh_all()`,
-time-boxed to 100 s:
-
-1. **Reference data** (`reference_data.py`):
-   - It saves each new layout's floorplan: the SVG, a PNG copy and the room sizes.
-   - Once, it fetches the complexes' buildings and streets from OpenStreetMap.
-   - It casts three rays from each wall to see what the wall looks at: the Oval, a street (First Ave, 14th, 20th, 23rd, Avenue C, FDR), or the next building and how far away it is.
-   - From that and NOAA's sun model (`stuytown_geo.py`), it works out the winter sun hours at floors 2, 5, 8 and 11.
-2. **Ratings and atlas** (`dream_units.py`):
-   - A listing with Oval views (`VBOV`) faces its building's Oval wall, and so does every apartment on its line.
-   - Your `line_overrides.json` notes beat that.
-   - Without building outlines, the direction is estimated from the building's position.
-3. **The map** (`units_map.py`) writes `data/units.geojson`.
-
-In the morning, the only dream-unit work is the alert's one-line note, and
-it runs on the notifier.
+With the applier stopped, the logger writes the morning's stats and its line
+in `data/daily_log.md`, fetches the floorplan of any new layout
+(`floorplans.py`: SVG, a PNG copy, room sizes), deletes recordings older
+than 30 days (git history keeps them), rebuilds `data/summary.md` and makes
+the day's one commit.
 
 ## What the live site has shown
 

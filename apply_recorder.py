@@ -36,7 +36,7 @@ import re
 import time
 import urllib.parse
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 RUNS_DIR = "data/apply_runs"
@@ -685,6 +685,34 @@ def _safe(read):
         return read()
     except Exception:
         return None
+
+
+KEEP_RUNS_DAYS = 30  # older recordings are deleted (git history still has them)
+
+
+def prune_runs(root: str | None = None, keep_days: int = KEEP_RUNS_DAYS, now: datetime | None = None) -> int:
+    """Delete recordings older than keep_days, except the one holding the
+    pages of the site's latest code version. Returns how many went. Never raises."""
+    import shutil
+
+    root = Path(root or RUNS_DIR)
+    if not root.is_dir():
+        return 0
+    try:
+        versions = json.loads(Path(SITE_VERSIONS_FILE).read_text(encoding="utf-8"))
+        latest = max(versions.values(), key=lambda v: v.get("first_seen_utc", "")).get("pages_in", "")
+    except (OSError, ValueError, AttributeError):
+        latest = ""
+    cutoff = ((now or datetime.now(timezone.utc)) - timedelta(days=keep_days)).strftime("%Y-%m-%dT%H-%M-%SZ")
+    removed = 0
+    for folder in sorted(root.iterdir()):
+        if folder.is_dir() and folder.name[:20] < cutoff and Path(latest).name != folder.name:
+            try:
+                shutil.rmtree(folder)
+                removed += 1
+            except OSError:
+                pass
+    return removed
 
 
 def run_folder(apartment: str, kind: str, root: str | None = None) -> Path:

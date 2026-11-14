@@ -51,6 +51,7 @@ def _ms(when: datetime) -> str:
 
 class RunStats:
     def __init__(self):
+        self.alerts_problem = None  # why alerts can't reach your phone this run (Pushover), if they can't
         self.started_utc = _utc_now()
         self.latencies_ms = []
         self.statuses = Counter()
@@ -235,6 +236,7 @@ class RunStats:
             "pace": self.pace,
             "units": self.units,
             "applier": applier.observations() if applier is not None else None,
+            "alerts": {"problem": self.alerts_problem},
         }
 
     def write(self, applier=None, state: dict | None = None, directory: str | None = None) -> str:
