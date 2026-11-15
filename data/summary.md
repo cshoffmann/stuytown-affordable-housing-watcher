@@ -1,17 +1,18 @@
 # StuyTown watcher: summary
 
-Updated Sat Nov 14, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2 bed <= $2,800**. Direct submit: **ready**.
+Updated Sun Nov 15, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2 bed <= $2,800**. Direct submit: **ready**.
 
 One line per morning: [daily_log.md](daily_log.md).
 
 ## Needs a look
 
-- Alerts can't reach your phone: Pushover rejected the request (HTTP 400): {"user":"valid, but has no active devices","devices":[],"group":0,"licenses":[],"errors":["user is valid but has no active devices"],"status":0,"request":"e7c310ca-195c-414a-9ab4-0f06a211e83f"}. If Pushover says "no active devices", open the Pushover app and buy it after its trial (or re-enable your device at pushover.net), then Run workflow with "Send a [TEST] alert". The run is marked failed until then
+- Alerts can't reach your phone: Pushover rejected the request (HTTP 400): {"user":"valid, but has no active devices","devices":[],"group":0,"licenses":[],"errors":["user is valid but has no active devices"],"status":0,"request":"46a44da3-7967-44c6-a9c6-1dd8e9eba40d"}. If Pushover says "no active devices", open the Pushover app and buy it after its trial (or re-enable your device at pushover.net), then Run workflow with "Send a [TEST] alert". The run is marked failed until then
 
 ## Mornings
 
 | Date | Units posted at (ET) | Qualified | Auto-apply | Checks | API median / p99 |
 | --- | --- | --- | --- | --- | --- |
+| Sun Nov 15 | none | 0 | - | 1,080 | 18 / 233 ms |
 | Sat Nov 14 | none | 0 | - | 1,080 | 18 / 230 ms |
 | Fri Nov 13 | none | 0 | - | 6,154 | 18 / 116 ms |
 | Thu Nov 12 | 7:15:00 | 0 | - | 6,135 | 70 / 281 ms |
