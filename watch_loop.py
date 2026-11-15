@@ -280,7 +280,7 @@ class Watcher:
 
     def finish(self, timeout: float = 120 + REFERENCE_BUDGET_SECONDS) -> None:
         """Let a running application finish, send what's queued, write the
-        morning's stats, the map and the summary, commit."""
+        morning's stats and the summary, commit."""
         if self.applier:
             self.applier.stop(timeout=60)
         self.notifier.drain(timeout)
@@ -410,9 +410,10 @@ def main(argv=None) -> int:
 
     # First, so the applicant profile is masked in the log before anything else prints.
     auto_apply.startup_check()
-    print(f"Pushover credentials loaded: {bool(check_units.PUSHOVER_TOKEN and check_units.PUSHOVER_USER)}")
+    if auto_apply.ENABLED:
+        print(f"Pushover credentials loaded: {bool(check_units.PUSHOVER_TOKEN and check_units.PUSHOVER_USER)}")
     pushover_problem = None
-    if os.environ.get("GITHUB_ACTIONS") == "true":
+    if os.environ.get("GITHUB_ACTIONS") == "true" and auto_apply.ENABLED:  # off sends no alerts at all
         pushover_problem = check_units.validate_pushover_credentials()
         if pushover_problem:
             # Alerts can't reach you, but auto-apply doesn't need them: keep

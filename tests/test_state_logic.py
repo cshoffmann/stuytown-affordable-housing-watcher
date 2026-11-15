@@ -158,51 +158,27 @@ class ProcessSnapshotTests(unittest.TestCase):
         with mock.patch("builtins.print"):
             return check_units.process_snapshot(units, now=when, **kwargs)
 
-    def test_new_unit_alerts_once_and_logs_metadata(self):
+    def test_a_new_unit_is_logged_once_with_its_metadata_and_sends_no_alert(self):
         for _ in range(3):
             self.check([UNIT_5A])
-        self.assertEqual(len(self.sent), 1)
-        alert = self.sent[0]
-        self.assertEqual(alert["priority"], 2)  # no rent rule given: every new unit is an Emergency
-        self.assertEqual(alert["url"], check_units.unit_url(UNIT_5A))
+        self.assertEqual(self.sent, [])  # the only alert is the applier's, after an application
         [event] = self.events()
         self.assertEqual(event["event"], "new")
         self.assertEqual(event["units"][0]["apartment"], "5A")
         self.assertEqual(event["units"][0]["data"], UNIT_5A)  # full API metadata kept
         self.assertNotIn("screenshot", event)
 
-    def test_only_qualifying_units_get_the_emergency_alert(self):
+    def test_every_unit_is_logged_and_marked_whether_it_qualifies(self):
         cheap = lambda unit: unit["price"] < 1500  # noqa: E731 -- 12C is $1,450, 5A $1,873
         self.check([UNIT_5A, UNIT_12C], qualifies=cheap, apply=lambda units: [UNIT_12C])
-        (emergency,) = self.sent  # 5A doesn't qualify: logged, no alert
-        self.assertEqual(emergency["priority"], 2)
-        self.assertIn("auto-applying now", emergency["title"])
-        self.assertIn("12C", emergency["message"])
-        self.assertNotIn("5A", emergency["message"])
-        # Every unit is logged, qualifying or not.
+        self.assertEqual(self.sent, [])
         self.assertEqual([u["qualifies_for_auto_apply"] for u in self.events()[0]["units"]], [False, True])
 
-    def test_a_qualifying_unit_the_applier_didnt_take_says_apply_now(self):
-        self.check([UNIT_12C], qualifies=lambda u: True, apply=lambda units: [])  # e.g. applied to before
-        self.assertIn("apply now", self.sent[0]["title"])
-        self.assertNotIn("auto-applying", self.sent[0]["title"])
-
-    def test_the_applier_gets_the_listings_before_any_alert_or_log(self):
+    def test_the_applier_gets_the_listings_before_the_log(self):
         order = []
-        self.notify.side_effect = lambda **alert: order.append("alert") or True
         with mock.patch.object(check_units, "record_event", lambda event: order.append("log")):
             self.check([UNIT_12C], qualifies=lambda u: True, apply=lambda units: order.append("apply"))
-        self.assertEqual(order, ["apply", "alert", "log"])
-
-    def test_a_failing_pushover_never_stops_the_check_or_the_applier(self):
-        self.notify.side_effect = RuntimeError("Pushover is down")
-        handed = []
-        with mock.patch("background.time.sleep"):  # skip the retry waits
-            changes = self.check([UNIT_12C], qualifies=lambda u: True, apply=handed.append)
-        self.assertEqual(changes.new, [UNIT_12C])
-        self.assertEqual(handed, [[UNIT_12C]])  # the applier got the unit
-        self.assertEqual(len(self.events()), 1)  # and it was logged
-        self.assertTrue(Path(check_units.STATE_FILE).exists())  # the state moved on: no re-alert loop
+        self.assertEqual(order, ["apply", "log"])
 
     def test_a_crash_in_the_applier_hand_off_never_stops_the_check(self):
         def broken(units):
@@ -210,14 +186,14 @@ class ProcessSnapshotTests(unittest.TestCase):
 
         changes = self.check([UNIT_5A], apply=broken)
         self.assertEqual(len(changes.new), 1)
-        self.assertEqual(len(self.sent), 1)
+        self.assertEqual(len(self.events()), 1)
 
     def test_updates_and_removals_are_logged_without_alerts(self):
         self.check([UNIT_5A])
         self.check([UNIT_5A_RENT_CHANGE])
         self.check([])
         self.check([], seconds=61)
-        self.assertEqual([a["priority"] for a in self.sent], [2])  # just the new-unit alert
+        self.assertEqual(self.sent, [])
         self.assertEqual([e["event"] for e in self.events()], ["new", "updated", "removed"])
         self.assertEqual(self.events()[1]["units"][0]["changed"]["price"], {"before": 1873, "after": 1925})
         removed = self.events()[2]["units"][0]
@@ -231,22 +207,6 @@ class AlertContentTests(unittest.TestCase):
             check_units.unit_url({"unitSpk": "P~NYST31~B~287~U~0T-A"}),
             "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYST31~B~287~U~0T-A",
         )
-
-    def test_single_new_unit_alert_links_straight_to_the_unit(self):
-        alert = check_units.qualifying_alert([UNIT_5A], auto_applying=False)
-        self.assertEqual(alert["priority"], 2)
-        self.assertIn("apply now", alert["title"])
-        self.assertEqual(alert["url"], check_units.unit_url(UNIT_5A))
-        self.assertIn("Apt 5A, 287 Avenue C", alert["message"])
-        self.assertIn("$1,873/mo", alert["message"])
-        self.assertIn(f'href="{check_units.unit_url(UNIT_5A)}"', alert["message"])
-
-    def test_many_new_units_still_fit_pushovers_limit(self):
-        units = [dict(UNIT_5A, unitSpk=f"P~TEST~U~{i}", name=f"{i}A") for i in range(40)]
-        alert = check_units.qualifying_alert(units, auto_applying=False)
-        self.assertLessEqual(len(alert["message"]), check_units.PUSHOVER_MESSAGE_LIMIT)
-        self.assertIn("more on the listings page", alert["message"])
-        self.assertEqual(alert["url"], check_units.LISTINGS_URL)
 
     def test_studio_label(self):
         self.assertTrue(check_units.unit_details(UNIT_12C).startswith("Studio / 1 bath, $1,450/mo"))

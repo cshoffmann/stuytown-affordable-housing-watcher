@@ -43,7 +43,7 @@ RUNS_DIR = "data/apply_runs"
 SITE_VERSIONS_FILE = "data/site_versions.json"  # each version of the site's code, and where its pages were kept
 SITE_VERSION = re.compile(r"/sb/aHUnit-js\.js\.v(\d+)")
 # Outcomes that need no pages to understand: everything went as it should.
-ROUTINE_OUTCOMES = ("submitted", "recorded")
+ROUTINE_OUTCOMES = ("submitted", "recorded", "filled")
 MAX_HTML_BYTES = 1_500_000
 MAX_BODY_CHARS = 50_000
 MAX_REQUESTS = 400

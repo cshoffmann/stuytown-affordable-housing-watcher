@@ -169,10 +169,14 @@ def issues(run: dict | None) -> list:
         if recording.get("status") == "failed":
             found.append(f"Couldn't open the form of Apt {recording.get('apartment')} ({recording.get('detail')}): "
                          "the site may have changed")
+        elif recording.get("status") == "incomplete" or recording.get("problems"):
+            found.append(f"The form rehearsal on Apt {recording.get('apartment')} couldn't fill every field "
+                         f"({'; '.join(recording.get('problems') or []) or recording.get('detail')}): "
+                         "the form may have changed")
         elif "unexpected" in check or "couldn't rebuild" in check:
             found.append(f"Direct submit couldn't learn the site's request (Apt {recording.get('apartment')}): {check}")
     direct = (applier or {}).get("direct_submit") or {}
-    if "code changed" in (direct.get("why_not") or "") and applying:  # while off, the next rehearsal re-proves it
+    if "code changed" in (direct.get("why_not") or "") and applying:  # while off, nothing is submitted directly
         found.append(f"StuyTown changed its site code; direct submit is off until a recording proves the request "
                      f"again ({direct['why_not']})")
     if applier is not None and not applier.get("browser_ready_seconds"):
@@ -277,7 +281,9 @@ def _qualifies(row: dict, limits) -> bool:
         return bool(measured)
     rules, max_rent = limits if isinstance(limits, tuple) else ({}, limits)
     beds = row.get("beds")
-    limit = rules.get(int(beds), max_rent) if isinstance(beds, (int, float)) else max_rent
+    import auto_apply
+
+    limit = auto_apply.limit_for_beds(beds, rules, max_rent)
     return bool(limit and row.get("rent") is not None and row["rent"] <= limit)
 
 

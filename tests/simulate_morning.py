@@ -1,21 +1,19 @@
 """
-Simulated morning, on your actual phone, with FAKE listings.
+Simulated morning with FAKE listings.
 
 Replays tests/fixtures/morning_scenario.json one check at a time through the
-REAL watcher code -- the same fetch (over a kept-open connection), compare,
-alert and events-log code that runs in GitHub Actions -- against a fake copy
-of the listings API running on your own computer. It never touches the real
-data/ folder or git: everything goes to tests/output/ (wiped at the start of
-each run). Auto-apply stays off (the fake units have no real pages;
+REAL watcher code -- the same fetch (over a kept-open connection), compare and
+events-log code that runs in GitHub Actions -- against a fake copy of the
+listings API running on your own computer. It never touches the real data/
+folder or git: everything goes to tests/output/ (wiped at the start of each
+run). Auto-apply stays off (the fake units have no real pages;
 tests/test_auto_apply.py covers applying), and the rent limit is set to
 $1,500: 5A ($1,873) doesn't qualify, 12C ($1,450) does.
 
-What your phone should get (the title starts with [TEST]) -- ONE alert:
-  EMERGENCY  "Qualifying StuyTown unit - apply now" when 12C is posted.
-             Breaks through Do Not Disturb and repeats every minute until you
-             tap Acknowledge (test alerts stop after 3 minutes).
-5A (posted, rent change, removal, re-listing) is only logged in events.json:
-units that don't qualify never alert.
+Your phone should get NOTHING: the watcher's only alert is the one sent after
+an application went in, and nothing applies here. Every posting, rent
+change, removal and re-listing is logged in tests/output/events.json, with
+12C marked as qualifying.
 
 Run from the repo folder:
     python tests/simulate_morning.py      (no keys set = dry run: alerts are printed, not sent)
@@ -140,11 +138,11 @@ def main() -> int:
         server.server_close()
 
     print("\n" + "=" * 60)
-    print(f"Alerts: {sent['emergency']} emergency (qualifying units), {sent['normal']} other "
+    print(f"Alerts: {sent['emergency'] + sent['normal']} (expected none) "
           "-- every unit, update and removal is logged in events.json.")
     print(f"Events log:  {check_units.EVENTS_FILE}")
-    if mismatches or (sent["emergency"], sent["normal"]) != (1, 0):
-        print(f"{mismatches} check(s) did NOT behave as expected, or the alerts weren't exactly 1 emergency.")
+    if mismatches or sent["emergency"] or sent["normal"]:
+        print(f"{mismatches} check(s) did NOT behave as expected, or an alert was sent.")
         return 1
     print("All checks behaved as expected.")
     return 0

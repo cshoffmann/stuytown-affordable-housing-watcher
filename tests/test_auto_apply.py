@@ -65,23 +65,28 @@ class EligibilityTests(unittest.TestCase):
         with mock.patch.object(auto_apply, "MAX_RENT", None):
             self.assertIn("no rent limit is set", auto_apply.skip_reason(unit(price=100), EXAMPLE_PROFILE))
 
-    def test_limits_by_bedrooms(self):
+    def test_limits_by_bedrooms_count_that_many_or_more(self):
         def reason(beds, price):
             return auto_apply.skip_reason(unit(price=price, bedrooms=beds), EXAMPLE_PROFILE)
 
-        with mock.patch.object(auto_apply, "RENT_RULES", {1: 2200.0, 2: 2700.0}), \
+        with mock.patch.object(auto_apply, "RENT_RULES", {1: 2300.0}), mock.patch.object(auto_apply, "MAX_RENT", None):
+            self.assertIsNone(reason(1, 2300))  # "1:2300" = 1 bedroom or more, $2,300 or less
+            self.assertIsNone(reason(2, 2250))
+            self.assertIsNone(reason(3, 2300))
+            self.assertIn("over $2,300.00", reason(2, 2300.01))
+            self.assertEqual(reason(0, 1500), "no rent limit for studio units")
+            self.assertEqual(auto_apply.limits_text(), "1+ bed <= $2,300")
+        with mock.patch.object(auto_apply, "RENT_RULES", {1: 2300.0, 2: 2800.0}), \
                 mock.patch.object(auto_apply, "MAX_RENT", None):
-            self.assertIsNone(reason(1, 2200))
-            self.assertIn("over $2,200.00", reason(1, 2200.01))
-            self.assertIsNone(reason(2, 2700))
-            self.assertEqual(reason(3, 1000), "no rent limit for 3 bed units")
+            self.assertIn("over $2,300.00", reason(1, 2650))
+            self.assertIsNone(reason(2, 2800))
+            self.assertIsNone(reason(4, 2800))  # 2+ beds get the 2-bed limit
             self.assertTrue(auto_apply.qualifies(unit(price=2650, bedrooms=2)))
             self.assertFalse(auto_apply.qualifies(unit(price=2650, bedrooms=1)))
-            self.assertEqual(auto_apply.limits_text(), "1 bed <= $2,200, 2 bed <= $2,700")
-        with mock.patch.object(auto_apply, "RENT_RULES", {1: 2200.0}):  # AUTO_APPLY_MAX_RENT (3000) covers the rest
-            self.assertIsNone(reason(2, 2999))
-            self.assertIn("over $2,200.00", reason(1, 2300))
-            self.assertEqual(auto_apply.limits_text(), "1 bed <= $2,200, others <= $3,000")
+            self.assertEqual(auto_apply.limits_text(), "1 bed <= $2,300, 2+ bed <= $2,800")
+        with mock.patch.object(auto_apply, "RENT_RULES", {1: 2300.0}):  # AUTO_APPLY_MAX_RENT (3000): studios
+            self.assertIsNone(reason(0, 2999))
+            self.assertEqual(auto_apply.limits_text(), "1+ bed <= $2,300, others <= $3,000")
 
     def test_limits_are_read_like_people_write_them(self):
         parse = check_units.parse_rules
@@ -201,14 +206,15 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(self.load(json.dumps(EXAMPLE_PROFILE))[1], "")
 
     def test_auto_apply_stays_off_for_the_run_without_a_rent_limit(self):
-        alerts = []
+        alerts, printed = [], []
         auto_apply._profile_for_run.cache_clear()
         self.addCleanup(auto_apply._profile_for_run.cache_clear)
         with mock.patch.object(auto_apply, "MAX_RENT", None), \
                 mock.patch.object(check_units, "notify", lambda **a: alerts.append(a) or True), \
-                mock.patch("builtins.print"):
+                mock.patch("builtins.print", lambda *a: printed.append(" ".join(map(str, a)))):
             self.assertIsNone(auto_apply._profile_for_run())
-        self.assertIn("AUTO_APPLY_MAX_RENT", alerts[0]["message"])
+        self.assertEqual(alerts, [])  # only applications send alerts
+        self.assertIn("AUTO_APPLY_MAX_RENT", printed[0])
 
 
 class ReadBackTests(unittest.TestCase):
@@ -289,36 +295,33 @@ class ApplierDispatchTests(unittest.TestCase):
         self.work()
         return queued
 
-    def test_with_auto_apply_off_it_rehearses_every_morning_and_never_applies(self):
+    def test_with_auto_apply_off_it_rehearses_one_form_a_morning_and_never_applies(self):
         self.applier = auto_apply.Applier(EXAMPLE_PROFILE, workers=1, record_only=True)
-        taken = self.check([unit("9F", 4380), unit("1A", 2500), unit("2B", 2900), unit("3C", 2950)])
-        self.assertEqual(taken, [])  # so the alert says "apply now"
+        taken = self.check([unit("9F", 4380), unit("1A", 2500), unit("2B", 2900)])
+        self.check([unit("3C", 2000)])
+        self.assertEqual(taken, [])
         self.assertEqual(self.tried, [])  # never applies
-        self.assertEqual(self.recorded, ["1A", "2B"])  # qualifying units first, two a morning
-        self.assertEqual(self.sent, [])  # recordings send no alert
+        self.assertEqual(self.recorded, ["1A"])  # one rehearsal a morning, a qualifying unit first
+        self.assertEqual(self.sent, [])  # no alerts while off
         self.assertEqual(self.applier.observations()["mode"], "recording only")
-        recorder = auto_apply.Applier(EXAMPLE_PROFILE, workers=1, record_only=True)
-        self.applier = recorder
-        with mock.patch.object(recorder.direct, "why_not", return_value=None):  # proven for the current code
-            self.assertEqual(self.check([unit("4D", 2000), unit("5E", 2100)]), [])
-            self.check([unit("6F", 2000)])
-        self.assertEqual(self.recorded, ["1A", "2B", "4D"])  # still one rehearsal a morning
 
-    def test_qualifying_units_are_queued_cheapest_first_and_each_gets_one_result_message(self):
+    def test_an_application_sends_one_high_priority_alert_with_the_unit(self):
         self.check([unit("9F", 4380), unit("2B", 2900), unit("1A", 2500)])
-        self.assertEqual(self.tried, ["1A", "2B"])
+        self.assertEqual(self.tried, ["1A", "2B"])  # cheapest first; 9F is over the limit
         self.assertEqual([(a["title"], a["priority"]) for a in self.sent],
-                         [("Applied: Apt 1A, 287 Avenue C", 0), ("Applied: Apt 2B, 287 Avenue C", 0)])
+                         [("Applied: Apt 1A, 287 Avenue C", 1), ("Applied: Apt 2B, 287 Avenue C", 1)])
+        message = self.sent[0]["message"]
+        self.assertIn("$2,500/mo", message)
+        self.assertIn("2 bed / 1 bath", message)
+        self.assertIn("766 sq ft", message)
         self.assertEqual(self.sent[0]["attachment"], ("filled-form.jpg", b"\xff\xd8 filled", "image/jpeg"))
-        self.assertIn("within 24 hours", self.sent[0]["message"])  # the detailed application comes next
+        self.assertIn("within 24 hours", message)  # the detailed application comes next
 
-    def test_a_failure_is_its_own_message_with_the_page_it_ended_on(self):
-        self.status = "rejected"
-        self.check([unit("1A", 2500)])
-        [alert] = self.sent
-        self.assertEqual((alert["title"], alert["priority"]),
-                         ("Auto-apply failed: Apt 1A, 287 Avenue C - apply yourself now", 0))
-        self.assertEqual(alert["attachment"][1], b"\xff\xd8 after")
+    def test_an_application_that_didnt_go_in_sends_no_alert(self):
+        for status in ("rejected", "failed", "incomplete", "blocked"):
+            self.status = status
+            self.check([unit(f"{status[:2]}1", 2500)])
+        self.assertEqual(self.sent, [])  # it's on the summary page instead
 
     def test_a_unit_is_never_queued_twice_while_its_application_runs(self):
         for _ in range(5):  # checks every 2 s while the application is still going
@@ -330,25 +333,19 @@ class ApplierDispatchTests(unittest.TestCase):
         self.check([unit("1A", 2500)])  # and not again once it's done
         self.assertEqual(self.tried, ["1A"])
 
-    def test_forms_of_units_over_the_limit_are_recorded_two_per_morning_without_applying(self):
+    def test_units_over_the_limit_are_only_logged(self):
         for _ in range(3):
-            self.check([unit("9F", 4380), unit("8E", 4100), unit("7D", 3900), unit("1A", 2500)])
+            self.check([unit("9F", 4380), unit("8E", 4100), unit("1A", 2500)])
         self.assertEqual(self.tried, ["1A"])
-        self.assertEqual(self.recorded, ["9F", "8E"])  # each once, and no more than two
+        self.assertEqual(self.recorded, [])
         self.assertEqual(list(json.loads(Path(auto_apply.APPLICATIONS_FILE).read_text())), ["P~TEST~U~1A"])
-
-    def test_applications_are_taken_before_recordings(self):
-        self.applier.dispatch([unit("9F", 4380)])  # a recording is queued first...
-        self.applier.dispatch([unit("1A", 2500)])  # ...then an application arrives
-        first = self.applier._jobs.get_nowait()
-        self.assertEqual((first[3], check_units.apartment(first[4])), ("apply", "1A"))
 
     def test_a_crashed_attempt_gets_one_more_try(self):
         self.status = "failed"
         for _ in range(4):
             self.check([unit("1A", 2500)])
         self.assertEqual(len(self.tried), auto_apply.MAX_FAILED_ATTEMPTS_PER_UNIT)
-        self.assertIn("apply yourself now", self.sent[0]["title"])
+        self.assertEqual(self.sent, [])
 
     def test_a_refused_form_isnt_retried(self):
         self.status = "rejected"
@@ -842,7 +839,7 @@ class EndToEndTests(unittest.TestCase):
         self.notifier, self.logger = background.Worker("notifier"), background.Worker("logger")
         self.applier = auto_apply.Applier(EXAMPLE_PROFILE, self.notifier, self.logger, workers=2)
         self.logger.yield_to = self.applier.busy
-        if self._testMethodName != "test_before_7_the_last_units_page_proves_the_format":
+        if self._testMethodName != "test_a_rehearsal_fills_the_form_and_never_presses_submit":
             self.applier.start()
         self.addCleanup(self.applier.stop, 30)
 
@@ -881,7 +878,7 @@ class EndToEndTests(unittest.TestCase):
 
         self.assertEqual(sorted(a["title"] for a in self.alerts), [
             "Applied: Apt 1A, 287 Avenue C", "Applied: Apt 2B, 287 Avenue C", "Applied: Apt 3C, 287 Avenue C"])
-        self.assertTrue(all(a["priority"] == 0 for a in self.alerts))
+        self.assertTrue(all(a["priority"] == 1 for a in self.alerts))  # high priority, one per application
         self.assertEqual(sorted(log), ["P~TEST~U~1A", "P~TEST~U~2B", "P~TEST~U~3C"])
         self.assertTrue(all(r["attempts"][-1]["status"] == "submitted" for r in log.values()))
         direct = log["P~TEST~U~3C"]["attempts"][-1]["timeline"]
@@ -908,7 +905,7 @@ class EndToEndTests(unittest.TestCase):
         self.assertNotIn("Jane", json.dumps(saved))
 
         runs = self.runs()
-        self.assertEqual(sorted(runs), ["1A_apply", "2B_apply", "3C_direct", "9F_record"])
+        self.assertEqual(sorted(runs), ["1A_apply", "2B_apply", "3C_direct"])  # 9F, over the limit: only logged
         report = json.loads((runs["1A_apply"] / "report.json").read_text())
         sent = report["analysis"]["submit_request"]
         self.assertEqual((sent["method"], sent["status"]), ("POST", 200))
@@ -916,17 +913,13 @@ class EndToEndTests(unittest.TestCase):
         self.assertIn("firstName", sent["body_keys"])
         self.assertEqual(report["analysis"]["anti_bot"], {})
         self.assertTrue(report["notes"]["text_after_submit_new"])  # the site's own confirmation wording
-        recorded = json.loads((runs["9F_record"] / "report.json").read_text())
-        self.assertEqual(recorded["notes"]["form_facts"]["forms_on_page"], 1)
-        self.assertIn("direct_submit_check", recorded["notes"])
         # The pages are kept once per version of the site's code, and whenever something goes wrong.
         kept = [name for name, folder in runs.items() if any(f.suffix == ".html" for f in folder.iterdir())]
         self.assertEqual(len(kept), 1, kept)
         self.assertTrue(json.loads((runs[kept[0]] / "report.json").read_text())["pages_kept"].startswith(
             "kept: the first time"))
-        self.assertTrue(recorded["pages_kept"].startswith("not kept") or kept == ["9F_record"])
         self.assertIn("1001", json.loads(Path(f"{self.tmp}/site_versions.json").read_text()))
-        self.assertNotIn("P~TEST~U~9F", by_unit)  # the recording's SUBMIT never reached the site
+        self.assertNotIn("P~TEST~U~9F", by_unit)  # over the limit: never applied to
         # Nothing personal in anything that gets committed.
         for folder in runs.values():
             for file in folder.iterdir():
@@ -937,23 +930,29 @@ class EndToEndTests(unittest.TestCase):
                               "example street", "10009", "fake-token"):
                     self.assertNotIn(value, text, f"{value!r} in {folder.name}/{file.name}")
 
-    def test_before_7_the_last_units_page_proves_the_format(self):
-        yesterday = self.listed(unit("7Z", 2600, version=3))[0]
-        Path(f"{self.tmp}/events.json").write_text(json.dumps([{"event": "new", "units": [
-            {"unit_id": yesterday["unitSpk"], "data": yesterday}]}]), encoding="utf-8")
-        self.applier.start()  # nothing listed yet
-        deadline = time.monotonic() + 30
-        while self.applier.direct.why_not() and time.monotonic() < deadline:
+    def test_a_rehearsal_fills_the_form_and_never_presses_submit(self):
+        rehearsal = auto_apply.Applier(EXAMPLE_PROFILE, self.notifier, self.logger, workers=1, record_only=True)
+        rehearsal.start()
+        self.addCleanup(rehearsal.stop, 30)
+        rehearsal.dispatch(self.listed(unit("1A", 2500)))
+        deadline = time.monotonic() + 60
+        while not rehearsal.recordings and time.monotonic() < deadline:
             time.sleep(0.1)
-        self.assertIsNone(self.applier.direct.why_not())
-        self.assertEqual(auto_apply.SelftestSiteHandler.applications, [])  # nothing was sent
-        self.assertEqual(self.applier.direct.format["rules"]["version"], "the unit's")
+        rehearsal.stop(30)
+        self.notifier.drain(30)
+        self.logger.drain(30)
+        (done,) = rehearsal.recordings
+        self.assertEqual(done["status"], "filled", done["detail"])  # every field found and filled
+        self.assertIn("SUBMIT was NOT pressed", done["detail"])
+        self.assertEqual(done["problems"], [])
+        self.assertEqual(auto_apply.SelftestSiteHandler.applications, [])  # nothing reached the site
+        self.assertEqual(self.alerts, [])  # and no alert
+        self.assertFalse(Path(f"{self.tmp}/applications.json").exists())
+        self.assertEqual(sorted(self.runs()), ["1A_record"])
 
     def test_a_direct_request_that_fails_is_handed_to_the_browser(self):
-        self.applier.dispatch(self.listed(unit("9F", 4380.54, version=2)))  # a recording proves the format
-        deadline = time.monotonic() + 30
-        while self.applier.direct.why_not() and time.monotonic() < deadline:
-            time.sleep(0.1)
+        self.applier.dispatch(self.listed(unit("0Z", 2400, version=2)))  # a browser application proves the format
+        self.assertTrue(self.applier.wait_idle(60))
         self.assertIsNone(self.applier.direct.why_not())
         auto_apply.SelftestSiteHandler.fail_next = 1  # the direct request gets a 503
         self.applier.dispatch(self.listed(unit("1A", 2500)))
@@ -963,14 +962,12 @@ class EndToEndTests(unittest.TestCase):
         self.assertEqual(attempt["status"], "submitted", attempt["detail"])
         self.assertEqual(attempt["timeline"]["form_via"], "unit page")
         self.assertEqual(attempt["timeline"]["direct_tried"]["status"], "unknown")
-        self.assertEqual(len(auto_apply.SelftestSiteHandler.applications), 2)  # the failed one, then the browser's
-        self.assertEqual(len(self.alerts), 1)  # one result message, not two
+        self.assertEqual(len(auto_apply.SelftestSiteHandler.applications), 3)  # 0Z; 1A's failed one, then the browser's
+        self.assertEqual(len(self.alerts), 2)  # one result message per unit, not two for 1A
 
     def test_the_site_refuses_a_second_application_and_a_new_code_version_stops_direct_submit(self):
-        self.applier.dispatch(self.listed(unit("9F", 4380.54, version=2)))
-        deadline = time.monotonic() + 30
-        while self.applier.direct.why_not() and time.monotonic() < deadline:
-            time.sleep(0.1)
+        self.applier.dispatch(self.listed(unit("0Z", 2400, version=2)))  # proves the format
+        self.assertTrue(self.applier.wait_idle(60))
         prepared = self.applier.direct.prepare(self.listed(unit("1A", 2500))[0])
         self.assertEqual(self.applier.direct.submit(prepared)["status"], 200)  # e.g. applied by hand earlier
         self.applier.dispatch([unit("1A", 2500)])

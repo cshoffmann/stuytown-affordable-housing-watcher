@@ -23,15 +23,16 @@ it every check's listings FIRST, before any alert or log is even queued:
 
 Repository variables control it:
 
-    AUTO_APPLY_MODE      on | off (default). Off = rehearsal only: nothing is ever
-                         sent. Each morning the first listed unit's form is
-                         filled and SUBMIT pressed with every request held back
-                         (a second unit too while the request format isn't
-                         proven for the site's current code), so the applying
-                         path stays tested and direct submit stays ready.
-    AUTO_APPLY_RULES     rent limits by bedrooms, $/month: "1:2200, 2:2700"
-                         (0 = studio). A unit whose bedroom count isn't listed
-                         falls back to AUTO_APPLY_MAX_RENT, or doesn't qualify.
+    AUTO_APPLY_MODE      on | off (default). Off = rehearsal only: each morning the
+                         first listed unit's form is filled in and every field
+                         checked, and SUBMIT is never pressed. No alerts.
+                         On = applies to qualifying units, and sends one
+                         high-priority alert per application that went in.
+    AUTO_APPLY_RULES     rent limits by bedrooms, $/month: "1:2300" means 1 bed
+                         or more for $2,300 or less; "1:2300, 2:2800" gives 2+
+                         beds their own limit (0 = studio). A unit smaller than
+                         every rule falls back to AUTO_APPLY_MAX_RENT, or
+                         doesn't qualify.
     AUTO_APPLY_MAX_RENT  one limit for every unit, e.g. 3000.
                          At least one of the two is required when on; there is
                          no built-in default. They also decide which new units
@@ -54,10 +55,9 @@ which has to be completed within 24 hours.
 Every trip through the form is recorded by apply_recorder.py into
 data/apply_runs/ -- steps and timings, the form's fields, the page HTML, the
 network traffic including what SUBMIT sends and what comes back -- with your
-details redacted. While on, it also records the form of up to
-MAX_FORM_RECORDINGS_PER_RUN units over your limit each morning, whenever no
-application is running -- filled in, with SUBMIT pressed and every outgoing
-request held back in the browser, so nothing is sent.
+details redacted. While off, the first unit listed each morning gets a
+rehearsal: its form is filled in and every field checked, and SUBMIT is
+never pressed.
 
 The repo (and its Actions logs) are public, so nothing personal is ever
 printed, committed or logged: in GitHub Actions every profile value is masked
@@ -103,12 +103,17 @@ parse_rules = check_units.parse_rules  # "1:2200, 2:2700" -> ({1: 2200.0, 2: 270
 RENT_RULES, RULE_PROBLEMS = check_units.parse_rules(os.environ.get("AUTO_APPLY_RULES", ""))  # {bedrooms: $/month}
 
 
+def limit_for_beds(beds, rules: dict, max_rent: float | None) -> float | None:
+    """The rule for this many bedrooms: the one for the largest size at or
+    under it ("1:2300" covers 1, 2, 3 ... beds), else max_rent."""
+    beds = check_units.number(beds)
+    covering = [size for size in rules if beds is not None and size <= beds]
+    return rules[max(covering)] if covering else max_rent
+
+
 def rent_limit_for(unit: dict) -> float | None:
-    """This unit's rent limit: its bedroom count's rule, else AUTO_APPLY_MAX_RENT."""
-    beds = check_units.number(unit.get("bedrooms"))
-    if beds is not None and int(beds) in RENT_RULES:
-        return RENT_RULES[int(beds)]
-    return MAX_RENT
+    """This unit's rent limit (see limit_for_beds)."""
+    return limit_for_beds(unit.get("bedrooms"), RENT_RULES, MAX_RENT)
 
 
 def limits_configured() -> bool:
@@ -123,11 +128,21 @@ def beds_text(beds) -> str:
 
 
 def limits_text(rules: dict | None = None, max_rent: float | None = None) -> str:
-    """'1 bed <= $2,200, 2 bed <= $2,700, others <= $3,000' (the current
+    """'1 bed <= $2,300, 2+ bed <= $2,800, others <= $3,000' (the current
     settings by default); '' when none are set."""
     rules = RENT_RULES if rules is None else rules
     max_rent = MAX_RENT if rules is RENT_RULES and max_rent is None else max_rent
-    parts = [f"{beds_text(beds)} <= ${limit:,.0f}" for beds, limit in sorted(rules.items())]
+    sizes = sorted(rules)
+    parts = []
+    for i, beds in enumerate(sizes):
+        top = sizes[i + 1] - 1 if i + 1 < len(sizes) else None
+        if top == beds:
+            label = beds_text(beds)
+        elif top is None:
+            label = "studio+" if beds == 0 else f"{beds}+ bed"
+        else:
+            label = f"{beds_text(beds)}-{top} bed" if beds else f"studio-{top} bed"
+        parts.append(f"{label} <= ${rules[beds]:,.0f}")
     if max_rent is not None:
         parts.append(f"{'others' if parts else 'any'} <= ${max_rent:,.0f}")
     return ", ".join(parts)
@@ -165,7 +180,6 @@ PHONE_KEYS = ("cell_phone", "work_phone")
 # they arrive, so it's worth being early again. An attempt that crashed or
 # couldn't press SUBMIT (so nothing was sent) gets one more try that day.
 MAX_FAILED_ATTEMPTS_PER_UNIT = 2
-MAX_FORM_RECORDINGS_PER_RUN = 2  # forms recorded per morning (SUBMIT held back: nothing is sent)
 APPLY_WORKERS = 2  # browsers kept open, so two qualifying units are applied to at once
 WARM_REFRESH_SECONDS = 240  # an idle worker reloads the site this often, to keep its connections open
 DIRECT_SUBMIT = True  # send straight to the API once the request format is proven (direct_submit.py)
@@ -298,8 +312,8 @@ def _profile_strings(value):
 @functools.cache
 def _profile_for_run() -> dict | None:
     """The profile, checked once per run along with the rent limit. A problem
-    is reported (log + one alert) and switches auto-apply off for the run; it
-    never stops the watcher -- the alerts matter more."""
+    is logged (and shown on the summary page) and switches auto-apply off for
+    the run; it never stops the watcher."""
     try:
         if not limits_configured():
             raise ProfileError("no rent limit is set: set the AUTO_APPLY_RULES repository variable "
@@ -312,11 +326,6 @@ def _profile_for_run() -> dict | None:
         return profile
     except ProfileError as e:
         print(f"Auto-apply is OFF for this run: {e}")
-        background.notify_with_retries(check_units.notify, {
-            "title": "StuyTown auto-apply is off",
-            "message": f"{html.escape(str(e))}. New-unit alerts still work.",
-            "priority": 0,
-        }, attempts=2)
         return None
 
 
@@ -327,8 +336,8 @@ def startup_check() -> None:
         print(f"WARNING: AUTO_APPLY_MODE={_MODE_SETTING!r} isn't on or off -- treating it as off.")
     if not ENABLED:
         _profile_if_any()  # masks the profile in the log, for the recordings
-        print("Auto-apply: off -- rehearsal only: the first listed unit's form is filled and SUBMIT pressed "
-              "with every request held back, so nothing is sent (set AUTO_APPLY_MODE to on to apply)")
+        print("Auto-apply: off -- rehearsal only: the first listed unit's form is filled in and checked; "
+              "SUBMIT is never pressed and no alerts are sent (set AUTO_APPLY_MODE to on to apply)")
         return
     if RULE_PROBLEMS:
         print(f"WARNING: AUTO_APPLY_RULES: couldn't read {', '.join(RULE_PROBLEMS)!r} "
@@ -594,20 +603,11 @@ class Applier:
             thread.start()
             self._threads.append(thread)
         self.direct.refresh_config(_a_known_unit())
-        known = None if self.record_only else _last_listed_unit()  # rehearsals use units listed right now
-        if self.direct.why_not() and known is not None:
-            # Before 7:00 nothing is listed, but the last unit seen may still
-            # have its page and form: a recording of it (SUBMIT held back,
-            # nothing sent) can prove the format before the first posting.
-            self._jobs.put((1, 0.0, next(self._order), "record", known))
         maintain = threading.Thread(target=self._maintain, name="applier-direct", daemon=True)
         maintain.start()
         self._threads.append(maintain)
         reason = self.direct.why_not()
-        if self.record_only:
-            print("   Direct submit: " + ("ready -- nothing to record" if reason is None else
-                                           f"not yet ({reason}); the next listed unit's form gets recorded"))
-        else:
+        if not self.record_only:
             print("   Direct submit: " + ("ready -- qualifying units go straight to StuyTown's API"
                                            if reason is None else f"not yet ({reason}); the browser applies"))
         deadline = time.monotonic() + wait_seconds
@@ -664,8 +664,8 @@ class Applier:
     def dispatch(self, units: list) -> list:
         """Called by the checker with every check's listings. For each unit
         that qualifies and isn't already handled or in progress (cheapest
-        first): a direct submit on its own thread, or a browser job. Also a
-        recording for an over-limit unit or two. Returns the units taken.
+        first): a direct submit on its own thread, or a browser job. Units
+        that don't qualify are only logged. Returns the units taken.
         Never waits. In recording-only mode it never applies."""
         if self.record_only:
             return self._record_if_needed(units)
@@ -685,9 +685,6 @@ class Applier:
                 if uid not in self._skips_logged:
                     self._skips_logged.add(uid)
                     print(f"   Auto-apply: skipping {check_units.unit_label(unit)} -- {reason}")
-                if not_eligible and uid not in self._recorded and len(self._recorded) < MAX_FORM_RECORDINGS_PER_RUN:
-                    self._recorded.add(uid)
-                    self._jobs.put((1, 0.0, next(self._order), "record", unit))
         for unit in sorted(queued, key=lambda u: check_units.unit_rent(u) or 0):
             prepared = self.direct.prepare(unit)
             if isinstance(prepared, tuple):
@@ -700,22 +697,16 @@ class Applier:
         return queued
 
     def _record_if_needed(self, units: list) -> list:
-        """Auto-apply off: rehearse on a unit listed right now -- fill its
-        form, press SUBMIT with every request held back, so nothing is sent.
-        The first listed unit every morning (qualifying units first), and a
-        second one while direct submit isn't proven for the site's current
-        code. Takes no unit, so the alert says "apply now"."""
-        if not units:
+        """Auto-apply off: one rehearsal a morning, on the first unit listed
+        (qualifying units first) -- its form filled in and checked, SUBMIT
+        never pressed. Takes no unit."""
+        if not units or self._recorded:
             return []
         with self._lock:
-            for unit in sorted(units, key=lambda u: skip_reason(u, self.profile) is not None):
-                uid = check_units.unit_id(unit)
-                wanted = 1 if self.direct.why_not() is None else MAX_FORM_RECORDINGS_PER_RUN
-                if uid in self._recorded or len(self._recorded) >= wanted:
-                    continue
-                self._recorded.add(uid)
-                self._jobs.put((1, 0.0, next(self._order), "record", unit))
-                print(f"   Recording the form of {check_units.unit_label(unit)} (auto-apply is off: nothing is sent)")
+            unit = sorted(units, key=lambda u: skip_reason(u, self.profile) is not None)[0]
+            self._recorded.add(check_units.unit_id(unit))
+            self._jobs.put((1, 0.0, next(self._order), "record", unit))
+        print(f"   Rehearsing the form of {check_units.unit_label(unit)} (auto-apply is off: SUBMIT is never pressed)")
         return []
 
     def _browser_job(self, unit: dict) -> None:
@@ -865,21 +856,21 @@ class Applier:
         self._finished(unit, attempt, recording)
 
     def _record_form(self, context, unit: dict) -> None:
+        """A rehearsal: open the unit's form, fill it in, check every field
+        took its value. SUBMIT is never pressed; nothing is sent."""
         attempt, recording = apply_to_unit(context, unit, self.profile, record_only=True, runs_dir=self.runs_dir,
                                            site=self.direct.config)
-        print(f"   Auto-apply: recorded the form of {check_units.unit_label(unit)} "
-              f"in {attempt.seconds:.1f}s -- {attempt.status}: {attempt.detail}")
+        print(f"   Rehearsal on {check_units.unit_label(unit)} in {attempt.seconds:.1f}s -- "
+              f"{attempt.status}: {attempt.detail}")
         if recording is not None:
             page = recording.pages.get("1_unit_page") or recording.pages.get("2_form_empty")
             if page:
                 self.direct.refresh_config(html=page)
-        learned = self.direct.learn(attempt.captured, unit, "a recording (nothing sent)")
-        attempt.captured = None
-        print(f"   Direct submit: {learned}")
         self.recordings.append({"apartment": check_units.apartment(unit), "unit_id": check_units.unit_id(unit),
-                                "status": attempt.status, "detail": attempt.detail, "direct_submit_check": learned})
+                                "status": attempt.status, "detail": attempt.detail,
+                                "problems": list(attempt.problems)})
+        attempt.filled_screenshot = attempt.result_screenshot = None  # they show your details
         if recording:
-            recording.report["notes"]["direct_submit_check"] = learned
             self.logger.submit(recording.write)
 
     def _finished(self, unit: dict, attempt: "Attempt", recording) -> None:
@@ -893,8 +884,10 @@ class Applier:
             _record(self.applications, unit, attempt)
             snapshot = copy.deepcopy(self.applications)
             self._in_flight.discard(uid)
-        # Everything from here on is background work.
-        self.notifier.submit(background.notify_with_retries, check_units.notify, result_alert(unit, attempt))
+        # Everything from here on is background work. Your phone hears only
+        # about applications that went in; anything else is on the summary page.
+        if attempt.status in ("submitted", "unconfirmed"):
+            self.notifier.submit(background.notify_with_retries, check_units.notify, result_alert(unit, attempt))
         self.logger.submit(save_applications, snapshot)
         if recording is not None:
             self.logger.submit(recording.write)
@@ -914,20 +907,6 @@ def _a_known_unit() -> str:
         return next(u["unit_id"] for e in reversed(events) for u in e.get("units", []) if u.get("unit_id"))
     except (OSError, ValueError, StopIteration, KeyError, TypeError):
         return ""
-
-
-def _last_listed_unit() -> dict | None:
-    """The most recently posted unit in the events log, as the API listed it."""
-    try:
-        with open(check_units.EVENTS_FILE, encoding="utf-8") as f:
-            events = json.load(f)
-        for event in reversed(events):
-            for listed in event.get("units", []) if event.get("event") == "new" else []:
-                if isinstance(listed.get("data"), dict) and listed["data"].get("unitSpk"):
-                    return listed["data"]
-    except (OSError, ValueError, TypeError, AttributeError):
-        pass
-    return None
 
 
 def _keys_sent(body: dict) -> list:
@@ -1145,15 +1124,15 @@ def apply_to_unit(context, unit: dict, profile: dict, record_only: bool = False,
         apply_recorder.run_folder(check_units.apartment(unit), "record" if record_only else "apply", runs_dir),
         apply_recorder.Redactor(profile))
     recorder.note("unit", check_units.unit_summary(unit))  # public listing data
-    recorder.note("kind", "recording: the form recorded, then filled and SUBMIT pressed with every outgoing "
-                          "request blocked -- nothing was sent" if record_only else "application")
+    recorder.note("kind", "rehearsal: the form recorded, then filled in and checked; SUBMIT was never pressed"
+                  if record_only else "application")
     started = time.monotonic()
     pages_before = set(context.pages)
     page = context.new_page()
     try:
         recorder.watch(page)
         attempt = run_form(page, check_units.unit_url(unit), form_values(profile), submit=not record_only,
-                           recorder=recorder, apartment=check_units.apartment(unit), capture=record_only,
+                           recorder=recorder, apartment=check_units.apartment(unit), capture=False,
                            record=record_only, site=site)
     except Exception as e:
         recorder.step("crashed", error=f"{type(e).__name__}: {e}"[:1000])
@@ -1903,11 +1882,31 @@ def _screenshot_of_last_page(context) -> bytes | None:
 
 # --------------------------------------------------------------- reporting
 
+def unit_facts(unit: dict) -> str:
+    """'Floor 6, 764 sq ft, Blank finish, layout 108'"""
+    parts = []
+    floor = str(unit.get("unitFloor") or "").lstrip("0")
+    if floor:
+        parts.append(f"Floor {floor}")
+    if unit.get("sqft"):
+        parts.append(f"{unit['sqft']} sq ft")
+    finish = unit.get("finish")
+    finish = finish.get("name") if isinstance(finish, dict) else finish
+    if finish:
+        parts.append(f"{finish} finish")
+    layout = (unit.get("style") or {}).get("name")
+    if layout:
+        parts.append(f"layout {layout}")
+    return ", ".join(parts)
+
+
 def result_alert(unit: dict, attempt: Attempt, link: str | None = None) -> dict:
-    """One normal-priority alert with the outcome: "Applied" on success, a
-    separate "didn't go through" message otherwise. Success carries the
-    filled-in form; a failure carries what the page showed at the end."""
+    """The alert for an application: "Applied: Apt ...", high priority, with
+    the unit (address, beds, rent, floor, size) and the filled-in form. The
+    watcher only sends it when an application went in; the selftest and
+    --check-form use it for their other outcomes too."""
     label = check_units.unit_label(unit)
+    facts = unit_facts(unit)
     if attempt.status == "submitted":
         title = f"Applied: {label}"
     elif attempt.status == "unconfirmed":
@@ -1916,7 +1915,7 @@ def result_alert(unit: dict, attempt: Attempt, link: str | None = None) -> dict:
         title = f"[FORM CHECK] Filled the form for {label} - not submitted"
     else:
         title = f"Auto-apply failed: {label} - apply yourself now"
-    lines = [check_units._linked_line(unit), html.escape(attempt.detail)]
+    lines = [check_units._linked_line(unit)] + ([html.escape(facts)] if facts else []) + [html.escape(attempt.detail)]
     if attempt.problems:
         lines.append("Empty or not taking the value: " + html.escape("; ".join(attempt.problems)))
     if attempt.site_messages:
@@ -1936,7 +1935,7 @@ def result_alert(unit: dict, attempt: Attempt, link: str | None = None) -> dict:
     return {
         "title": title,
         "message": check_units._fit(lines),
-        "priority": 0,
+        "priority": 1 if attempt.status in ("submitted", "unconfirmed") else 0,
         "url": link or check_units.unit_url(unit),
         "url_title": "Open this unit",
         **({"attachment": (name, image, "image/jpeg")} if image else {}),
@@ -2072,10 +2071,9 @@ def main(argv=None) -> int:
 
 def _selftest(profile: dict) -> int:
     """The real applier -- warm browser worker, queue, background alerts and
-    logging -- pointed at the fake site: first a recording of an over-limit
-    fake unit, which captures the site's request (sending nothing) and
-    proves the direct-submit format; then one qualifying fake unit, applied
-    to directly (or by the browser, if the format couldn't be proven)."""
+    logging -- pointed at the fake site: a first qualifying fake unit,
+    applied to by the browser (which proves the direct-submit format from the
+    site's own request), then a second, applied to directly."""
     server = _serve_selftest_site()
     base = f"http://127.0.0.1:{server.server_port}"
     check_units.TITLE_PREFIX = "[TEST] "
@@ -2095,24 +2093,22 @@ def _selftest(profile: dict) -> int:
         if os.path.exists(leftover):
             os.remove(leftover)
     building = {"address": "FAKE FORM, NOT A REAL UNIT"}
-    over = {"unitSpk": "P~SELF~U~OVER", "name": "OVER", "building": building, "price": limit + 1000,
-            "incomeRequirement": 0, "bedrooms": 1, "bathrooms": 1, "version": 2}
+    first = {"unitSpk": "P~SELF~U~FIRST", "name": "FIRST", "building": building, "price": limit,
+             "incomeRequirement": 0, "bedrooms": 1, "bathrooms": 1, "version": 2}
     unit = {"unitSpk": "P~SELF~U~TEST", "name": "TEST", "building": building, "price": limit,
             "incomeRequirement": 0, "bedrooms": 1, "bathrooms": 1, "version": 1}
-    SelftestSiteHandler.units = {u["unitSpk"]: u for u in (over, unit)}
+    SelftestSiteHandler.units = {u["unitSpk"]: u for u in (first, unit)}
     SelftestSiteHandler.applications = []
     notifier, logger = background.Worker("notifier"), background.Worker("logger")
     applier = Applier(profile, notifier, logger, workers=1, runs_dir=SELFTEST_RUNS_DIR)
     logger.yield_to = applier.busy
     try:
         applier.start()
-        print("1. Recording an over-limit fake unit's form (nothing is sent)...")
-        applier.dispatch([over])
-        deadline = time.monotonic() + 60
-        while applier.direct.why_not() and time.monotonic() < deadline:
-            time.sleep(0.2)
+        print("1. Applying to a first qualifying fake unit (browser; proves the request format)...")
+        applier.dispatch([first])
+        applier.wait_idle(60)
         print(f"   direct submit: {'ready' if applier.direct.why_not() is None else applier.direct.why_not()}")
-        print("2. Applying to the qualifying fake unit...")
+        print("2. Applying to a second qualifying fake unit...")
         started = time.monotonic()
         applier.dispatch([unit])
         applier.wait_idle(60)
@@ -2129,7 +2125,7 @@ def _selftest(profile: dict) -> int:
     print(f"Result: {last['status']} -- {last['detail']} (via {via})")
     print(f"Sent from your profile: {', '.join(last.get('fields_filled') or []) or 'nothing'}")
     print(f"Applications the fake site received: {len(received)} "
-          "(the recording must have sent none)")
+          "(one per fake unit)")
     if last.get("problems"):
         print(f"Required fields empty or not taking the value: {'; '.join(last['problems'])}")
     if last.get("recording"):
