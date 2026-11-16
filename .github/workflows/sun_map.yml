@@ -1,11 +1,15 @@
 name: Rebuild sun map
 
-# By hand from the Actions tab: rebuilds data/sun/ (which way every apartment
-# line faces and its sun by floor) from the latest evidence -- the market-rate
-# listings the watcher saves each morning, the affordable units it has seen,
-# and your notes in tools/sun_map/inputs/line_notes.json. Takes a couple of
-# minutes; commits only if something changed.
+# Rebuilds data/sun/ (which way every apartment line faces, its sun score
+# and sun by floor) from the latest evidence -- the market-rate listings the
+# watcher saves each morning, the affordable units it has seen, and your
+# notes in tools/sun_map/inputs/line_notes.json. Every Sunday afternoon, or
+# by hand from the Actions tab. Takes a couple of minutes; commits only when
+# an answer changed (not just the build date).
 on:
+  schedule:
+    - cron: '17 15 * * 0'   # Sundays 3:17pm New York time, well away from the morning watcher
+      timezone: 'America/New_York'
   workflow_dispatch:
 
 # Its own group: sharing the watcher's could cancel a watcher run waiting in
@@ -43,8 +47,15 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Only the build date changed? Then there's nothing new to commit.
+          if python - <<'PY'
+          import json, subprocess, sys
+          old = json.loads(subprocess.run(["git", "show", "HEAD:data/sun/unit_lines.json"], capture_output=True, text=True).stdout or "{}")
+          new = json.load(open("data/sun/unit_lines.json"))
+          sys.exit(0 if old.get("addresses") == new.get("addresses") else 1)
+          PY
+          then echo "No change in any answer"; exit 0; fi
           git add data/sun
-          if git diff --cached --quiet; then echo "No change"; exit 0; fi
           git commit -m "Rebuild sun map"
           for i in 1 2 3; do git push && exit 0; git pull --rebase; done
           exit 1

@@ -113,7 +113,8 @@ summary{cursor:pointer}
       <input type="range" id="floor" min="1" max="14" step="1" value="7"></div>
     <div class="ctl"><label for="metric">Colour and rank by</label>
       <select id="metric">
-        <option value="mf">Mornings first (morning + ½ afternoon)</option>
+        <option value="score">Sun score (all day, mornings count more)</option>
+        <option value="mf">Mornings first (morning + ½ afternoon hours)</option>
         <option value="m">Morning sun only (before noon)</option>
         <option value="all">All-day sun</option>
         <option value="dec">Mid-winter day (Dec 21)</option>
@@ -142,6 +143,7 @@ summary{cursor:pointer}
         <input type="number" id="fmax" min="1" max="14" value="10" aria-label="Highest floor" style="width:58px">
         <label class="check"><input type="checkbox" id="belowTop" checked> below the top floor</label>
         <label class="check"><input type="checkbox" id="sureOnly"> sure or likely only</label>
+        <label class="check"><input type="checkbox" id="worstCase"> rank by worst case</label>
       </div>
     </div>
     <p class="note" id="picksNote"></p>
@@ -159,9 +161,10 @@ summary{cursor:pointer}
     <h2>How this is worked out</h2>
     <ul>
       <li><b>Buildings:</b> outlines from OpenStreetMap (© OpenStreetMap contributors). StuyTown floors are Terrace, Main, then 1–11 or 1–12; Peter Cooper Village is Main then 1–14. Top floors come from the listings' “top floor” tag where there is one.</li>
-      <li><b>Sun:</b> NOAA sun positions every 10 minutes on the 21st of each month. A window counts as sunny when the sun is in front of it, over 2° up, and no building, its own wings included, is in the way. Morning means before noon. Trees aren't modelled; they mostly shade floors 1–5 in summer.</li>
+      <li><b>Sun score (0–100), the number to compare by:</b> morning + 0.75 × afternoon + a bonus of half the smaller of the two (up to 1.5 h), so all-day sun ranks highest, mornings beat afternoons, and some of both beats a lot of one. It counts “full-sun hours”: sun straight into the window counts fully, sun skimming along the wall barely counts. October–March count 1.5× because the dark months are when light matters most, and the courtyard trees take sun off floors 1–5, more in summer. 100 = the sunniest apartments in the complex. <b>Rank</b> compares a line with every line on the same floor (top 5% = sunnier than 95% of them); “#1 of 8” is its place in its own building.</li>
+      <li><b>Hours:</b> AM h and PM h are plain hours of direct sun before and after noon on an average day (the 21st of every month), trees taken off. Dec 21 is the shortest day. NOAA sun positions every 10 minutes; a window is in sun when the sun is in front of it, over 2° up, and no building, its own wings included, is in the way.</li>
       <li><b>Which apartment is where:</b> CBRE's 2006 sale brochure has lettered plans for 272–280 and 330 First Ave, 400–410 and 442–450 E 20th, 435–445 E 14th and the Peter Cooper Village typical floor. Buildings of the same design are matched by outline and turned the right way using listing sizes and view tags. For designs with no plan (the Oval ring, 521–525 E 14th, 522–526 E 20th, 605–625 E 14th, 622–628 E 20th, 315–325 Ave C, 310 First), the 8 apartments of a floor are placed round each entrance's core from the outline, two per wing and lettered clockwise as in every plan, and the listings (Oval / river / Empire State views, one- or two-sided layouts) decide where A starts. Those answers are odds, not facts.</li>
-      <li><b>Confidence:</b> <span class="pill c-sure">sure</span> the building's own plan, a same-design building confirmed by several listings, or a line you confirmed. <span class="pill c-likely">likely</span> one direction has 80%+ of the odds. <span class="pill c-either">either way</span> two answers about equally likely (often north side or south side). <span class="pill c-unknown">unknown</span> nothing to go on.</li>
+      <li><b>Confidence:</b> <span class="pill c-sure">sure</span> the building's own plan, a same-design building confirmed by several listings, or a line you confirmed. <span class="pill c-likely">likely</span> one direction has 80%+ of the odds. <span class="pill c-either">either way</span> two answers about equally likely (often north side or south side); the score is then the odds-weighted average and the range (e.g. 17–83) is worst to best case. <span class="pill c-unknown">unknown</span> nothing to go on.</li>
       <li><b>Getting sharper:</b> the watcher saves the market-rate listings every morning, and each rebuild (tools/sun_map/build.py) learns from them. One line you confirm at a viewing or with the leasing office (tools/sun_map/inputs/line_notes.json) fixes every letter in that building.</li>
     </ul>
   </section>
@@ -185,12 +188,13 @@ const byFp = {}; Object.entries(ADDRS).forEach(([a, x]) => (byFp[x.building] ||=
 const segsByFp = {}; D.segments.forEach(s => (segsByFp[s.fp] ||= []).push(s));
 const bById = Object.fromEntries(D.buildings.map(b => [b.id, b]));
 $('built').textContent = 'Built ' + (D.built_utc || '').slice(0, 10) + '.';
-let state = {floor:7, metric:'mf', hideStreet:true, sel:null};
-try { Object.assign(state, JSON.parse(localStorage.getItem('sunmap2') || '{}'), {sel:null}); } catch(e) {}
-const save = () => { try { localStorage.setItem('sunmap2', JSON.stringify({floor:state.floor, metric:state.metric, hideStreet:state.hideStreet})); } catch(e) {} };
+let state = {floor:7, metric:'score', hideStreet:true, sel:null};
+try { Object.assign(state, JSON.parse(localStorage.getItem('sunmap3') || '{}'), {sel:null}); } catch(e) {}
+const save = () => { try { localStorage.setItem('sunmap3', JSON.stringify({floor:state.floor, metric:state.metric, hideStreet:state.hideStreet})); } catch(e) {} };
 
-function val(f, metric){ if(!f) return null; const [m,a,d] = f; return metric==='m' ? m : metric==='all' ? m+a : metric==='dec' ? d : m + a/2; }
-function maxOf(metric){ return metric==='m' ? 4.5 : metric==='all' ? 10 : metric==='dec' ? 8 : 6.5; }
+function val(f, metric){ if(!f) return null; const [m,a,d] = f; return metric==='score' ? f[4] : metric==='m' ? m : metric==='all' ? m+a : metric==='dec' ? d : m + a/2; }
+function maxOf(metric){ return metric==='score' ? 100 : metric==='m' ? 4.5 : metric==='all' ? 10 : metric==='dec' ? 8 : 6.5; }
+const rankText = pct => pct >= 50 ? `top ${Math.max(1, 100-pct)}%` : `bottom ${Math.max(1, pct)}%`;
 function color(v, metric){ if (v==null) return css('--line'); const t = Math.max(0, Math.min(1, v / maxOf(metric))); return css('--s' + Math.min(4, Math.floor(t*5))); }
 const fmt = v => v==null ? '–' : (Math.round(v*10)/10).toFixed(1);
 const facesText = f => f.slice().sort((a,b)=>COMPASS.indexOf(a)-COMPASS.indexOf(b)).join(' + ') || '?';
@@ -200,18 +204,23 @@ const pct = p => Math.round(p*100) + '%';
 function lineAt(addr, letter, floor){
   const B = ADDRS[addr], L = B && B.lines[letter]; if (!L) return null;
   const f = Math.min(Math.max(floor||1, 1), B.top_floor);
-  const exp = [0,0,0,0]; const opts = {};
+  const exp = [0,0,0,0,0]; const opts = {}; let goodAm = 0; const cases = [];
   L.spots.forEach(([i, w]) => { const sp = B.spots[i], s = sp.sun[f-1];
     for (let k=0;k<4;k++) exp[k] += w*s[k];
-    const key = sp.faces.join('+'); const o = (opts[key] ||= {faces:sp.faces, p:0, oval:sp.oval, street:sp.street, sun:[0,0,0,0]});
-    o.p += w; for (let k=0;k<4;k++) o.sun[k] += w*s[k]; });
+    if (s[0] >= 3) goodAm += w; if (w >= 0.1) cases.push(s[4]);
+    const key = sp.faces.join('+'); const o = (opts[key] ||= {faces:sp.faces, p:0, oval:sp.oval, street:sp.street, sun:[0,0,0,0,0]});
+    o.p += w; for (let k=0;k<5;k++) o.sun[k] += w*s[k]; });
+  exp[4] = L.score[f-1];
   const options = Object.values(opts).sort((a,b)=>b.p-a.p); options.forEach(o => { o.sun = o.sun.map(v => v/o.p); });
-  return {B, L, f, exp, options};
+  const here = Object.values(B.lines).map(x => x.score[f-1]).sort((a,b)=>b-a);
+  return {B, L, f, exp, options, score: L.score[f-1], pct: L.pct[f-1], worst: Math.min(...cases), best: Math.max(...cases),
+          goodAm, rank: here.indexOf(L.score[f-1]) + 1, of: here.length};
 }
 function scoreLine(addr, letter, lo, hi){
-  const B = ADDRS[addr]; let s=0, m=0, a=0, d=0, n=0;
-  for (let f=lo; f<=hi; f++){ const x = lineAt(addr, letter, f); if (!x) continue; s += val(x.exp, state.metric); m += x.exp[0]; a += x.exp[1]; d += x.exp[2]; n++; }
-  return n ? {s:s/n, m:m/n, a:a/n, d:d/n} : null;
+  const B = ADDRS[addr]; let s=0, m=0, a=0, d=0, w=0, b=0, p=0, n=0;
+  for (let f=lo; f<=hi; f++){ const x = lineAt(addr, letter, f); if (!x) continue;
+    s += val(x.exp, state.metric); m += x.exp[0]; a += x.exp[1]; d += x.exp[2]; w += x.worst; b += x.best; p += x.pct; n++; }
+  return n ? {s:s/n, m:m/n, a:a/n, d:d/n, worst:w/n, best:b/n, pct:p/n} : null;
 }
 function facesCell(x){
   const o = x.options;
@@ -239,10 +248,13 @@ function showLookup(){
   const notes = [];
   if (apt.floor < 1) notes.push('Main/Terrace level: floor 1 shown, the real figure is a bit lower');
   if (apt.floor >= x.B.top_floor) notes.push('top floor');
+  const mWord = x.exp[0] >= 3.5 ? 'strong' : x.exp[0] >= 1.5 ? 'some' : x.exp[0] >= 0.5 ? 'little' : 'none';
   out.innerHTML = `<div class="result"><div class="toolbar"><span class="big">${short(addr)} · ${String(apt.floor<1?(apt.floor<0?'0T':'0M'):String(apt.floor).padStart(2,'0'))}-${apt.line}</span>${pill(x.L.confidence)}</div>
+    <div class="toolbar"><span class="big mono">Sun ${x.score}/100</span><span><b>${rankText(x.pct)}</b> of all lines on floor ${x.f} · #${x.rank} of ${x.of} in this building</span>${x.best - x.worst >= 15 ? `<span class="muted">could be ${x.worst}–${x.best}, depending on which side it is</span>` : ''}</div>
     <div>Windows face <b>${facesCell(x)}</b> ${ovalCell(x.L)} ${streetCell(x)}</div>
+    <div>Mornings: <b>${mWord}</b>${x.goodAm > 0.1 && x.goodAm < 0.9 ? ` · ${pct(x.goodAm)} chance of 3+ hours of morning sun` : ''}</div>
     <div class="mono">~${fmt(x.exp[0])} h morning + ${fmt(x.exp[1])} h afternoon sun on an average day · Dec 21: ${fmt(x.exp[2])} h (${fmt(x.exp[3])} h before noon)</div>
-    ${x.options.length > 1 ? `<div class="opts">${x.options.filter(o=>o.p>=0.05).map(o => `<div class="opt"><span class="lbl">${pct(o.p)} chance</span><b>${facesText(o.faces)}</b>${o.oval?' <span class="oval-tag">Oval</span>':''}<span class="mono note">${fmt(o.sun[0])} h am · ${fmt(o.sun[1])} h pm · Dec ${fmt(o.sun[2])} h</span></div>`).join('')}</div>` : ''}
+    ${x.options.length > 1 ? `<div class="opts">${x.options.filter(o=>o.p>=0.05).map(o => `<div class="opt"><span class="lbl">${pct(o.p)} chance</span><b>${facesText(o.faces)}</b>${o.oval?' <span class="oval-tag">Oval</span>':''}<span class="mono note">score ${Math.round(o.sun[4])} · ${fmt(o.sun[0])} h am · ${fmt(o.sun[1])} h pm · Dec ${fmt(o.sun[2])} h</span></div>`).join('')}</div>` : ''}
     <div class="note">${x.L.source}. Building top floor: ${x.B.top_floor}${x.B.top_floor_known?'':' (estimated)'}${notes.length?'. '+notes.join('; '):''}.</div></div>`;
   state.floor = Math.min(14, fl); $('floor').value = state.floor; select(x.B.building, false); paint();
 }
@@ -292,7 +304,7 @@ function paint(){
   dotEls.forEach(([d, sp, B]) => { const hide = (state.hideStreet && sp.street.length) || f > B.top_floor;
     d.style.display = hide ? 'none' : ''; d.setAttribute('fill', color(val(sp.sun[Math.min(f, B.top_floor)-1], m), m)); });
   $('ramp').innerHTML = [0,1,2,3,4].map(i=>`<span style="background:var(--s${i})"></span>`).join('');
-  $('rampLabels').textContent = `0 → ${maxOf(m)}+ h a day` + (m==='mf' ? ' (score)' : '');
+  $('rampLabels').textContent = m === 'score' ? '0 → 100 sun score' : `0 → ${maxOf(m)}+ h a day` + (m==='mf' ? ' (score)' : '');
   $('floorOut').textContent = f;
 }
 
@@ -310,9 +322,9 @@ function renderPanel(){
   addrs.forEach(addr => {
     const B = ADDRS[addr];
     const rows = Object.keys(B.lines).sort().map(letter => ({letter, x: lineAt(addr, letter, f)})).sort((a,b2) => val(b2.x.exp, m) - val(a.x.exp, m));
-    html += `<div><h3 class="addr">${short(addr)} <span class="note">top floor ${B.top_floor}${B.top_floor_known?'':' (est.)'}</span></h3><div class="tbl"><table><thead><tr><th>Line</th><th>Windows face</th><th></th><th class="num">AM h</th><th class="num">PM h</th><th class="num">Dec 21</th><th>Floors</th><th></th></tr></thead><tbody>` +
+    html += `<div><h3 class="addr">${short(addr)} <span class="note">top floor ${B.top_floor}${B.top_floor_known?'':' (est.)'}</span></h3><div class="tbl"><table><thead><tr><th>Line</th><th class="num">Score</th><th>Rank</th><th>Windows face</th><th></th><th class="num">AM h</th><th class="num">PM h</th><th class="num">Dec 21</th><th>Floors</th><th></th></tr></thead><tbody>` +
       rows.map(({letter, x}) => { const strip = Array.from({length: B.top_floor}, (_, i) => { const y = lineAt(addr, letter, i+1); return `<i style="background:${color(val(y.exp,m),m)}" class="${i+1===f?'cur':''}" title="floor ${i+1}: ${fmt(val(y.exp,m))}"></i>`; }).join('');
-        return `<tr><td><b>${letter}</b></td><td>${facesCell(x)}</td><td>${ovalCell(x.L)} ${streetCell(x)}</td><td class="num">${fmt(x.exp[0])}</td><td class="num">${fmt(x.exp[1])}</td><td class="num">${fmt(x.exp[2])}</td><td><span class="strip">${strip}</span></td><td>${pill(x.L.confidence)}</td></tr>`; }).join('') +
+        return `<tr><td><b>${letter}</b></td><td class="num"><b>${x.score}</b>${x.best - x.worst >= 15 ? ` <span class="muted">${x.worst}–${x.best}</span>` : ''}</td><td>${rankText(x.pct)}</td><td>${facesCell(x)}</td><td>${ovalCell(x.L)} ${streetCell(x)}</td><td class="num">${fmt(x.exp[0])}</td><td class="num">${fmt(x.exp[1])}</td><td class="num">${fmt(x.exp[2])}</td><td><span class="strip">${strip}</span></td><td>${pill(x.L.confidence)}</td></tr>`; }).join('') +
       `</tbody></table></div><p class="note">${B.lines[Object.keys(B.lines)[0]].source}.</p></div>`;
   });
   const segs = segsByFp[b.id] || []; const agg = {};
@@ -335,10 +347,11 @@ function renderPicks(){
     const hi = Math.min(hiIn, $('belowTop').checked ? B.top_floor - 1 : B.top_floor); if (hi < lo) return;
     const r = scoreLine(addr, letter, lo, hi); if (r) rows.push({addr, letter, L, r, lo, hi, x: lineAt(addr, letter, Math.round((lo+hi)/2))});
   }));
-  rows.sort((a,b) => b.r.s - a.r.s);
-  $('picksNote').textContent = `Top 40 of ${rows.length} lines, averaged over floors ${lo}–${hiIn}${$('belowTop').checked ? ' (below each top floor)' : ''}${state.hideStreet ? ', leaving out lines likely onto a street' : ''}. Uncertain lines count each possible side by its odds.`;
-  $('picks').innerHTML = `<thead><tr><th>#</th><th>Line</th><th>Windows face</th><th></th><th class="num">AM h</th><th class="num">PM h</th><th class="num">Dec 21</th><th></th></tr></thead><tbody>` +
-    rows.slice(0, 40).map((o,i) => `<tr class="click" data-fp="${ADDRS[o.addr].building}" tabindex="0"><td class="num muted">${i+1}</td><td><span class="addr">${short(o.addr)}</span> · <b>${o.letter}</b></td><td>${facesCell(o.x)}</td><td>${ovalCell(o.L)}</td><td class="num">${fmt(o.r.m)}</td><td class="num">${fmt(o.r.a)}</td><td class="num">${fmt(o.r.d)}</td><td>${pill(o.L.confidence)}</td></tr>`).join('') + `</tbody>`;
+  const worst = $('worstCase').checked && state.metric === 'score';
+  rows.sort((a,b) => worst ? (b.r.worst - a.r.worst) || (b.r.s - a.r.s) : b.r.s - a.r.s);
+  $('picksNote').textContent = `Top 40 of ${rows.length} lines, averaged over floors ${lo}–${hiIn}${$('belowTop').checked ? ' (below each top floor)' : ''}${state.hideStreet ? ', leaving out lines likely onto a street' : ''}. ${worst ? ' Ranked by worst case: the score if an uncertain line turns out to be its darker side.' : ' Uncertain lines count each possible side by its odds; the range shows worst to best case.'}`;
+  $('picks').innerHTML = `<thead><tr><th>#</th><th>Line</th><th class="num">Score</th><th>Rank</th><th>Windows face</th><th></th><th class="num">AM h</th><th class="num">PM h</th><th class="num">Dec 21</th><th></th></tr></thead><tbody>` +
+    rows.slice(0, 40).map((o,i) => `<tr class="click" data-fp="${ADDRS[o.addr].building}" tabindex="0"><td class="num muted">${i+1}</td><td><span class="addr">${short(o.addr)}</span> · <b>${o.letter}</b></td><td class="num"><b>${Math.round(state.metric === 'score' ? o.r.s : o.x.score)}</b>${o.r.best - o.r.worst >= 15 ? ` <span class="muted">${Math.round(o.r.worst)}–${Math.round(o.r.best)}</span>` : ''}</td><td>${rankText(Math.round(o.r.pct))}</td><td>${facesCell(o.x)}</td><td>${ovalCell(o.L)}</td><td class="num">${fmt(o.r.m)}</td><td class="num">${fmt(o.r.a)}</td><td class="num">${fmt(o.r.d)}</td><td>${pill(o.L.confidence)}</td></tr>`).join('') + `</tbody>`;
   wire($('picks'));
 }
 function wire(tbl){ tbl.querySelectorAll('tr.click').forEach(tr => { if (!tr.dataset.fp) return; const go = () => { select(tr.dataset.fp); $('map').scrollIntoView({behavior:'smooth'}); }; tr.addEventListener('click', go); tr.addEventListener('keydown', e => { if (e.key==='Enter') go(); }); }); }
@@ -346,8 +359,8 @@ function wire(tbl){ tbl.querySelectorAll('tr.click').forEach(tr => { if (!tr.dat
 // ---------------- seen
 function seenTable(list){
   const rows = list.map(L => { const x = lineAt(L.address, L.line, L.floor > 0 ? L.floor : 1); return {L, x, s: x ? val(x.exp, state.metric) : -1}; }).sort((a,b)=>b.s-a.s);
-  return `<thead><tr><th>Apartment</th><th class="num">Beds</th><th class="num">Rent</th><th>Windows face</th><th></th><th class="num">AM h</th><th class="num">PM h</th><th class="num">Dec 21</th><th></th></tr></thead><tbody>` +
-    rows.map(({L, x}) => `<tr class="click" data-fp="${x ? x.B.building : ''}" tabindex="0"><td><span class="addr">${short(L.address)}</span> <span class="mono">${L.apt}</span></td><td class="num">${L.beds ?? '–'}</td><td class="num">${L.rent ? '$' + Math.round(L.rent).toLocaleString() : '–'}</td><td>${x ? facesCell(x) : '<span class="muted">–</span>'}</td><td>${x ? ovalCell(x.L) + ' ' + streetCell(x) : ''}${L.codes.includes('VBOV') ? ' <span class="note">(listed: Oval views)</span>' : ''}</td><td class="num">${x ? fmt(x.exp[0]) : '–'}</td><td class="num">${x ? fmt(x.exp[1]) : '–'}</td><td class="num">${x ? fmt(x.exp[2]) : '–'}</td><td>${x ? pill(x.L.confidence) : ''}</td></tr>`).join('') + `</tbody>`;
+  return `<thead><tr><th>Apartment</th><th class="num">Beds</th><th class="num">Rent</th><th class="num">Score</th><th>Rank</th><th>Windows face</th><th></th><th class="num">AM h</th><th class="num">PM h</th><th class="num">Dec 21</th><th></th></tr></thead><tbody>` +
+    rows.map(({L, x}) => `<tr class="click" data-fp="${x ? x.B.building : ''}" tabindex="0"><td><span class="addr">${short(L.address)}</span> <span class="mono">${L.apt}</span></td><td class="num">${L.beds ?? '–'}</td><td class="num">${L.rent ? '$' + Math.round(L.rent).toLocaleString() : '–'}</td><td class="num"><b>${x ? x.score : '–'}</b></td><td>${x ? rankText(x.pct) : ''}</td><td>${x ? facesCell(x) : '<span class="muted">–</span>'}</td><td>${x ? ovalCell(x.L) + ' ' + streetCell(x) : ''}${L.codes.includes('VBOV') ? ' <span class="note">(listed: Oval views)</span>' : ''}</td><td class="num">${x ? fmt(x.exp[0]) : '–'}</td><td class="num">${x ? fmt(x.exp[1]) : '–'}</td><td class="num">${x ? fmt(x.exp[2]) : '–'}</td><td>${x ? pill(x.L.confidence) : ''}</td></tr>`).join('') + `</tbody>`;
 }
 function renderSeen(){
   const aff = D.listings.filter(L => L.source === 'affordable'), mkt = D.listings.filter(L => L.source !== 'affordable');
@@ -360,7 +373,7 @@ $('floor').value = state.floor; $('metric').value = state.metric; $('hideStreet'
 $('floor').addEventListener('input', e => { state.floor = +e.target.value; paint(); renderPanel(); save(); });
 $('metric').addEventListener('change', e => { state.metric = e.target.value; all(); });
 $('hideStreet').addEventListener('change', e => { state.hideStreet = e.target.checked; all(); });
-['fmin','fmax','belowTop','sureOnly'].forEach(id => $(id).addEventListener('change', renderPicks));
+['fmin','fmax','belowTop','sureOnly','worstCase'].forEach(id => $(id).addEventListener('change', renderPicks));
 new MutationObserver(all).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', all);
 sel.value = '1 STUYVESANT OVAL'; $('lkApt').value = '07-F';

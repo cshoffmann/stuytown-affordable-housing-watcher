@@ -6,8 +6,15 @@ interactive map is data/sun/sun_map.html).
     import unit_sun
     unit_sun.lookup(unit)                       # a unit from the listings API
     unit_sun.lookup("287 AVENUE C", "07-F")     # or an address and apartment
-    unit_sun.describe(unit)  # 'Faces ESE + SSW (sure) · ~4.3 h morning + 5.1 h afternoon sun a day on floor 7 (Dec 21: 4.8 h)'
-    unit_sun.short(unit)     # 'ESE+SSW · 4.3/5.1 h' for a table cell
+    unit_sun.describe(unit)  # 'Sun 84/100, top 2% on floor 7, #1 of 8 here · faces ESE + SSW (sure) · mornings: strong ...'
+    unit_sun.short(unit)     # '84 top 2% · ESE+SSW' for a table cell
+
+Sun score, 0-100: how sunny the apartment is all year, all day, with
+mornings counting more: morning + 0.75 x afternoon + a bonus for having
+both, in "full-sun hours" (sun straight in counts fully, sun skimming the
+wall barely counts; October-March count 1.5x; courtyard trees shade floors
+1-5, more in summer). 100 = the sunniest apartments in the complex. "Top
+2%" compares it with every apartment line on the same floor.
 
 An apartment number is floor + line letter (07-F: floor 7, line F); every
 apartment with the same letter in a building sits in the same spot of the
@@ -18,8 +25,10 @@ floor, so faces the same way. How sure the direction is:
     likely      one direction has 80%+ of the odds
     either way  two answers are about as good (e.g. north side or south side)
     unknown     nothing to go on yet
-Sun hours: the average day (21st of every month), split before/after noon,
-plus Dec 21, the shortest day. Trees aren't counted.
+When it isn't sure, the score is the odds-weighted average, and the lookup
+also gives the worst and best case and the chance of real morning sun.
+Hours: plain hours of direct sun on the average day (21st of every month),
+before and after noon, plus Dec 21, the shortest day.
 
 Standard library only and never raises (None / "" when it doesn't know), so
 it's safe anywhere, auto-apply included. refresh_market_evidence() saves the
@@ -83,6 +92,18 @@ def _faces_text(faces) -> str:
     return " + ".join(sorted(faces, key=lambda f: COMPASS.index(f) if f in COMPASS else 99)) or "?"
 
 
+GOOD_MORNING_H = 3.0  # "real morning sun": at least this many hours before noon on the average day
+
+
+def rank_text(pct: int) -> str:
+    """Percentile among all lines on the floor -> 'top 4%' (upper half) or 'bottom 10%' (lower half)."""
+    return f"top {max(1, 100 - pct)}%" if pct >= 50 else f"bottom {max(1, pct)}%"
+
+
+def morning_word(hours: float) -> str:
+    return "strong" if hours >= 3.5 else "some" if hours >= 1.5 else "little" if hours >= 0.5 else "none"
+
+
 def lookup(unit_or_address, apartment=None, path: str = LINES_FILE) -> dict | None:
     """Everything the sun map knows about this apartment, or None."""
     try:
@@ -96,21 +117,31 @@ def lookup(unit_or_address, apartment=None, path: str = LINES_FILE) -> dict | No
         used_floor = min(max(floor if floor is not None else 1, 1), top)
         options = {}
         expected = [0.0, 0.0, 0.0, 0.0]
+        p_good_morning = 0.0
+        cases = []  # (score, weight) per spot
         for index, weight in info["spots"]:
             spot = building["spots"][index]
             sun = spot["sun"][used_floor - 1]
             for k in range(4):
                 expected[k] += weight * sun[k]
+            if sun[0] >= GOOD_MORNING_H:
+                p_good_morning += weight
+            cases.append((sun[4], weight))
             key = tuple(spot["faces"])
             option = options.setdefault(key, {"faces": list(key), "p": 0.0, "oval": spot["oval"],
-                                              "street": spot["street"], "sun": [0.0] * 4})
+                                              "street": spot["street"], "sun": [0.0] * 5})
             option["p"] += weight
-            for k in range(4):
+            for k in range(5):
                 option["sun"][k] += weight * sun[k]
         ranked = sorted(options.values(), key=lambda o: -o["p"])
         for o in ranked:
             o["sun"] = [round(v / o["p"], 1) for v in o["sun"]] if o["p"] else o["sun"]
+            o["score"] = int(round(o["sun"][4]))
             o["p"] = round(o["p"], 2)
+        likely_cases = [sc for sc, w in cases if w >= 0.1] or [sc for sc, _ in cases]
+        score = info["score"][used_floor - 1]
+        # rank among this address's lines on the same floor (1 = sunniest)
+        here = sorted((ln["score"][used_floor - 1] for ln in building["lines"].values()), reverse=True)
         notes = []
         if floor is not None and floor < 1:
             notes.append("Main/Terrace level: floor 1's sun shown, the real figure is a bit lower")
@@ -123,9 +154,15 @@ def lookup(unit_or_address, apartment=None, path: str = LINES_FILE) -> dict | No
             "faces": ranked[0]["faces"] if ranked else [],
             "p_faces": info.get("p_faces", {}), "p_oval": info.get("p_oval", 0.0), "p_street": info.get("p_street", 0.0),
             "street": sorted({st for o in ranked for st in o["street"]}) if info.get("p_street", 0) >= 0.3 else [],
+            "sun_score": score, "percentile": info["pct"][used_floor - 1],
+            "top_percent": max(1, 100 - info["pct"][used_floor - 1]),
+            "rank_text": rank_text(info["pct"][used_floor - 1]),
+            "rank_in_building": here.index(score) + 1, "lines_in_building": len(here),
+            "worst_score": int(min(likely_cases)), "best_score": int(max(likely_cases)),
+            "p_good_morning": round(p_good_morning, 2),
             "morning_h": round(expected[0], 1), "afternoon_h": round(expected[1], 1),
             "dec21_h": round(expected[2], 1), "dec21_morning_h": round(expected[3], 1),
-            "sun_score": round(expected[0] + expected[1] / 2, 1),  # mornings count double
+            "mornings": morning_word(expected[0]),
             "source": info.get("source", ""), "notes": notes,
         }
     except Exception:
@@ -140,40 +177,45 @@ def _oval_text(p: float) -> str:
     return ""
 
 
-def describe(unit_or_address, apartment=None, path: str = LINES_FILE) -> str:
-    """One line for alerts and the summary, or '' if the sun map doesn't know the apartment."""
-    info = lookup(unit_or_address, apartment, path)
-    if not info:
-        return ""
+def _faces_phrase(info) -> str:
     opts = info["options"]
-    if not opts:
-        return ""
     if opts[0]["p"] >= 0.8 or len(opts) == 1:
-        faces = f"Faces {_faces_text(opts[0]['faces'])} ({info['confidence']})"
-    elif sum(o["p"] for o in opts[:2]) >= 0.75:
-        faces = "Faces " + " or ".join(f"{_faces_text(o['faces'])} ({o['p']:.0%})" for o in opts[:2])
-    else:  # spread over several spots: say how likely each direction is
-        top = sorted(info["p_faces"].items(), key=lambda kv: -kv[1])[:3]
-        faces = "Windows face " + ", ".join(f"{f} {p:.0%}" for f, p in top) + f" ({info['confidence']})"
-    bits = [faces]
+        return f"faces {_faces_text(opts[0]['faces'])} ({info['confidence']})"
+    if sum(o["p"] for o in opts[:2]) >= 0.75:
+        return "faces " + " or ".join(f"{_faces_text(o['faces'])} ({o['p']:.0%})" for o in opts[:2])
+    top = sorted(info["p_faces"].items(), key=lambda kv: -kv[1])[:3]  # spread over several spots
+    return "windows face " + ", ".join(f"{f} {p:.0%}" for f, p in top) + f" ({info['confidence']})"
+
+
+def describe(unit_or_address, apartment=None, path: str = LINES_FILE) -> str:
+    """One line for alerts and the summary, or '' if the sun map doesn't know the apartment:
+    'Sun 84/100, top 2% on floor 7, #1 of 8 here · faces ESE + SSW (sure) · mornings: strong
+    (4.3 h), afternoons 4.9 h, Dec 21 4 h'."""
+    info = lookup(unit_or_address, apartment, path)
+    if not info or not info["options"]:
+        return ""
+    floor_word = f"floor {info['floor']}" if info["floor"] and info["floor"] > 0 else "the lowest floor"
+    head = (f"Sun {info['sun_score']}/100, {info['rank_text']} on {floor_word}, "
+            f"#{info['rank_in_building']} of {info['lines_in_building']} here")
+    if info["best_score"] - info["worst_score"] >= 15:
+        head += f" (could be {info['worst_score']}-{info['best_score']})"
+    bits = [head, _faces_phrase(info)]
     oval = _oval_text(info["p_oval"])
     if oval:
         bits.append(oval)
     if info["street"]:
         where = "onto " + ", ".join(info["street"])
         bits.append(where if info["p_street"] >= 0.8 else f"maybe {where} ({info['p_street']:.0%})")
-    floor_word = f"floor {info['floor']}" if info["floor"] and info["floor"] > 0 else "the lowest floor"
-    sun = (f"~{info['morning_h']:g} h morning + {info['afternoon_h']:g} h afternoon sun a day on {floor_word} "
-           f"(Dec 21: {info['dec21_h']:g} h)")
-    spread = [o["sun"][0] for o in opts if o["p"] >= 0.2]
-    if len(spread) > 1 and max(spread) - min(spread) >= 1.5:
-        sun += f"; mornings {min(spread):g}-{max(spread):g} h depending on which side"
-    bits.append(sun)
+    morning = f"mornings: {info['mornings']} ({info['morning_h']:g} h)"
+    if 0.1 < info["p_good_morning"] < 0.9:
+        morning += f", {info['p_good_morning']:.0%} chance of {GOOD_MORNING_H:g} h+"
+    bits.append(f"{morning}, afternoons {info['afternoon_h']:g} h, Dec 21 {info['dec21_h']:g} h")
     return " · ".join(bits)
 
 
 def short(unit_or_address, apartment=None, path: str = LINES_FILE) -> str:
-    """'ESE+SSW Oval · 4.3/5.1 h' (morning/afternoon), '?' marks a guess; '' if unknown."""
+    """'84 top 2% · ESE+SSW Oval · 4.3/4.9 h' (score, rank on its floor, faces, morning/afternoon hours);
+    '?' marks a direction that's a guess; '' if unknown."""
     info = lookup(unit_or_address, apartment, path)
     if not info or not info["options"]:
         return ""
@@ -182,7 +224,8 @@ def short(unit_or_address, apartment=None, path: str = LINES_FILE) -> str:
     if top["p"] < 0.8:
         faces = f"{faces}? ({top['p']:.0%})"
     oval = " Oval" if info["p_oval"] >= 0.8 else (" Oval?" if info["p_oval"] >= 0.3 else "")
-    return f"{faces}{oval} · {info['morning_h']:g}/{info['afternoon_h']:g} h"
+    return (f"{info['sun_score']} {info['rank_text']} · {faces}{oval} · "
+            f"{info['morning_h']:g}/{info['afternoon_h']:g} h")
 
 
 # ------------------------------------------------------------------ evidence for the next rebuild
@@ -231,8 +274,9 @@ def merge_market(saved: dict, units: list, now: str | None = None) -> tuple:
     return data, new
 
 
-def refresh_market_evidence(timeout: float = 20, path: str = MARKET_FILE) -> str:
+def refresh_market_evidence(timeout: float = 20, path: str | None = None) -> str:
     """Save today's market-rate listings to data/sun/market_seen.json. One request; never raises."""
+    path = path or MARKET_FILE
     try:
         req = urllib.request.Request(MARKET_URL, headers={
             "User-Agent": "Mozilla/5.0 (compatible; personal-housing-watcher/1.0)", "Accept": "application/json",

@@ -79,40 +79,60 @@ after appearing, which is why applying comes before everything else.
 Nothing personal is committed (the repo is public). Your details are
 replaced with their key names, and tokens and API keys are scrubbed.
 
-## Sun map: which way a unit faces
+## Sun map: how sunny a unit is, and which way it faces
 
 Every unit in the alerts and the summary gets a line like
 
-    Faces ESE + SSW (sure) · ~4.3 h morning + 4.9 h afternoon sun a day on floor 7 (Dec 21: 4 h)
+    Sun 84/100, top 2% on floor 7, #1 of 8 here · faces ESE + SSW (sure) · mornings: strong (4.3 h), afternoons 4.9 h, Dec 21 4 h
 
-An apartment number is floor + line (07-F: floor 7, line F), and every
-apartment with the same letter in a building is stacked in the same spot,
-so the line letter decides the direction.
+- **Sun score (0–100)** is the number to compare by: all-day sun, with mornings
+  counting more. It's morning + 0.75 × afternoon + a bonus for having both,
+  measured in "full-sun hours":
+  - sun straight into the window counts fully; sun skimming along the wall barely counts
+  - October–March count 1.5×, because the dark months are when light matters most
+  - the courtyard trees take sun off floors 1–5, more in summer
+
+  100 means the sunniest apartments in the complex.
+- **Top 2%** compares the line with every apartment line on the same floor.
+  **#1 of 8 here** is its place in its own building.
+- **Faces** gives the window directions. Stuy Town's grid is turned 29°, so
+  "south" windows face SSW and "east" ones ESE; ESE gets the morning sun.
+  The label says how sure the direction is:
+  - *sure*: the building's own 2006 CBRE floor plan, or a building of the same design confirmed by several listings
+  - *likely*: one direction has 80%+ of the odds
+  - *either way*: two answers are about equally good, often north side or south side
+- **When it isn't sure**, the score is the odds-weighted average, with the
+  worst-to-best range ("could be 17–83") and the chance of 3+ hours of
+  morning sun.
+- **Hours** are plain hours of direct sun on an average day (the 21st of every
+  month), before and after noon, plus Dec 21, the shortest day.
+
+An apartment number is floor + line (07-F: floor 7, line F). Every apartment
+with the same letter in a building sits in the same spot, so the letter
+decides the direction.
 
 - **Map:** download [`data/sun/sun_map.html`](data/sun/sun_map.html) and open
-  it in a browser. Look up any unit, see each building's lines floor by
-  floor, and rank lines for your floors (mornings first).
+  it in a browser. You can look up any unit, see each building's lines
+  floor by floor, and rank every line for your floors (by score, or by worst
+  case if you'd rather not gamble on an *either way* line).
 - **Lookup:** `python unit_sun.py 287 AVENUE C 07-F`, or `unit_sun.describe(unit)`
   in code. The data is [`data/sun/unit_lines.json`](data/sun/unit_lines.json);
-  [`data/sun/units_by_floor.csv`](data/sun/units_by_floor.csv) has every line and floor for a spreadsheet.
-- **How sure:** *sure* comes from the building's own 2006 CBRE floor plan,
-  or a building of the same design confirmed by several listings.
-  *likely* means one direction has 80%+ of the odds. *either way* means two
-  answers are about equally good, often north side or south side.
-  Buildings with no plan (the Oval ring, 521–525 E 14th, 522–526 E 20th,
+  [`data/sun/units_by_floor.csv`](data/sun/units_by_floor.csv) has every line and floor (score, rank, hours) for a spreadsheet.
+- **Getting sharper:**
+  - Each morning the watcher saves the market-rate listings
+    (`data/sun/market_seen.json`).
+  - The **Rebuild sun map** workflow uses them every Sunday, or whenever you
+    run it from the Actions tab. It commits only when an answer changed.
+  - When you confirm a line yourself (a viewing, the leasing office), record it:
+
+        python tools/sun_map/confirm.py "1 Stuyvesant Oval" 07-F --faces ENE --oval yes
+
+    One confirmed line fixes every other letter in that building at the next
+    rebuild.
+- **Buildings with no plan** (the Oval ring, 521–525 E 14th, 522–526 E 20th,
   605–625 E 14th, 622–628 E 20th, 315–325 Ave C) are worked out from their
   outline and the listings' Oval / river / Empire State view tags, so their
   answers are odds.
-- **Sharper over time:** each morning the watcher saves the market-rate
-  listings (`data/sun/market_seen.json`). Rebuild with the **Rebuild sun map**
-  workflow (Actions tab), or `pip install -r tools/sun_map/requirements.txt`
-  then `python tools/sun_map/build.py`. A line you confirm yourself goes in
-  [`tools/sun_map/inputs/line_notes.json`](tools/sun_map/inputs/line_notes.json)
-  and fixes every other letter in that building.
-- **Sun model:** direct sun on the 21st of each month, with other buildings and
-  the building's own wings blocking it. Trees aren't counted. In Stuy Town,
-  ESE windows get the morning sun and SSW windows get late morning to
-  sunset; floors 6–10 are clear of most shade.
 
 ## Settings
 
@@ -185,8 +205,8 @@ python site_check.py                    # the live site vs the watcher
 | `run_stats.py`, `summary.py` | Each morning's stats; the summary page |
 | `floorplans.py` | Each layout's floorplan (SVG, PNG, room sizes) |
 | `unit_sun.py` | Which way a unit faces and its sun (reads `data/sun/`); saves the market listings it learns from |
-| `tools/sun_map/` | Builds the sun map: `build.py`, its inputs (OpenStreetMap outlines, CBRE plan labels, your notes) and the page template |
+| `tools/sun_map/` | Builds the sun map: `build.py`, `confirm.py` (record a line you've confirmed), its inputs (OpenStreetMap outlines, CBRE plan labels, your notes) and the page template |
 | `site_check.py` | The live site vs the watcher |
 | `background.py` | The alert and logging workers |
 | `.github/workflows/watch.yml` | The workflow |
-| `.github/workflows/sun_map.yml` | Rebuild sun map (by hand from the Actions tab) |
+| `.github/workflows/sun_map.yml` | Rebuild sun map (Sundays, or by hand from the Actions tab) |

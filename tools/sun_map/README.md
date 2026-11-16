@@ -7,7 +7,9 @@ faces and how much direct sun it gets on each floor, and writes `data/sun/`
     pip install -r tools/sun_map/requirements.txt
     python tools/sun_map/build.py          # about a minute
 
-Or run the **Rebuild sun map** workflow from the Actions tab.
+Or run the **Rebuild sun map** workflow from the Actions tab (it also runs
+every Sunday). Record a line you've confirmed with
+`python tools/sun_map/confirm.py "1 Stuyvesant Oval" 07-F --faces ENE --oval yes`.
 
 ## Inputs
 
@@ -41,6 +43,18 @@ Or run the **Rebuild sun map** workflow from the Actions tab.
    - a prior that in a chain of crosses B/C and F/G sit on the chain wings.
 
    The result is a probability per spot, not one guess.
-4. **Sun.** For every wall piece and floor: the sun every 10 minutes on the
-   21st of each month, blocked by every building (its own wings included).
-   An apartment is in sun when any of its windows is.
+4. **Sun.** For every wall piece and floor, the sun is checked every 10
+   minutes on the 21st of each month, blocked by every building (its own
+   wings included). An apartment is in sun when any of its windows is.
+   - Hours: plain hours in sun.
+   - Trees: floors 1–5 keep only part of their sun, by floor. In leaf
+     (May–October) floor 1 keeps 35% and floor 5 keeps 90%; bare, floor 1
+     keeps 80%.
+5. **Score.** Each 10 minutes counts by how squarely the sun hits the window
+   (cos of the angle; the best-lit window counts). October–March count 1.5×,
+   and the tree factor applies. Then:
+   - raw = morning + 0.75 × afternoon + 0.5 × min(morning, afternoon, 1.5)
+   - score = raw scaled so the sunniest 0.5% of lines and floors = 100
+
+   An uncertain line's score is the odds-weighted average over its possible
+   spots. Its percentile is among every line on the same floor.

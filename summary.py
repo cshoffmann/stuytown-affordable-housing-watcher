@@ -255,7 +255,7 @@ def render(events: list, stats: list, applications: dict, max_rent: float | None
     cutoff = now.date().toordinal() - UNITS_SHOWN_DAYS
     lines += ["", f"## Units (last {UNITS_SHOWN_DAYS} days, newest first)", "",
               "| Posted (ET) | Apartment | Floor | Beds | Sq ft | Rent | $/sq ft | Min. income | Finish "
-              "| Layout | Features | Faces · sun (h am/pm) | Listed for | Qualified | Auto-apply |",
+              "| Layout | Features | Sun score · rank · faces · h am/pm | Listed for | Qualified | Auto-apply |",
               "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     for row in rows:
         if not row["posted"] or row["posted"].date().toordinal() < cutoff:
