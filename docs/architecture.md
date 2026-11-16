@@ -91,9 +91,17 @@ Its safety rules:
 
 With the applier stopped, the logger writes the morning's stats and its line
 in `data/daily_log.md`, fetches the floorplan of any new layout
-(`floorplans.py`: SVG, a PNG copy, room sizes), deletes recordings older
-than 30 days (git history keeps them), rebuilds `data/summary.md` and makes
-the day's one commit.
+(`floorplans.py`: SVG, a PNG copy, room sizes), saves the morning's
+market-rate listings for the sun map (`unit_sun.refresh_market_evidence`,
+one request), deletes recordings older than 30 days (git history keeps
+them), rebuilds `data/summary.md` and makes the day's one commit.
+
+The sun map itself (`data/sun/`, which way each apartment line faces and its
+sun by floor) is built separately by `tools/sun_map/build.py`, by hand or
+from the "Rebuild sun map" workflow; it needs shapely and numpy, which the
+watcher doesn't. The watcher only reads its output through `unit_sun.py`
+(standard library, a dictionary lookup) for the alert and summary lines, so
+it never slows an application down.
 
 ## What the live site has shown
 

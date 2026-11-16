@@ -1,0 +1,369 @@
+<title>StuyTown Sun Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a unit lookup, then the map + building panel side by side (stacked on phones), then picks, seen units, method. */
+:root{
+  --bg:#f4f6f9; --panel:#ffffff; --fg:#18202c; --muted:#5b6678; --line:#d5dbe4;
+  --bldg:#dfe3ea; --bldg-edge:#b9c1ce; --oval:#cfe3c6; --accent:#c2410c; --sel:#1d4ed8;
+  --s0:#8e9bb3; --s1:#b8b08f; --s2:#e2b04a; --s3:#ef8f24; --s4:#d9480f;
+  --chip:#eef1f5; --good:#15803d; --warn:#b45309; --bad:#b91c1c;
+  --f-display:"Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body:"Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#10141b; --panel:#171c25; --fg:#e7ebf2; --muted:#9aa5b6; --line:#2a3240;
+  --bldg:#262d3a; --bldg-edge:#3a4456; --oval:#1f3324; --accent:#fb923c; --sel:#60a5fa;
+  --s0:#4b5873; --s1:#8a8466; --s2:#d6a23e; --s3:#f59e2b; --s4:#ff6a2b;
+  --chip:#202733; --good:#4ade80; --warn:#fbbf24; --bad:#f87171; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#10141b; --panel:#171c25; --fg:#e7ebf2; --muted:#9aa5b6; --line:#2a3240;
+  --bldg:#262d3a; --bldg-edge:#3a4456; --oval:#1f3324; --accent:#fb923c; --sel:#60a5fa;
+  --s0:#4b5873; --s1:#8a8466; --s2:#d6a23e; --s3:#f59e2b; --s4:#ff6a2b;
+  --chip:#202733; --good:#4ade80; --warn:#fbbf24; --bad:#f87171; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.5;margin:0;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:20px 48px}
+.wrap{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;letter-spacing:-0.01em}
+h1{font-size:28px;font-weight:800}
+h2{font-size:19px;font-weight:700}
+h3{font-size:15px;font-weight:700}
+p{margin:0;max-width:74ch}
+.lede{color:var(--muted)}
+.mono,td.num,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.controls{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.ctl{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ctl label,.lbl{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+select,input[type=number],input[type=text]{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:5px 8px;max-width:100%}
+input[type=range]{width:180px;accent-color:var(--accent)}
+.check{display:flex;gap:6px;align-items:center;font-size:13px}
+.check input{accent-color:var(--accent)}
+:focus-visible{outline:2px solid var(--sel);outline-offset:2px}
+.lookup{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.lookup form{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.result{border-left:4px solid var(--s3);padding:8px 12px;background:var(--chip);border-radius:0 8px 8px 0;display:flex;flex-direction:column;gap:6px}
+.result.none{border-left-color:var(--line)}
+.result .big{font-family:var(--f-display);font-size:18px;font-weight:700}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.main{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){.main{grid-template-columns:minmax(0,1fr)}}
+.mapbox{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px;min-width:0}
+svg#map{width:100%;height:auto;display:block}
+.b{fill:var(--bldg);stroke:var(--bldg-edge);stroke-width:.6;cursor:pointer}
+.b:hover{fill:var(--chip)}
+.b.sel{stroke:var(--sel);stroke-width:2.2}
+.seg{pointer-events:none}
+.udot{stroke:var(--panel);stroke-width:.8;cursor:pointer}
+.lab{font-family:var(--f-body);font-size:7px;fill:var(--muted);pointer-events:none;text-anchor:middle}
+.street{font-family:var(--f-display);font-size:10px;fill:var(--muted);letter-spacing:.12em;text-anchor:middle;font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:12px;color:var(--muted);padding:6px 4px 2px}
+.ramp{display:flex}
+.ramp span{display:inline-block;width:26px;height:10px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.pill{display:inline-block;border-radius:4px;padding:0 6px;font-size:11px;font-weight:600;line-height:18px;white-space:nowrap}
+.c-sure{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}
+.c-likely{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.c-either{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
+.c-unknown{background:var(--chip);color:var(--muted)}
+.tbl{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+td.num,th.num{text-align:right}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--chip)}
+.strip{display:inline-flex;gap:1px}
+.strip i{display:inline-block;width:9px;height:14px;border-radius:1px}
+.strip i.cur{outline:1.5px solid var(--fg)}
+.note{font-size:12px;color:var(--muted)}
+.method{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.method ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;max-width:82ch}
+.addr{font-family:var(--f-display);font-weight:700}
+.muted{color:var(--muted)}
+.street-tag{color:var(--bad);font-weight:600}
+.oval-tag{color:var(--good);font-weight:600}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button{font:inherit;font-size:13px;color:var(--fg);background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:5px 12px;cursor:pointer}
+summary{cursor:pointer}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:6px">
+    <h1>StuyTown Sun Map</h1>
+    <p class="lede">Which way every apartment line in Stuyvesant Town and Peter Cooper Village faces, and how much direct sun it gets on each floor. An apartment number is floor + line: 07‑<b>F</b> is floor 7, line F, and every F in a building sits in the same spot. <span id="built"></span></p>
+  </header>
+
+  <section class="lookup" aria-labelledby="lkTitle">
+    <h2 id="lkTitle">Look up a unit</h2>
+    <form id="lk" autocomplete="off">
+      <div class="ctl"><label for="lkAddr">Building</label><select id="lkAddr"></select></div>
+      <div class="ctl"><label for="lkApt">Apartment</label><input type="text" id="lkApt" placeholder="07-F" size="7" inputmode="text"></div>
+      <button type="submit">Look up</button>
+    </form>
+    <div id="lkOut"></div>
+  </section>
+
+  <div class="controls" role="group" aria-label="Map settings">
+    <div class="ctl"><label for="floor">Floor <span id="floorOut" class="mono"></span></label>
+      <input type="range" id="floor" min="1" max="14" step="1" value="7"></div>
+    <div class="ctl"><label for="metric">Colour and rank by</label>
+      <select id="metric">
+        <option value="mf">Mornings first (morning + ½ afternoon)</option>
+        <option value="m">Morning sun only (before noon)</option>
+        <option value="all">All-day sun</option>
+        <option value="dec">Mid-winter day (Dec 21)</option>
+      </select></div>
+    <label class="check"><input type="checkbox" id="hideStreet" checked> Leave out windows onto a street</label>
+  </div>
+
+  <div class="main">
+    <div class="mapbox">
+      <svg id="map" role="img" aria-label="Map of StuyTown and Peter Cooper Village buildings, walls coloured by sun"></svg>
+      <div class="legend">
+        <span>Sun:</span><span class="ramp" id="ramp"></span><span id="rampLabels" class="mono"></span>
+        <span>· dots are apartment spots; tap a building</span>
+      </div>
+    </div>
+    <aside class="panel" id="panel" aria-live="polite"></aside>
+  </div>
+
+  <section class="panel">
+    <div class="toolbar" style="justify-content:space-between">
+      <h2>Best lines for your floors</h2>
+      <div class="toolbar">
+        <span class="lbl">Floors</span>
+        <input type="number" id="fmin" min="1" max="14" value="5" aria-label="Lowest floor" style="width:58px">
+        <span class="muted">to</span>
+        <input type="number" id="fmax" min="1" max="14" value="10" aria-label="Highest floor" style="width:58px">
+        <label class="check"><input type="checkbox" id="belowTop" checked> below the top floor</label>
+        <label class="check"><input type="checkbox" id="sureOnly"> sure or likely only</label>
+      </div>
+    </div>
+    <p class="note" id="picksNote"></p>
+    <div class="tbl"><table id="picks"></table></div>
+  </section>
+
+  <section class="panel">
+    <h2>Units you've seen</h2>
+    <p class="note">Every unit the watcher has seen on the affordable-housing site, at its own floor, sunniest first. Tap a row to open its building.</p>
+    <div class="tbl"><table id="seen"></table></div>
+    <details><summary class="lbl">Market-rate listings used as evidence (<span id="mktCount"></span>)</summary><div class="tbl"><table id="seenMkt"></table></div></details>
+  </section>
+
+  <section class="method">
+    <h2>How this is worked out</h2>
+    <ul>
+      <li><b>Buildings:</b> outlines from OpenStreetMap (© OpenStreetMap contributors). StuyTown floors are Terrace, Main, then 1–11 or 1–12; Peter Cooper Village is Main then 1–14. Top floors come from the listings' “top floor” tag where there is one.</li>
+      <li><b>Sun:</b> NOAA sun positions every 10 minutes on the 21st of each month. A window counts as sunny when the sun is in front of it, over 2° up, and no building, its own wings included, is in the way. Morning means before noon. Trees aren't modelled; they mostly shade floors 1–5 in summer.</li>
+      <li><b>Which apartment is where:</b> CBRE's 2006 sale brochure has lettered plans for 272–280 and 330 First Ave, 400–410 and 442–450 E 20th, 435–445 E 14th and the Peter Cooper Village typical floor. Buildings of the same design are matched by outline and turned the right way using listing sizes and view tags. For designs with no plan (the Oval ring, 521–525 E 14th, 522–526 E 20th, 605–625 E 14th, 622–628 E 20th, 315–325 Ave C, 310 First), the 8 apartments of a floor are placed round each entrance's core from the outline, two per wing and lettered clockwise as in every plan, and the listings (Oval / river / Empire State views, one- or two-sided layouts) decide where A starts. Those answers are odds, not facts.</li>
+      <li><b>Confidence:</b> <span class="pill c-sure">sure</span> the building's own plan, a same-design building confirmed by several listings, or a line you confirmed. <span class="pill c-likely">likely</span> one direction has 80%+ of the odds. <span class="pill c-either">either way</span> two answers about equally likely (often north side or south side). <span class="pill c-unknown">unknown</span> nothing to go on.</li>
+      <li><b>Getting sharper:</b> the watcher saves the market-rate listings every morning, and each rebuild (tools/sun_map/build.py) learns from them. One line you confirm at a viewing or with the leasing office (tools/sun_map/inputs/line_notes.json) fixes every letter in that building.</li>
+    </ul>
+  </section>
+</div>
+
+<script id="data" type="application/json">__DATA__</script>
+<script>
+(function(){
+const D = JSON.parse(document.getElementById('data').textContent);
+const $ = id => document.getElementById(id);
+const A = D.grid_bearing * Math.PI/180;
+const GU = [Math.sin(A+Math.PI/2), Math.cos(A+Math.PI/2)], GV = [Math.sin(A), Math.cos(A)];
+const toS = p => [p[0]*GU[0]+p[1]*GU[1], -(p[0]*GV[0]+p[1]*GV[1])];
+const NAMES = {"STUYVESANT OVAL":"Oval","EAST 14TH STREET":"E 14th","EAST 20TH STREET":"E 20th","EAST 23RD STREET":"E 23rd","FIRST AVENUE":"First Ave","AVENUE C":"Ave C","PETER COOPER ROAD":"Peter Cooper Rd","14TH STREET LOOP":"14th St Loop"};
+const short = a => { for (const k in NAMES) if (a.endsWith(k)) return a.replace(k, NAMES[k]); return a; };
+const CONF = {"sure":"c-sure","likely":"c-likely","either way":"c-either","unknown":"c-unknown"};
+const COMPASS = ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const ADDRS = D.addresses;
+const byFp = {}; Object.entries(ADDRS).forEach(([a, x]) => (byFp[x.building] ||= []).push(a));
+const segsByFp = {}; D.segments.forEach(s => (segsByFp[s.fp] ||= []).push(s));
+const bById = Object.fromEntries(D.buildings.map(b => [b.id, b]));
+$('built').textContent = 'Built ' + (D.built_utc || '').slice(0, 10) + '.';
+let state = {floor:7, metric:'mf', hideStreet:true, sel:null};
+try { Object.assign(state, JSON.parse(localStorage.getItem('sunmap2') || '{}'), {sel:null}); } catch(e) {}
+const save = () => { try { localStorage.setItem('sunmap2', JSON.stringify({floor:state.floor, metric:state.metric, hideStreet:state.hideStreet})); } catch(e) {} };
+
+function val(f, metric){ if(!f) return null; const [m,a,d] = f; return metric==='m' ? m : metric==='all' ? m+a : metric==='dec' ? d : m + a/2; }
+function maxOf(metric){ return metric==='m' ? 4.5 : metric==='all' ? 10 : metric==='dec' ? 8 : 6.5; }
+function color(v, metric){ if (v==null) return css('--line'); const t = Math.max(0, Math.min(1, v / maxOf(metric))); return css('--s' + Math.min(4, Math.floor(t*5))); }
+const fmt = v => v==null ? '–' : (Math.round(v*10)/10).toFixed(1);
+const facesText = f => f.slice().sort((a,b)=>COMPASS.indexOf(a)-COMPASS.indexOf(b)).join(' + ') || '?';
+const pct = p => Math.round(p*100) + '%';
+
+// one line at one floor: expected sun, and the possible sides with their odds
+function lineAt(addr, letter, floor){
+  const B = ADDRS[addr], L = B && B.lines[letter]; if (!L) return null;
+  const f = Math.min(Math.max(floor||1, 1), B.top_floor);
+  const exp = [0,0,0,0]; const opts = {};
+  L.spots.forEach(([i, w]) => { const sp = B.spots[i], s = sp.sun[f-1];
+    for (let k=0;k<4;k++) exp[k] += w*s[k];
+    const key = sp.faces.join('+'); const o = (opts[key] ||= {faces:sp.faces, p:0, oval:sp.oval, street:sp.street, sun:[0,0,0,0]});
+    o.p += w; for (let k=0;k<4;k++) o.sun[k] += w*s[k]; });
+  const options = Object.values(opts).sort((a,b)=>b.p-a.p); options.forEach(o => { o.sun = o.sun.map(v => v/o.p); });
+  return {B, L, f, exp, options};
+}
+function scoreLine(addr, letter, lo, hi){
+  const B = ADDRS[addr]; let s=0, m=0, a=0, d=0, n=0;
+  for (let f=lo; f<=hi; f++){ const x = lineAt(addr, letter, f); if (!x) continue; s += val(x.exp, state.metric); m += x.exp[0]; a += x.exp[1]; d += x.exp[2]; n++; }
+  return n ? {s:s/n, m:m/n, a:a/n, d:d/n} : null;
+}
+function facesCell(x){
+  const o = x.options;
+  if (o[0].p >= 0.8 || o.length === 1) return facesText(o[0].faces);
+  if (o[0].p + (o[1]?.p||0) >= 0.75) return o.slice(0,2).map(q => `${facesText(q.faces)} <span class="muted">${pct(q.p)}</span>`).join(' <span class="muted">or</span> ');
+  const top = Object.entries(x.L.p_faces).slice(0,3); return top.map(([f,p]) => `${f} <span class="muted">${pct(p)}</span>`).join(', ');
+}
+function ovalCell(L){ return L.p_oval >= 0.8 ? '<span class="oval-tag">Oval</span>' : L.p_oval >= 0.3 ? `<span class="oval-tag">Oval?</span> <span class="muted">${pct(L.p_oval)}</span>` : ''; }
+function streetCell(x){ const st = [...new Set(x.options.flatMap(o => o.street))]; if (!st.length || x.L.p_street < 0.3) return '';
+  return `<span class="street-tag">${st.join(', ')}</span>` + (x.L.p_street < 0.8 ? ` <span class="muted">${pct(x.L.p_street)}</span>` : ''); }
+const pill = c => `<span class="pill ${CONF[c]||'c-unknown'}">${c}</span>`;
+
+// ---------------- lookup
+const sel = $('lkAddr');
+Object.keys(ADDRS).sort((a,b) => short(a).localeCompare(short(b), undefined, {numeric:true})).forEach(a => { const o = document.createElement('option'); o.value = a; o.textContent = short(a); sel.appendChild(o); });
+function parseApt(t){ const m = String(t||'').trim().toUpperCase().match(/^(\d{1,2}|0?M|0?T)\s*-?\s*([A-H])$/); if (!m) return null;
+  const fl = /M/.test(m[1]) ? 0 : /T/.test(m[1]) ? -1 : parseInt(m[1], 10); return {floor: fl, line: m[2]}; }
+function showLookup(){
+  const addr = sel.value, apt = parseApt($('lkApt').value);
+  const out = $('lkOut');
+  if (!apt){ out.innerHTML = `<div class="result none"><span class="muted">Type an apartment like 07-F (floor 7, line F), or 0M-D for the Main level.</span></div>`; return; }
+  const x = lineAt(addr, apt.line, apt.floor);
+  if (!x){ out.innerHTML = `<div class="result none">No line ${apt.line} in the sun map for ${short(addr)}.</div>`; return; }
+  const fl = Math.max(1, apt.floor);
+  const notes = [];
+  if (apt.floor < 1) notes.push('Main/Terrace level: floor 1 shown, the real figure is a bit lower');
+  if (apt.floor >= x.B.top_floor) notes.push('top floor');
+  out.innerHTML = `<div class="result"><div class="toolbar"><span class="big">${short(addr)} · ${String(apt.floor<1?(apt.floor<0?'0T':'0M'):String(apt.floor).padStart(2,'0'))}-${apt.line}</span>${pill(x.L.confidence)}</div>
+    <div>Windows face <b>${facesCell(x)}</b> ${ovalCell(x.L)} ${streetCell(x)}</div>
+    <div class="mono">~${fmt(x.exp[0])} h morning + ${fmt(x.exp[1])} h afternoon sun on an average day · Dec 21: ${fmt(x.exp[2])} h (${fmt(x.exp[3])} h before noon)</div>
+    ${x.options.length > 1 ? `<div class="opts">${x.options.filter(o=>o.p>=0.05).map(o => `<div class="opt"><span class="lbl">${pct(o.p)} chance</span><b>${facesText(o.faces)}</b>${o.oval?' <span class="oval-tag">Oval</span>':''}<span class="mono note">${fmt(o.sun[0])} h am · ${fmt(o.sun[1])} h pm · Dec ${fmt(o.sun[2])} h</span></div>`).join('')}</div>` : ''}
+    <div class="note">${x.L.source}. Building top floor: ${x.B.top_floor}${x.B.top_floor_known?'':' (estimated)'}${notes.length?'. '+notes.join('; '):''}.</div></div>`;
+  state.floor = Math.min(14, fl); $('floor').value = state.floor; select(x.B.building, false); paint();
+}
+$('lk').addEventListener('submit', e => { e.preventDefault(); showLookup(); });
+
+// ---------------- map
+const svg = $('map'); const NS='http://www.w3.org/2000/svg';
+let minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9;
+D.buildings.forEach(b => b.ring.forEach(p => { const [x,y]=toS(p); minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y); }));
+const pad = 30; svg.setAttribute('viewBox', `${minX-pad} ${minY-pad} ${maxX-minX+2*pad} ${maxY-minY+2*pad}`);
+const el = (t, a, parent) => { const e=document.createElementNS(NS,t); for (const k in a) e.setAttribute(k,a[k]); (parent||svg).appendChild(e); return e; };
+const gBase = el('g',{}), gSeg = el('g',{}), gDot = el('g',{}), gLab = el('g',{});
+el('polygon',{points:D.oval.map(p=>toS(p).join(',')).join(' '), fill:'var(--oval)'}, gBase);
+const midX=(minX+maxX)/2, midY=(minY+maxY)/2;
+el('text',{x:midX,y:maxY+22,class:'street'},gLab).textContent='EAST 14TH STREET';
+el('text',{x:midX,y:minY-14,class:'street'},gLab).textContent='EAST 23RD STREET';
+el('text',{x:minX-14,y:midY,class:'street',transform:`rotate(-90 ${minX-14} ${midY})`},gLab).textContent='FIRST AVENUE';
+el('text',{x:maxX+18,y:midY,class:'street',transform:`rotate(90 ${maxX+18} ${midY})`},gLab).textContent='AVENUE C / FDR';
+{ const pcvY = Math.max(...D.buildings.filter(b=>b.complex!=='Stuy Town').flatMap(b=>b.ring.map(p=>toS(p)[1])));
+  const stY = Math.min(...D.buildings.filter(b=>b.complex==='Stuy Town').flatMap(b=>b.ring.map(p=>toS(p)[1])));
+  el('text',{x:midX,y:(pcvY+stY)/2+3.5,class:'street'},gLab).textContent='EAST 20TH STREET'; }
+{ const g = el('g',{transform:`translate(${maxX-6} ${minY+18}) rotate(${-D.grid_bearing})`},gLab);
+  el('path',{d:'M0,-13 L5,6 L0,2 L-5,6 Z', fill:'var(--muted)'},g); el('text',{x:0,y:-16,class:'street','font-size':'9'},g).textContent='N'; }
+const bEls = {};
+D.buildings.forEach(b => {
+  const poly = el('polygon',{points:b.ring.map(p=>toS(p).join(',')).join(' '), class:'b', tabindex:'0', role:'button', 'aria-label':b.addresses.map(short).join(', ')}, gBase);
+  poly.addEventListener('click', () => select(b.id));
+  poly.addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); select(b.id); } });
+  bEls[b.id] = poly;
+  let cx=0,cy=0; b.ring.forEach(p=>{const [x,y]=toS(p);cx+=x;cy+=y;}); cx/=b.ring.length; cy/=b.ring.length;
+  const nums = b.addresses.filter(a => /^\d/.test(a)).map(a=>a.split(' ')[0]);
+  el('text',{x:cx,y:cy+2.4,class:'lab'},gLab).textContent = nums.length>3 ? nums[0]+'–'+nums[nums.length-1] : nums.join('·');
+});
+const segEls = D.segments.map(s => {
+  const a = toS([s.xy[0],s.xy[1]]), c = toS([s.xy[2],s.xy[3]]); const r = s.facing*Math.PI/180, out = toS([Math.sin(r)*2.2, Math.cos(r)*2.2]);
+  return el('line',{x1:a[0]+out[0],y1:a[1]+out[1],x2:c[0]+out[0],y2:c[1]+out[1],class:'seg','stroke-width':'3.2'}, gSeg);
+});
+const dotEls = [];
+Object.entries(ADDRS).forEach(([addr, B]) => B.spots.forEach((sp, i) => {
+  const p = toS(sp.xy); const d = el('circle',{cx:p[0],cy:p[1],r:'2.2',class:'udot'}, gDot);
+  d.addEventListener('click', () => select(B.building)); dotEls.push([d, sp, B]);
+}));
+function paint(){
+  const f = state.floor, m = state.metric;
+  D.segments.forEach((s,i) => { const fv = s.f[Math.min(f, s.f.length)-1]; const hide = state.hideStreet && s.street;
+    segEls[i].setAttribute('stroke', hide ? css('--bldg-edge') : color(val(fv,m), m)); segEls[i].setAttribute('stroke-opacity', hide ? '.35' : '1'); });
+  dotEls.forEach(([d, sp, B]) => { const hide = (state.hideStreet && sp.street.length) || f > B.top_floor;
+    d.style.display = hide ? 'none' : ''; d.setAttribute('fill', color(val(sp.sun[Math.min(f, B.top_floor)-1], m), m)); });
+  $('ramp').innerHTML = [0,1,2,3,4].map(i=>`<span style="background:var(--s${i})"></span>`).join('');
+  $('rampLabels').textContent = `0 → ${maxOf(m)}+ h a day` + (m==='mf' ? ' (score)' : '');
+  $('floorOut').textContent = f;
+}
+
+// ---------------- building panel
+function select(fpId, scroll=true){
+  state.sel = fpId; Object.values(bEls).forEach(e=>e.classList.remove('sel')); bEls[fpId]?.classList.add('sel');
+  renderPanel(); if (scroll && window.innerWidth < 900) $('panel').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function renderPanel(){
+  const p = $('panel'); const b = bById[state.sel];
+  if (!b){ p.innerHTML = `<h2>Pick a building</h2><p class="muted">Tap any building. Walls are coloured by how much direct sun a window on floor ${state.floor} gets on an average day; dots are apartment spots.</p><p class="note">In Stuy Town the sunny walls face SSW (downtown) or ESE (toward Avenue C, the morning side).</p>`; return; }
+  const f = state.floor, m = state.metric;
+  const addrs = (byFp[b.id]||[]).slice().sort((x,y)=>short(x).localeCompare(short(y),undefined,{numeric:true}));
+  let html = `<div><div class="lbl">${b.complex === 'Stuy Town' ? 'Stuyvesant Town' : 'Peter Cooper Village'}</div><h2>${addrs.map(short).join(', ') || b.addresses.map(short).join(', ')}</h2></div><p class="note">Floor ${f}. Hours are an average day; Dec 21 is the shortest. The strip shows floors 1 to the top.</p>`;
+  addrs.forEach(addr => {
+    const B = ADDRS[addr];
+    const rows = Object.keys(B.lines).sort().map(letter => ({letter, x: lineAt(addr, letter, f)})).sort((a,b2) => val(b2.x.exp, m) - val(a.x.exp, m));
+    html += `<div><h3 class="addr">${short(addr)} <span class="note">top floor ${B.top_floor}${B.top_floor_known?'':' (est.)'}</span></h3><div class="tbl"><table><thead><tr><th>Line</th><th>Windows face</th><th></th><th class="num">AM h</th><th class="num">PM h</th><th class="num">Dec 21</th><th>Floors</th><th></th></tr></thead><tbody>` +
+      rows.map(({letter, x}) => { const strip = Array.from({length: B.top_floor}, (_, i) => { const y = lineAt(addr, letter, i+1); return `<i style="background:${color(val(y.exp,m),m)}" class="${i+1===f?'cur':''}" title="floor ${i+1}: ${fmt(val(y.exp,m))}"></i>`; }).join('');
+        return `<tr><td><b>${letter}</b></td><td>${facesCell(x)}</td><td>${ovalCell(x.L)} ${streetCell(x)}</td><td class="num">${fmt(x.exp[0])}</td><td class="num">${fmt(x.exp[1])}</td><td class="num">${fmt(x.exp[2])}</td><td><span class="strip">${strip}</span></td><td>${pill(x.L.confidence)}</td></tr>`; }).join('') +
+      `</tbody></table></div><p class="note">${B.lines[Object.keys(B.lines)[0]].source}.</p></div>`;
+  });
+  const segs = segsByFp[b.id] || []; const agg = {};
+  segs.forEach(s => { const k = (s.address ? short(s.address) : '?') + '|' + s.compass + '|' + (s.oval?'Oval':'') + '|' + (s.street||''); (agg[k] ||= []).push(s.f[Math.min(f, s.f.length)-1]); });
+  const wr = Object.entries(agg).map(([k,v]) => { const [ad,cp,ov,st] = k.split('|'); const avg = i => v.reduce((t,x)=>t+x[i],0)/v.length; return {ad,cp,ov,st,s:[avg(0),avg(1),avg(2)]}; })
+    .sort((x,y) => x.ad.localeCompare(y.ad) || val(y.s,m) - val(x.s,m));
+  html += `<details><summary class="lbl">Walls of this building</summary><div class="tbl"><table><thead><tr><th>Address</th><th>Faces</th><th class="num">AM h</th><th class="num">PM h</th><th class="num">Dec 21</th></tr></thead><tbody>${wr.map(r=>`<tr><td>${r.ad}</td><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${color(val(r.s,m),m)}"></span> ${r.cp}${r.ov?' <span class="oval-tag">Oval</span>':''}${r.st?` <span class="street-tag">${r.st}</span>`:''}</td><td class="num">${fmt(r.s[0])}</td><td class="num">${fmt(r.s[1])}</td><td class="num">${fmt(r.s[2])}</td></tr>`).join('')}</tbody></table></div></details>`;
+  const seen = D.listings.filter(L => (byFp[b.id]||[]).includes(L.address));
+  if (seen.length) html += `<div class="note"><b>Listings seen here:</b> ${seen.map(L => `${short(L.address).split(' ')[0]} ${L.apt}${L.codes.includes('VBOV')?' (Oval view)':''}${L.codes.includes('VBRV')?' (river view)':''}${L.codes.includes('VBESV')?' (Empire State view)':''}`).join(', ')}</div>`;
+  p.innerHTML = html;
+}
+
+// ---------------- picks
+function renderPicks(){
+  const lo = Math.max(1, +$('fmin').value||5), hiIn = Math.max(lo, +$('fmax').value||10), sure = $('sureOnly').checked;
+  const rows = [];
+  Object.entries(ADDRS).forEach(([addr, B]) => Object.entries(B.lines).forEach(([letter, L]) => {
+    if (state.hideStreet && L.p_street >= 0.5) return;
+    if (sure && !(L.confidence === 'sure' || L.confidence === 'likely')) return;
+    const hi = Math.min(hiIn, $('belowTop').checked ? B.top_floor - 1 : B.top_floor); if (hi < lo) return;
+    const r = scoreLine(addr, letter, lo, hi); if (r) rows.push({addr, letter, L, r, lo, hi, x: lineAt(addr, letter, Math.round((lo+hi)/2))});
+  }));
+  rows.sort((a,b) => b.r.s - a.r.s);
+  $('picksNote').textContent = `Top 40 of ${rows.length} lines, averaged over floors ${lo}–${hiIn}${$('belowTop').checked ? ' (below each top floor)' : ''}${state.hideStreet ? ', leaving out lines likely onto a street' : ''}. Uncertain lines count each possible side by its odds.`;
+  $('picks').innerHTML = `<thead><tr><th>#</th><th>Line</th><th>Windows face</th><th></th><th class="num">AM h</th><th class="num">PM h</th><th class="num">Dec 21</th><th></th></tr></thead><tbody>` +
+    rows.slice(0, 40).map((o,i) => `<tr class="click" data-fp="${ADDRS[o.addr].building}" tabindex="0"><td class="num muted">${i+1}</td><td><span class="addr">${short(o.addr)}</span> · <b>${o.letter}</b></td><td>${facesCell(o.x)}</td><td>${ovalCell(o.L)}</td><td class="num">${fmt(o.r.m)}</td><td class="num">${fmt(o.r.a)}</td><td class="num">${fmt(o.r.d)}</td><td>${pill(o.L.confidence)}</td></tr>`).join('') + `</tbody>`;
+  wire($('picks'));
+}
+function wire(tbl){ tbl.querySelectorAll('tr.click').forEach(tr => { if (!tr.dataset.fp) return; const go = () => { select(tr.dataset.fp); $('map').scrollIntoView({behavior:'smooth'}); }; tr.addEventListener('click', go); tr.addEventListener('keydown', e => { if (e.key==='Enter') go(); }); }); }
+
+// ---------------- seen
+function seenTable(list){
+  const rows = list.map(L => { const x = lineAt(L.address, L.line, L.floor > 0 ? L.floor : 1); return {L, x, s: x ? val(x.exp, state.metric) : -1}; }).sort((a,b)=>b.s-a.s);
+  return `<thead><tr><th>Apartment</th><th class="num">Beds</th><th class="num">Rent</th><th>Windows face</th><th></th><th class="num">AM h</th><th class="num">PM h</th><th class="num">Dec 21</th><th></th></tr></thead><tbody>` +
+    rows.map(({L, x}) => `<tr class="click" data-fp="${x ? x.B.building : ''}" tabindex="0"><td><span class="addr">${short(L.address)}</span> <span class="mono">${L.apt}</span></td><td class="num">${L.beds ?? '–'}</td><td class="num">${L.rent ? '$' + Math.round(L.rent).toLocaleString() : '–'}</td><td>${x ? facesCell(x) : '<span class="muted">–</span>'}</td><td>${x ? ovalCell(x.L) + ' ' + streetCell(x) : ''}${L.codes.includes('VBOV') ? ' <span class="note">(listed: Oval views)</span>' : ''}</td><td class="num">${x ? fmt(x.exp[0]) : '–'}</td><td class="num">${x ? fmt(x.exp[1]) : '–'}</td><td class="num">${x ? fmt(x.exp[2]) : '–'}</td><td>${x ? pill(x.L.confidence) : ''}</td></tr>`).join('') + `</tbody>`;
+}
+function renderSeen(){
+  const aff = D.listings.filter(L => L.source === 'affordable'), mkt = D.listings.filter(L => L.source !== 'affordable');
+  $('seen').innerHTML = seenTable(aff); $('seenMkt').innerHTML = seenTable(mkt); $('mktCount').textContent = mkt.length;
+  wire($('seen')); wire($('seenMkt'));
+}
+
+function all(){ paint(); renderPanel(); renderPicks(); renderSeen(); save(); }
+$('floor').value = state.floor; $('metric').value = state.metric; $('hideStreet').checked = state.hideStreet;
+$('floor').addEventListener('input', e => { state.floor = +e.target.value; paint(); renderPanel(); save(); });
+$('metric').addEventListener('change', e => { state.metric = e.target.value; all(); });
+$('hideStreet').addEventListener('change', e => { state.hideStreet = e.target.checked; all(); });
+['fmin','fmax','belowTop','sureOnly'].forEach(id => $(id).addEventListener('change', renderPicks));
+new MutationObserver(all).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', all);
+sel.value = '1 STUYVESANT OVAL'; $('lkApt').value = '07-F';
+all(); showLookup(); state.sel = null; Object.values(bEls).forEach(e=>e.classList.remove('sel')); bEls[ADDRS['1 STUYVESANT OVAL'].building]?.classList.add('sel'); state.sel = ADDRS['1 STUYVESANT OVAL'].building; renderPanel();
+})();
+</script>
