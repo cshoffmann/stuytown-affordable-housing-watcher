@@ -28,7 +28,18 @@ How a line gets its direction, best first:
      (ENE), one of two neighbouring apartments".
 Sun: NOAA sun positions every 10 minutes on the 21st of each month; a window
 is in sun when the sun is in front of it, over 2 degrees up, and no building
-(its own wings included) is in the way. Trees aren't modelled.
+(its own wings included) is in the way. Floors 1-5 lose some sun to the
+courtyard trees (more in leaf, May-October).
+
+Sun score (0-100), the number to compare apartments by:
+    morning + 0.75 x afternoon + 0.5 x min(morning, afternoon, 1.5)
+in "full-sun hours": each 10 minutes counts by how squarely the sun hits the
+window (sun straight in = 1, skimming along the wall = ~0), October-March
+counts 1.5x (the dark months are when light matters most), trees as above.
+So all-day sun ranks highest, mornings beat afternoons, and some of both
+beats a lot of one. 100 = the sunniest apartment and floor in the complex.
+Each line also gets its percentile among every line on the same floor, and
+its rank in its building.
 """
 import csv
 import itertools
@@ -159,13 +170,49 @@ def seg_lit(seg, z):
     return _lit_cache[key]
 
 
-def sun_stats(mask):
-    """[morning h, afternoon h, Dec 21 h, Dec 21 morning h]: daily averages over the 12 days, and the shortest day."""
+SUN_MONTH = SUN_DAY + 1  # DAYS are the 21st of months 1..12
+LEAF_ON = (SUN_MONTH >= 5) & (SUN_MONTH <= 10)
+DAY_WEIGHT = np.where((SUN_MONTH >= 10) | (SUN_MONTH <= 3), 1.5, 1.0)
+DAY_WEIGHT = DAY_WEIGHT / DAY_WEIGHT[np.unique(SUN_DAY, return_index=True)[1]].mean()  # averages to 1 over the 12 days
+# Share of sun that gets through the courtyard trees (mature London planes, about 5 storeys tall),
+# by floor: in leaf (May-October) and bare.
+TREES_LEAF = {1: 0.35, 2: 0.45, 3: 0.6, 4: 0.75, 5: 0.9}
+TREES_BARE = {1: 0.8, 2: 0.85, 3: 0.9, 4: 0.95, 5: 1.0}
+
+
+def tree_factor(floor):
+    return np.where(LEAF_ON, TREES_LEAF.get(floor, 1.0), TREES_BARE.get(floor, 1.0))
+
+
+def incidence(seg):
+    """How squarely the sun hits this wall at each step: 1 straight in, 0 skimming along it or behind."""
+    if "cos" not in seg:
+        seg["cos"] = np.clip(np.cos(np.radians(SUN_EL)) * np.cos(np.radians(SUN_AZ - seg["facing"])), 0, 1)
+    return seg["cos"]
+
+
+def spot_sun(segs, complex_name, floor):
+    """[morning h, afternoon h, Dec 21 h, Dec 21 morning h, raw score] for an apartment with these windows.
+    Hours: plain hours in sun (any window), trees taken off; raw score: see the module docstring."""
+    z = z_of(complex_name, floor)
+    lit = np.zeros(len(SUN_AZ), bool)
+    strength = np.zeros(len(SUN_AZ))
+    for s in segs:
+        m = seg_lit(s, z)
+        lit |= m
+        strength = np.maximum(strength, m * incidence(s))
+    trees = tree_factor(floor)
+    hours = lit * trees
     n = len(DAYS)
-    return [round(float(mask[MORNING].sum()) * STEP_H / n, 1),
-            round(float(mask[~MORNING].sum()) * STEP_H / n, 1),
-            round(float(mask[SUN_DAY == DEC].sum()) * STEP_H, 1),
-            round(float(mask[(SUN_DAY == DEC) & MORNING].sum()) * STEP_H, 1)]
+    eff = strength * trees * DAY_WEIGHT
+    em = float(eff[MORNING].sum()) * STEP_H / n
+    ea = float(eff[~MORNING].sum()) * STEP_H / n
+    raw = em + 0.75 * ea + 0.5 * min(em, ea, 1.5)
+    return [round(float(hours[MORNING].sum()) * STEP_H / n, 1),
+            round(float(hours[~MORNING].sum()) * STEP_H / n, 1),
+            round(float(hours[SUN_DAY == DEC].sum()) * STEP_H, 1),
+            round(float(hours[(SUN_DAY == DEC) & MORNING].sum()) * STEP_H, 1),
+            raw]
 
 
 def z_of(complex_name, floor):
@@ -822,12 +869,7 @@ for addr, A in sorted(ADDR.items()):
     spots = []
     for i in used:
         sp = A["spots"][i]
-        sun = []
-        for f in range(1, top + 1):
-            mask = np.zeros(len(SUN_AZ), bool)
-            for s in sp["segs"]:
-                mask |= seg_lit(s, z_of(fp["complex"], f))
-            sun.append(sun_stats(mask))
+        sun = [spot_sun(sp["segs"], fp["complex"], f) for f in range(1, top + 1)]
         spots.append({"faces": faces_of(sp["segs"]), "oval": any(s["oval"] for s in sp["segs"]),
                       "street": sorted({s["street"] for s in sp["segs"] if s["street"]}),
                       "xy": [round(float(v), 1) for v in sp["p"]], "sun": sun})
@@ -860,6 +902,43 @@ for addr, A in sorted(ADDR.items()):
     OUT_ADDR[addr] = {"complex": fp["complex"], "building": A["fp"], "top_floor": top,
                       "top_floor_known": addr in TOPS, "spots": spots, "lines": lines}
 
+# ---------------------------------------------------------------- scores, percentiles, ranks
+def line_raw(A, ln, f):
+    return sum(w * A["spots"][i]["sun"][f - 1][4] for i, w in ln["spots"])
+
+
+_raws = sorted(line_raw(A, ln, f) for A in OUT_ADDR.values() for ln in A["lines"].values()
+               for f in range(1, A["top_floor"] + 1))
+SCORE_REF = _raws[int(len(_raws) * 0.995)]  # the sunniest half-percent of lines and floors = 100
+
+
+def to_score(raw):
+    return int(round(min(100.0, 100.0 * raw / SCORE_REF)))
+
+
+by_floor = {}
+for addr, A in OUT_ADDR.items():
+    for letter, ln in A["lines"].items():
+        ln["score"] = [to_score(line_raw(A, ln, f)) for f in range(1, A["top_floor"] + 1)]
+        for f, sc in enumerate(ln["score"], 1):
+            by_floor.setdefault(f, []).append(sc)
+for A in OUT_ADDR.values():  # after the lines: each spot's own score, for best / worst case
+    for sp in A["spots"]:
+        for row in sp["sun"]:
+            row[4] = to_score(row[4])
+for f in by_floor:
+    by_floor[f].sort()
+for addr, A in OUT_ADDR.items():
+    for letter, ln in A["lines"].items():
+        # percent of all lines on the same floor that this one beats (ties count half)
+        ln["pct"] = []
+        for f, sc in enumerate(ln["score"], 1):
+            arr = by_floor[f]
+            lower = np.searchsorted(arr, sc, "left")
+            same = np.searchsorted(arr, sc, "right") - lower
+            ln["pct"].append(int(round(100 * (lower + same / 2) / len(arr))))
+log(f"score 100 = {SCORE_REF:.2f} raw (full-sun hours, weighted)")
+
 # addresses with listings but no model at all (shouldn't happen, but say so)
 missing = sorted({L["address"] for L in LISTINGS} - set(OUT_ADDR))
 if missing:
@@ -872,11 +951,17 @@ lookup = {
     "about": ("Which way each StuyTown / Peter Cooper Village apartment line faces and how much direct sun it "
               "gets, by floor. Built by tools/sun_map/build.py; read with unit_sun.py. For each address: "
               "'spots' are apartment positions on a typical floor (windows' compass directions, Oval, street, "
-              "and sun per floor 1..top_floor as [morning h, afternoon h, Dec 21 h, Dec 21 morning h], the first "
-              "two averaged over the 21st of every month); 'lines' gives, for each letter, which spot(s) it "
+              "and sun per floor 1..top_floor as [morning h, afternoon h, Dec 21 h, Dec 21 morning h, sun score], "
+              "the hours averaged over the 21st of every month, trees taken off floors 1-5); 'lines' gives, for "
+              "each letter, which spot(s) it is with probabilities, its expected sun score per floor ('score', "
+              "0-100) and its percentile among all lines on that floor ('pct'). Sun score = morning + 0.75 x "
+              "afternoon + 0.5 x min(morning, afternoon, 1.5) in full-sun hours (sun straight in counts 1, "
+              "skimming the wall ~0; Oct-Mar count 1.5x), scaled so 100 = the sunniest lines; 'lines' gives, "
+              "for each letter, which spot(s) it "
               "is, with probabilities. Confidence: sure (the building's own plan, or a same-design building "
               "confirmed by listings), likely, either way (two fits equally good), unknown."),
     "built_utc": now,
+    "score_reference_raw": round(SCORE_REF, 3),
     "inputs": {"osm_fetched_utc": B.get("fetched_utc"), "listings": len(LISTINGS)},
     "addresses": OUT_ADDR,
 }
@@ -886,14 +971,15 @@ with open(os.path.join(OUT, "unit_lines.json"), "w") as f:
 with open(os.path.join(OUT, "units_by_floor.csv"), "w", newline="") as f:
     w = csv.writer(f)
     w.writerow(["address", "line", "confidence", "likely_faces", "p_oval", "p_street", "floor", "top_floor",
-                "morning_h", "afternoon_h", "dec21_h", "dec21_morning_h"])
+                "sun_score", "percentile_on_floor", "morning_h", "afternoon_h", "dec21_h", "dec21_morning_h"])
     for addr, A in OUT_ADDR.items():
         for letter, ln in A["lines"].items():
             for fl in range(1, A["top_floor"] + 1):
                 exp = [sum(wt * A["spots"][i]["sun"][fl - 1][k] for i, wt in ln["spots"]) for k in range(4)]
+                exp = [ln["score"][fl - 1], ln["pct"][fl - 1]] + exp
                 faces = " ".join(f"{f}:{p:.0%}" for f, p in ln["p_faces"].items())
                 w.writerow([addr, letter, ln["confidence"], faces, ln["p_oval"], ln["p_street"],
-                            fl, A["top_floor"]] + [round(x, 1) for x in exp])
+                            fl, A["top_floor"]] + exp[:2] + [round(x, 1) for x in exp[2:]])
 
 
 def xy(p):
@@ -906,7 +992,7 @@ for s in SEGS:
     top = 14 if fp["complex"] == "Peter Cooper Village" else 12
     seg_out.append({"fp": s["fp"], "address": s["address"], "compass": geo.compass(s["facing"]), "facing": round(s["facing"]),
                     "street": s["street"], "oval": s["oval"], "xy": [round(float(v), 1) for v in (*s["a"], *s["b"])],
-                    "f": [sun_stats(seg_lit(s, z_of(fp["complex"], f))) for f in range(1, top + 1)]})
+                    "f": [(lambda r: r[:4] + [to_score(r[4])])(spot_sun([s], fp["complex"], f)) for f in range(1, top + 1)]})
 page = {
     "built_utc": now,
     "grid_bearing": geo.GRID_BEARING,

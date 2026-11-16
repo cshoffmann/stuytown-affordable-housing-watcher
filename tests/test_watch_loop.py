@@ -26,6 +26,7 @@ import apply_recorder  # noqa: E402
 import background  # noqa: E402
 import check_units  # noqa: E402
 import floorplans  # noqa: E402
+import unit_sun  # noqa: E402
 import run_stats  # noqa: E402
 import summary  # noqa: E402
 import watch_loop  # noqa: E402
@@ -94,6 +95,8 @@ class CheckerTests(unittest.TestCase):
             (floorplans, "FLOORPLANS_DIR", f"{tmp.name}/floorplans"),
             (apply_recorder, "RUNS_DIR", f"{tmp.name}/apply_runs"),
             (floorplans, "fetch_floorplan", mock.Mock(side_effect=OSError("offline"))),
+            (unit_sun, "MARKET_FILE", f"{tmp.name}/sun/market_seen.json"),
+            (unit_sun, "MARKET_URL", "http://127.0.0.1:9/offline"),  # nothing listens there: fails at once
             (watch_loop, "DAILY_LOG_FILE", f"{tmp.name}/daily_log.md"),
         ]:
             patcher = mock.patch.object(target, name, value)
