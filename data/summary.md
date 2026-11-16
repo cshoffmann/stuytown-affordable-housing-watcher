@@ -1,17 +1,18 @@
 # StuyTown watcher: summary
 
-Updated Sun Nov 15, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2 bed <= $2,800**. Direct submit: **ready**.
+Updated Mon Nov 16, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2+ bed <= $2,800**. Direct submit: **ready**.
 
 One line per morning: [daily_log.md](daily_log.md).
 
 ## Needs a look
 
-- Alerts can't reach your phone: Pushover rejected the request (HTTP 400): {"user":"valid, but has no active devices","devices":[],"group":0,"licenses":[],"errors":["user is valid but has no active devices"],"status":0,"request":"46a44da3-7967-44c6-a9c6-1dd8e9eba40d"}. If Pushover says "no active devices", open the Pushover app and buy it after its trial (or re-enable your device at pushover.net), then Run workflow with "Send a [TEST] alert". The run is marked failed until then
+Nothing: the latest morning went as it should.
 
 ## Mornings
 
 | Date | Units posted at (ET) | Qualified | Auto-apply | Checks | API median / p99 |
 | --- | --- | --- | --- | --- | --- |
+| Mon Nov 16 | 7:15:00 | 0 | - | 1,080 | 44 / 350 ms |
 | Sun Nov 15 | none | 0 | - | 1,080 | 18 / 233 ms |
 | Sat Nov 14 | none | 0 | - | 1,080 | 18 / 230 ms |
 | Fri Nov 13 | none | 0 | - | 6,154 | 18 / 116 ms |
@@ -52,6 +53,7 @@ One line per morning: [daily_log.md](daily_log.md).
 
 | Posted (ET) | Apartment | Floor | Beds | Sq ft | Rent | $/sq ft | Min. income | Finish | Layout | Features | Listed for | Qualified | Auto-apply |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Nov 16 7:15:00 AM | 07-A, 530 East 23rd Street | 7 | 1 | 944 | $5,094 | $5.40 | $174,639 | Platinum | [150](floorplans/150.png) | East River view, wall A/C, PS 40 zone, Custom closets | 45 min | no |  |
 | Nov 12 7:15:00 AM | 10-C, 285 Avenue C | 10 | 1 | 745 | $4,181 | $5.61 | $143,352 | Modern | [107](floorplans/107.png) |  | 44 min | no |  |
 | Nov 9 7:15:00 AM | 08-B, 330 First Avenue | 8 | 2 | 955 | $2,787 | $2.92 | $95,556 | Blank | [126](floorplans/126_st2bedclassic.png) | PS 40 zone, stainless appliances | 23.0 s | yes |  |
 | Nov 6 8:30:00 AM | 13-A, 441 East 20th Street | 13 | 1 | 944 | $4,994 | $5.29 | $171,207 | Platinum | [150](floorplans/150.png) | wall A/C, PS 40 zone, Downtown view, closet system, Wood flooring | 90 min | no |  |
@@ -90,7 +92,7 @@ One line per morning: [daily_log.md](daily_log.md).
 | 108 | 1 | 764 | 2 | $2,081-$2,125 | living 12’1” x 18’8”, bedroom 15’0” x 12’0”, dining 9’6” x 8’1”, 4 closets | <a href="floorplans/108.png"><img src="floorplans/108.png" width="140" alt="layout 108"></a> |
 | 110 | 1 | 764 | 2 | $2,234 | living 11’11” x 18’8”, bedroom 15’0” x 12’0”, dining 9’6” x 9’4”, 4 closets | <a href="floorplans/110.png"><img src="floorplans/110.png" width="140" alt="layout 110"></a> |
 | 119 | 1 | 749 | 2 | $2,033-$2,078 | living 12’0” x 19’4”, bedroom 12’8” x 14’0”, dining 8’2” x 10’2”, 4 closets | <a href="floorplans/119.png"><img src="floorplans/119.png" width="140" alt="layout 119"></a> |
-| 150 | 1 | 944 | 1 | $4,994 | living room | dining room 255” x 151”58” x 60”, bedroom 151” x 138”, 4 closets | <a href="floorplans/150.png"><img src="floorplans/150.png" width="140" alt="layout 150"></a> |
+| 150 | 1 | 944 | 2 | $4,994-$5,094 | living room | dining room 255” x 151”58” x 60”, bedroom 151” x 138”, 4 closets | <a href="floorplans/150.png"><img src="floorplans/150.png" width="140" alt="layout 150"></a> |
 | 123 | 2 | 932 | 1 | $2,644 | living 12’0” x 18’8”, bedroom 15’0” x 12’0”, bedroom 2 9’2” x 14’4”, dining 8’4” x 9’6”, 5 closets | <a href="floorplans/123.png"><img src="floorplans/123.png" width="140" alt="layout 123"></a> |
 | 124 | 2 | 932 | 2 | $3,263-$4,503 | living 12’0” x 18’8”, bedroom 11’11” x 15’0”, bedroom 2 9’2” x 14’3”, dining 9’6” x 8’2”, 5 closets | <a href="floorplans/124.png"><img src="floorplans/124.png" width="140" alt="layout 124"></a> |
 | 125 | 2 | 948 | 1 | $2,648 | living 12’0” x 18’8”, bedroom 15’0” x 12’0”, bedroom 2 9’2” x 14’4”, dining 9’2” x 9’6”, 5 closets | <a href="floorplans/125.png"><img src="floorplans/125.png" width="140" alt="layout 125"></a> |
@@ -100,11 +102,11 @@ One line per morning: [daily_log.md](daily_log.md).
 
 ## Patterns
 
-- **Posting times** (ET, all days): 7:15 ×12, 7:30 ×4, 8:00 ×6, 8:15 ×3, 8:30 ×2
-- **Units by weekday:** Mon 5, Tue 4, Wed 6, Thu 5, Fri 7
+- **Posting times** (ET, all days): 7:15 ×13, 7:30 ×4, 8:00 ×6, 8:15 ×3, 8:30 ×2
+- **Units by weekday:** Mon 6, Tue 4, Wed 6, Thu 5, Fri 7
 - **How long units at or under your limit stay listed:** median 40.0 s (fastest 23.0 s, 8 units)
-- **How long units over your limit stay listed:** median 8 min (fastest 39.0 s, 9 units)
-- **When on the quarter hour they're posted** (their clock, s): -0.14 to +0.11, -0.14 to +0.11, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.11, -0.15 to +0.10
+- **How long units over your limit stay listed:** median 13 min (fastest 39.0 s, 10 units)
+- **When on the quarter hour they're posted** (their clock, s): -0.14 to +0.11, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.11, -0.15 to +0.10, -9.52 to +0.48
 - **Our applications:** 2 sent (2 browser); median 1.1 s from the unit appearing to sending
 - **All auto-apply results so far:** 5 submitted
 
@@ -113,27 +115,29 @@ One line per morning: [daily_log.md](daily_log.md).
 | Code | Means | Units |
 | --- | --- | --- |
 | IBSS | Stainless steel appliances | 16 |
-| PS40 | PS40 School District | 8 |
-| ATW2 | Through wall A/C | 4 |
+| PS40 | PS40 School District | 9 |
+| ATW2 | Through wall A/C | 5 |
 | DW18 | Dishwasher | 4 |
 | NFF | Natural finish wood flooring | 4 |
 | MAVM | Renovated bathroom | 3 |
 | ELFA | ELFA closet systems | 2 |
 | VBOV | Oval Views | 2 |
 | ATW3 | 3 Through wall A/C Units | 1 |
+| CC | Custom closets | 1 |
 | DTVW | Downtown view | 1 |
 | OKU | Open kitchen with breakfast bar | 1 |
 | PBAC | Extra closet space | 1 |
 | PBGK | Galley kitchen | 1 |
 | PWF | Wood flooring | 1 |
+| VBRV | East River view | 1 |
+| zCRRE | Platinum finish | 6 |
 | FS06 | 6th floor | 5 |
-| zCRRE | Platinum finish | 5 |
 | FS10 | 10th floor | 4 |
 | zMET | Classic finish | 4 |
 | FS02 | 2nd floor | 3 |
+| FS07 | 7th floor | 3 |
 | FS03 | 3rd floor | 2 |
 | FS05 | 5th floor | 2 |
-| FS07 | 7th floor | 2 |
 | FS08 | 8th floor | 2 |
 | FS09 | 9th floor | 2 |
 | FS0M | Main level | 2 |
