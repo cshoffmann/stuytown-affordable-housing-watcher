@@ -93,6 +93,7 @@ import apply_recorder
 import background
 import check_units
 import direct_submit
+import unit_sun
 
 _MODE_SETTING = os.environ.get("AUTO_APPLY_MODE", "").strip().lower()
 ENABLED = _MODE_SETTING in ("on", "true", "yes", "1")
@@ -1915,7 +1916,9 @@ def result_alert(unit: dict, attempt: Attempt, link: str | None = None) -> dict:
         title = f"[FORM CHECK] Filled the form for {label} - not submitted"
     else:
         title = f"Auto-apply failed: {label} - apply yourself now"
-    lines = [check_units._linked_line(unit)] + ([html.escape(facts)] if facts else []) + [html.escape(attempt.detail)]
+    sun = unit_sun.describe(unit)  # which way it faces, how much sun (data/sun, the sun map)
+    lines = ([check_units._linked_line(unit)] + ([html.escape(facts)] if facts else []) + ([html.escape(sun)] if sun else [])
+             + [html.escape(attempt.detail)])
     if attempt.problems:
         lines.append("Empty or not taking the value: " + html.escape("; ".join(attempt.problems)))
     if attempt.site_messages:

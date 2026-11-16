@@ -1,0 +1,50 @@
+name: Rebuild sun map
+
+# By hand from the Actions tab: rebuilds data/sun/ (which way every apartment
+# line faces and its sun by floor) from the latest evidence -- the market-rate
+# listings the watcher saves each morning, the affordable units it has seen,
+# and your notes in tools/sun_map/inputs/line_notes.json. Takes a couple of
+# minutes; commits only if something changed.
+on:
+  workflow_dispatch:
+
+# Its own group: sharing the watcher's could cancel a watcher run waiting in
+# line. The two never write the same files (this writes data/sun/unit_lines.json,
+# sun_map.html and units_by_floor.csv; the watcher writes market_seen.json), so
+# a pull --rebase before pushing is always clean.
+concurrency:
+  group: sun-map
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install
+        run: pip install -r tools/sun_map/requirements.txt
+
+      - name: Build
+        run: python tools/sun_map/build.py
+
+      - name: Check
+        run: python -m unittest tests.test_unit_sun -v
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/sun
+          if git diff --cached --quiet; then echo "No change"; exit 0; fi
+          git commit -m "Rebuild sun map"
+          for i in 1 2 3; do git push && exit 0; git pull --rebase; done
+          exit 1

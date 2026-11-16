@@ -84,17 +84,18 @@ class SummaryPageTests(unittest.TestCase):
             self.addCleanup(patcher.stop)
 
     def test_the_page_has_every_morning_unit_and_pattern(self):
-        page = summary.render(EVENTS, [morning()], APPLICATIONS, max_rent=3000,
-                              now=datetime(2026, 10, 12, 14, 0, tzinfo=timezone.utc))
+        with mock.patch.object(summary.unit_sun, "short", lambda unit: "ESE+SSW · 4.3/5.1 h"):
+            page = summary.render(EVENTS, [morning()], APPLICATIONS, max_rent=3000,
+                                  now=datetime(2026, 10, 12, 14, 0, tzinfo=timezone.utc))
         self.assertIn("Auto-apply rent limits: **any <= $3,000**", page)
         self.assertIn("Direct submit: **ready**.", page)
         self.assertIn("Nothing: the latest morning went as it should.", page)
         self.assertIn("| Mon Oct 12 | 7:15:00, 7:30:00 | 1 | 1 submitted | 5,400 | 45 / 258 ms |", page)
         self.assertIn("| Oct 12 7:15:00 AM | 08-B, 287 Avenue C | 8 | 1 | 766 | $2,787 | $3.64 | $60,000 | "
-                      "Classic | 108 | Marble bath | 40.0 s | yes | submitted, sent 0.07 s after it appeared, direct |",
+                      "Classic | 108 | Marble bath | ESE+SSW · 4.3/5.1 h | 40.0 s | yes | submitted, sent 0.07 s after it appeared, direct |",
                       page)
         self.assertIn("| Oct 12 7:30:00 AM | 06-B, 287 Avenue C | 6 | 1 | 766 | $3,067 | $4.00 | $60,000 | "
-                      "Classic | 108 | Marble bath | 90.0 s | no |  |", page)
+                      "Classic | 108 | Marble bath | ESE+SSW · 4.3/5.1 h | 90.0 s | no |  |", page)
         self.assertIn("**Posting times** (ET, all days): 7:15 ×1, 7:30 ×1", page)
         self.assertIn("-0.21 to +0.04", page)
         self.assertIn("1 sent (1 direct); median 0.1 s from the unit appearing to sending, 0.3 s to the site's", page)

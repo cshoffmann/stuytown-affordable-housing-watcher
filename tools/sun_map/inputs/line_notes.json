@@ -1,0 +1,6 @@
+{
+ "about": "Apartment lines you've confirmed yourself (a viewing, the leasing office, a photo). Key: 'ADDRESS|LETTER' with the address as the listings write it. faces: compass directions of its windows (N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW, NNW; Stuy Town's grid is turned 29 degrees, so 'south' windows are SSW and 'east' ones ESE); oval: true/false. One confirmed line fixes every other letter in that building, so it's worth adding. Keys starting with EXAMPLE are ignored. Rebuild with: python tools/sun_map/build.py",
+ "lines": {
+  "EXAMPLE 1 STUYVESANT OVAL|F": {"faces": ["ENE"], "oval": true, "note": "copy without EXAMPLE, then edit"}
+ }
+}

@@ -44,6 +44,7 @@ import check_units
 import run_stats
 import summary
 import floorplans
+import unit_sun
 
 POLL_INTERVAL_SECONDS = 2  # auto-apply on: every check is one small request; cheap units go in 25-81 s
 COLLECT_POLL_SECONDS = 10  # auto-apply off (collecting data): no bursts; the shortest listing so far lasted 25 s
@@ -298,6 +299,7 @@ class Watcher:
         self.stats.write(self.applier, check_units.load_state())
         self.write_daily_log()
         print(f"   {floorplans.refresh(budget_seconds=REFERENCE_BUDGET_SECONDS)}")
+        print(f"   {unit_sun.refresh_market_evidence()}")  # what the sun map learns from (data/sun)
         pruned = apply_recorder.prune_runs()
         if pruned:
             print(f"   recordings: {pruned} older than {apply_recorder.KEEP_RUNS_DAYS} days deleted")
@@ -410,6 +412,9 @@ def main(argv=None) -> int:
 
     # First, so the applicant profile is masked in the log before anything else prints.
     auto_apply.startup_check()
+    # Read the sun map now (~20 ms), not on the first alert after an application.
+    sun = unit_sun.load()
+    print(f"Sun map: {len(sun.get('addresses', {}))} addresses" if sun else "Sun map: not found (data/sun/unit_lines.json)")
     if auto_apply.ENABLED:
         print(f"Pushover credentials loaded: {bool(check_units.PUSHOVER_TOKEN and check_units.PUSHOVER_USER)}")
     pushover_problem = None

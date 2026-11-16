@@ -1,0 +1,3 @@
+# Only for rebuilding the sun map (python tools/sun_map/build.py); the watcher doesn't need these.
+shapely>=2.0
+numpy>=1.26
