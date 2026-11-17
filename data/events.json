@@ -3749,5 +3749,140 @@
         "listed_for_seconds": 2690.0
       }
     ]
+  },
+  {
+    "event": "new",
+    "detected_at_utc": "2026-11-17T12:30:00Z",
+    "unit_count": 1,
+    "units": [
+      {
+        "unit_id": "P~NYPC21~B~530~U~07-A",
+        "apartment": "07-A",
+        "address": "530 East 23rd Street",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 5093.64,
+        "income_requirement": 174639.1,
+        "available_date": "2026-10-06T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYPC21~B~530~U~07-A",
+        "data": {
+          "unitSpk": "P~NYPC21~B~530~U~07-A",
+          "unitFloor": "07",
+          "name": "07-A",
+          "property": {
+            "name": "Peter Cooper Village",
+            "propertySpk": "P~102PCV",
+            "commonImages": []
+          },
+          "building": {
+            "address": "530 EAST 23RD STREET",
+            "latitude": "40.7351",
+            "longitude": "-73.9756",
+            "buildingId": "261",
+            "buildingName": "530 EAST 23RD STREET",
+            "transportationDescription": "Get around NYC with a short walk to multiple subways, buses, on-site CitiBike stations, and even the East River Ferry at 20th Street.",
+            "transports": [
+              {
+                "imageUrl": "/media/t02dfmty/l.png",
+                "description": "22_L"
+              },
+              {
+                "imageUrl": "/media/rcvl4pqk/m23.png",
+                "description": "32_M23"
+              },
+              {
+                "imageUrl": "/media/w4rlarll/m9.png",
+                "description": "29_M9"
+              },
+              {
+                "imageUrl": "/media/trsfb4aw/east-river-ferry.jpg",
+                "description": "37_RiverFerry"
+              },
+              {
+                "imageUrl": "/media/1ojhg5wj/citbike.png",
+                "description": "35_CityBike"
+              }
+            ]
+          },
+          "finish": "Platinum",
+          "style": {
+            "id": 522,
+            "name": "150"
+          },
+          "incomeRequirement": 174639.1,
+          "bedrooms": 1,
+          "bathrooms": 1,
+          "sqft": 944,
+          "availableDate": "2026-10-06T00:00:00Z",
+          "price": 5093.64,
+          "unitRates": {
+            "12": 5093.64,
+            "24": 5093.64
+          },
+          "isFlex": false,
+          "floorplan": {
+            "floorplanSvg": "/media/e3el30ku/150.svg",
+            "staticImageUrl": null
+          },
+          "description": null,
+          "virtualTourUrl": null,
+          "version": 7,
+          "amenities": [
+            {
+              "searchCode": "RiverViews",
+              "code": "VBRV",
+              "friendlyDescription": "East River view"
+            },
+            {
+              "searchCode": null,
+              "code": "zCRRE",
+              "friendlyDescription": "Platinum finish"
+            },
+            {
+              "searchCode": null,
+              "code": "ATW2",
+              "friendlyDescription": "Through wall A/C"
+            },
+            {
+              "searchCode": "PS40Code",
+              "code": "PS40",
+              "friendlyDescription": "PS40 School District"
+            },
+            {
+              "searchCode": null,
+              "code": "CC",
+              "friendlyDescription": "Custom closets"
+            },
+            {
+              "searchCode": null,
+              "code": "FS07",
+              "friendlyDescription": "7th floor"
+            }
+          ],
+          "images": []
+        },
+        "qualifies_for_auto_apply": false
+      }
+    ]
+  },
+  {
+    "event": "removed",
+    "detected_at_utc": "2026-11-17T13:02:40Z",
+    "units": [
+      {
+        "unit_id": "P~NYPC21~B~530~U~07-A",
+        "apartment": "07-A",
+        "address": "530 East 23rd Street",
+        "bedrooms": 1,
+        "bathrooms": 1,
+        "price": 5093.64,
+        "income_requirement": 174639.1,
+        "available_date": "2026-10-06T00:00:00Z",
+        "url": "https://affordable-housing.stuytown.com/apartments/units?unitSpk=P~NYPC21~B~530~U~07-A",
+        "first_seen_utc": "2026-11-17T12:30:00Z",
+        "last_seen_utc": "2026-11-17T13:01:30Z",
+        "listed_for_seconds": 1890.0
+      }
+    ]
   }
 ]

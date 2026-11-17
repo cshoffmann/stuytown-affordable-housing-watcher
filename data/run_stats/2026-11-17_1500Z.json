@@ -1,0 +1,126 @@
+{
+  "alerts": {
+    "problem": null
+  },
+  "applier": {
+    "browser_ready_seconds": [
+      0.97
+    ],
+    "direct_submit": {
+      "format_rules": {
+        "buildingAddress": "capitalized",
+        "cellPhone": "digits",
+        "householdSize": "text",
+        "totalAnnualEarnings": "whole",
+        "version": "the unit's",
+        "workPhone": "digits"
+      },
+      "format_site_version": "639298937513594692",
+      "ready": true,
+      "site_version": "639298937513594692",
+      "verified_utc": "2026-11-12T12:15:02.598Z",
+      "why_not": null
+    },
+    "idle_listings_page": {
+      "errors": {},
+      "loads": 45,
+      "requests_on_its_own": [],
+      "watched_minutes": 173.0,
+      "websockets": {}
+    },
+    "mode": "recording only",
+    "profile_warnings": [],
+    "recordings": [
+      {
+        "apartment": "07-A",
+        "detail": "everything required is filled; SUBMIT was NOT pressed (form check only)",
+        "problems": [],
+        "status": "filled",
+        "unit_id": "P~NYPC21~B~530~U~07-A"
+      }
+    ],
+    "workers": 1
+  },
+  "listings_api": {
+    "connections": {
+      "kept-open connection": 1036,
+      "new connection": 44
+    },
+    "distinct_responses": 2,
+    "etag": {
+      "seen": false
+    },
+    "failures": {},
+    "headers": {
+      "access-control-allow-origin": {
+        "*": 1080
+      },
+      "connection": {
+        "close": 43,
+        "keep-alive": 1037
+      },
+      "strict-transport-security": {
+        "max-age=15724800; includeSubDomains": 1080
+      },
+      "x-cache": {
+        "CONFIG_NOCACHE": 1080
+      }
+    },
+    "headers_present": {
+      "x-azure-ref": 1080
+    },
+    "requests": 1080,
+    "response_bytes": {
+      "max": 1694,
+      "min": 42
+    },
+    "response_ms": {
+      "max": 533.0,
+      "median": 29.1,
+      "min": 23.4,
+      "p90": 62.3,
+      "p99": 243.3
+    },
+    "statuses": {
+      "200": 1080
+    },
+    "their_clock_minus_ours_exact_s": {
+      "at_least": -0.024,
+      "at_most": 0.995,
+      "best_guess": 0.485,
+      "consistent": true
+    },
+    "their_clock_minus_ours_s": {
+      "max": -0.0,
+      "median": -0.0,
+      "min": -0.5,
+      "p90": -0.0,
+      "p99": -0.0
+    }
+  },
+  "pace": [],
+  "run": {
+    "ended_utc": "2026-11-17T15:00:00.117Z",
+    "started_utc": "2026-11-17T11:59:01.447Z"
+  },
+  "units": {
+    "P~NYPC21~B~530~U~07-A": {
+      "address": "530 East 23rd Street",
+      "apartment": "07-A",
+      "first_seen_utc": "2026-11-17T12:30:00.000Z",
+      "income_requirement": 174639.1,
+      "last_seen_utc": "2026-11-17T13:01:30Z",
+      "listed_for_seconds": 1890.0,
+      "not_listed_at_utc": "2026-11-17T12:29:50.000Z",
+      "posted_vs_quarter_hour_their_clock_s": [
+        -9.52,
+        0.48
+      ],
+      "posted_within_seconds": 10.0,
+      "qualifies_for_auto_apply": false,
+      "removal_confirmed_utc": "2026-11-17T13:02:40.000Z",
+      "rent": 5093.64,
+      "seen_seconds_after_quarter_hour": 0.0
+    }
+  }
+}
