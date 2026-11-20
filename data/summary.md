@@ -1,6 +1,6 @@
 # StuyTown watcher: summary
 
-Updated Thu Nov 19, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2+ bed <= $2,800**. Direct submit: **ready**.
+Updated Fri Nov 20, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2+ bed <= $2,800**. Direct submit: **ready**.
 
 One line per morning: [daily_log.md](daily_log.md).
 
@@ -12,6 +12,7 @@ Nothing: the latest morning went as it should.
 
 | Date | Units posted at (ET) | Qualified | Auto-apply | Checks | API median / p99 |
 | --- | --- | --- | --- | --- | --- |
+| Fri Nov 20 | 7:30:00 | 0 | - | 1,080 | 15 / 219 ms |
 | Thu Nov 19 | 7:30:10 | 0 | - | 1,080 | 13 / 227 ms |
 | Wed Nov 18 | 7:30:00 | 0 | - | 1,080 | 61 / 289 ms |
 | Tue Nov 17 | 7:30:00 | 0 | - | 1,080 | 29 / 243 ms |
@@ -56,6 +57,7 @@ Nothing: the latest morning went as it should.
 
 | Posted (ET) | Apartment | Floor | Beds | Sq ft | Rent | $/sq ft | Min. income | Finish | Layout | Features | Listed for | Qualified | Auto-apply |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Nov 20 7:30:00 AM | 07-A, 530 East 23rd Street | 7 | 1 | 944 | $5,094 | $5.40 | $174,639 | Platinum | [150](floorplans/150.png) | East River view, wall A/C, PS 40 zone, Custom closets | 32 min | no |  |
 | Nov 19 7:30:10 AM | 10-A, 11 Stuyvesant Oval | 10 | 1 | 771 | $4,878 | $6.33 | $167,252 | Platinum | [102](floorplans/102.png) | dishwasher, wall A/C | 31 min | no |  |
 | Nov 18 7:30:00 AM | 03-C, 615 East 14th Street | 3 | 1 | 745 | $3,756 | $5.04 | $128,780 | Platinum | [107](floorplans/107.png) | Open Kitchen, closet system, wall A/C | 16 min | no |  |
 | Nov 17 7:30:00 AM | 07-A, 530 East 23rd Street | 7 | 1 | 944 | $5,094 | $5.40 | $174,639 | Platinum | [150](floorplans/150.png) | East River view, wall A/C, PS 40 zone, Custom closets | 32 min | no |  |
@@ -98,7 +100,7 @@ Nothing: the latest morning went as it should.
 | 108 | 1 | 764 | 2 | $2,081-$2,125 | living 12’1” x 18’8”, bedroom 15’0” x 12’0”, dining 9’6” x 8’1”, 4 closets | <a href="floorplans/108.png"><img src="floorplans/108.png" width="140" alt="layout 108"></a> |
 | 110 | 1 | 764 | 2 | $2,234 | living 11’11” x 18’8”, bedroom 15’0” x 12’0”, dining 9’6” x 9’4”, 4 closets | <a href="floorplans/110.png"><img src="floorplans/110.png" width="140" alt="layout 110"></a> |
 | 119 | 1 | 749 | 2 | $2,033-$2,078 | living 12’0” x 19’4”, bedroom 12’8” x 14’0”, dining 8’2” x 10’2”, 4 closets | <a href="floorplans/119.png"><img src="floorplans/119.png" width="140" alt="layout 119"></a> |
-| 150 | 1 | 944 | 3 | $4,994-$5,094 | living room | dining room 255” x 151”58” x 60”, bedroom 151” x 138”, 4 closets | <a href="floorplans/150.png"><img src="floorplans/150.png" width="140" alt="layout 150"></a> |
+| 150 | 1 | 944 | 4 | $4,994-$5,094 | living room | dining room 255” x 151”58” x 60”, bedroom 151” x 138”, 4 closets | <a href="floorplans/150.png"><img src="floorplans/150.png" width="140" alt="layout 150"></a> |
 | 123 | 2 | 932 | 1 | $2,644 | living 12’0” x 18’8”, bedroom 15’0” x 12’0”, bedroom 2 9’2” x 14’4”, dining 8’4” x 9’6”, 5 closets | <a href="floorplans/123.png"><img src="floorplans/123.png" width="140" alt="layout 123"></a> |
 | 124 | 2 | 932 | 2 | $3,263-$4,503 | living 12’0” x 18’8”, bedroom 11’11” x 15’0”, bedroom 2 9’2” x 14’3”, dining 9’6” x 8’2”, 5 closets | <a href="floorplans/124.png"><img src="floorplans/124.png" width="140" alt="layout 124"></a> |
 | 125 | 2 | 948 | 1 | $2,648 | living 12’0” x 18’8”, bedroom 15’0” x 12’0”, bedroom 2 9’2” x 14’4”, dining 9’2” x 9’6”, 5 closets | <a href="floorplans/125.png"><img src="floorplans/125.png" width="140" alt="layout 125"></a> |
@@ -108,11 +110,11 @@ Nothing: the latest morning went as it should.
 
 ## Patterns
 
-- **Posting times** (ET, all days): 7:15 ×13, 7:30 ×7, 8:00 ×6, 8:15 ×3, 8:30 ×2
-- **Units by weekday:** Mon 6, Tue 5, Wed 7, Thu 6, Fri 7
+- **Posting times** (ET, all days): 7:15 ×13, 7:30 ×8, 8:00 ×6, 8:15 ×3, 8:30 ×2
+- **Units by weekday:** Mon 6, Tue 5, Wed 7, Thu 6, Fri 8
 - **How long units at or under your limit stay listed:** median 40.0 s (fastest 23.0 s, 8 units)
-- **How long units over your limit stay listed:** median 18 min (fastest 39.0 s, 13 units)
-- **When on the quarter hour they're posted** (their clock, s): -0.14 to +0.12, -0.14 to +0.12, -0.14 to +0.11, -0.15 to +0.10, -9.52 to +0.48, -9.52 to +0.48, -9.53 to +0.47, +0.49 to +10.49
+- **How long units over your limit stay listed:** median 25 min (fastest 39.0 s, 14 units)
+- **When on the quarter hour they're posted** (their clock, s): -0.14 to +0.12, -0.14 to +0.11, -0.15 to +0.10, -9.52 to +0.48, -9.52 to +0.48, -9.53 to +0.47, +0.49 to +10.49, -9.51 to +0.49
 - **Our applications:** 2 sent (2 browser); median 1.1 s from the unit appearing to sending
 - **All auto-apply results so far:** 5 submitted
 
@@ -121,15 +123,15 @@ Nothing: the latest morning went as it should.
 | Code | Means | Units |
 | --- | --- | --- |
 | IBSS | Stainless steel appliances | 16 |
-| PS40 | PS40 School District | 10 |
-| ATW2 | Through wall A/C | 8 |
+| PS40 | PS40 School District | 11 |
+| ATW2 | Through wall A/C | 9 |
 | DW18 | Dishwasher | 5 |
 | NFF | Natural finish wood flooring | 4 |
+| CC | Custom closets | 3 |
 | ELFA | ELFA closet systems | 3 |
 | MAVM | Renovated bathroom | 3 |
-| CC | Custom closets | 2 |
+| VBRV | East River view | 3 |
 | VBOV | Oval Views | 2 |
-| VBRV | East River view | 2 |
 | ATW3 | 3 Through wall A/C Units | 1 |
 | DTVW | Downtown view | 1 |
 | OKU | Open kitchen with breakfast bar | 1 |
@@ -137,10 +139,10 @@ Nothing: the latest morning went as it should.
 | PBAC | Extra closet space | 1 |
 | PBGK | Galley kitchen | 1 |
 | PWF | Wood flooring | 1 |
-| zCRRE | Platinum finish | 9 |
+| zCRRE | Platinum finish | 10 |
 | FS06 | 6th floor | 5 |
+| FS07 | 7th floor | 5 |
 | FS10 | 10th floor | 5 |
-| FS07 | 7th floor | 4 |
 | zMET | Classic finish | 4 |
 | FS02 | 2nd floor | 3 |
 | FS03 | 3rd floor | 3 |

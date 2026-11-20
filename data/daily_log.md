@@ -10,3 +10,4 @@ One line per morning: units listed between 7 and 10 AM.
 | Tue 2026-11-17 | 1 | 07:30 Apt 07-A, 530 East 23rd Street, 1 bed, $5,094 |
 | Wed 2026-11-18 | 1 | 07:30 Apt 03-C, 615 East 14th Street, 1 bed, $3,756 |
 | Thu 2026-11-19 | 1 | 07:30 Apt 10-A, 11 Stuyvesant Oval, 1 bed, $4,878 |
+| Fri 2026-11-20 | 1 | 07:30 Apt 07-A, 530 East 23rd Street, 1 bed, $5,094 |
