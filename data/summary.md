@@ -1,6 +1,6 @@
 # StuyTown watcher: summary
 
-Updated Fri Nov 20, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2+ bed <= $2,800**. Direct submit: **ready**.
+Updated Sat Nov 21, 10:00 AM ET. Auto-apply rent limits: **1 bed <= $2,300, 2+ bed <= $2,800**. Direct submit: **ready**.
 
 One line per morning: [daily_log.md](daily_log.md).
 
@@ -12,6 +12,7 @@ Nothing: the latest morning went as it should.
 
 | Date | Units posted at (ET) | Qualified | Auto-apply | Checks | API median / p99 |
 | --- | --- | --- | --- | --- | --- |
+| Sat Nov 21 | none | 0 | - | 1,080 | 18 / 210 ms |
 | Fri Nov 20 | 7:30:00 | 0 | - | 1,080 | 15 / 219 ms |
 | Thu Nov 19 | 7:30:10 | 0 | - | 1,080 | 13 / 227 ms |
 | Wed Nov 18 | 7:30:00 | 0 | - | 1,080 | 61 / 289 ms |
