@@ -39,6 +39,14 @@ APPLY_SITE = REPO_ROOT / "tests" / "fixtures" / "apply_site"
 PERSONAL = ("Jane", "Doe", "jane.doe@example.com", "212-555-0123", "Example Street", "95000", "10009")
 
 
+def setUpModule():
+    # The fake units aren't real apartments, so the sun-map filter is off for
+    # these tests; SunFilterTests below switch it back on.
+    patcher = mock.patch.object(auto_apply, "SUN_CONFIDENCE", "any")
+    patcher.start()
+    unittest.addModuleCleanup(patcher.stop)
+
+
 def unit(apartment="5A", price=2850.0, income_requirement=60000, **extra):
     return {
         **FAKE_UNITS["5A"], "unitSpk": f"P~TEST~U~{apartment}", "name": apartment,
@@ -127,6 +135,44 @@ class EligibilityTests(unittest.TestCase):
         # The day is New York's: 11pm ET on Oct 10 is already Oct 11 in UTC.
         late = {"attempts": [{"status": "submitted", "at_utc": "2026-10-11T03:00:00Z"}]}
         self.assertIn("already applied", auto_apply.already_handled(late, today=oct_10))
+
+
+class SunFilterTests(unittest.TestCase):
+    """Auto-apply only takes units whose direction the sun map is sure of (or thinks likely)."""
+
+    def real(self, address, apartment, price=2000):
+        return unit(apartment, price=price, building={"address": address}, name=apartment)
+
+    def setUp(self):
+        for name, value in (("SUN_CONFIDENCE", "likely"), ("MIN_SUN_SCORE", None), ("RENT_RULES", {}),
+                            ("MAX_RENT", 3000)):
+            patcher = mock.patch.object(auto_apply, name, value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def test_sure_and_likely_lines_qualify_either_way_ones_dont(self):
+        self.assertIsNone(auto_apply.skip_reason(self.real("330 FIRST AVENUE", "07-G"), EXAMPLE_PROFILE))  # sure
+        self.assertIsNone(auto_apply.skip_reason(self.real("545 EAST 14TH STREET", "06-H"), EXAMPLE_PROFILE))  # likely
+        why = auto_apply.skip_reason(self.real("522 EAST 20TH STREET", "06-C"), EXAMPLE_PROFILE)  # either way
+        self.assertIn("isn't certain enough (either way", why)
+        self.assertIn("not in the sun map", auto_apply.skip_reason(self.real("9 NOWHERE STREET", "06-C"), EXAMPLE_PROFILE))
+
+    def test_rent_is_still_checked_first(self):
+        self.assertIn("over $3,000.00", auto_apply.skip_reason(self.real("330 FIRST AVENUE", "07-G", 3500), EXAMPLE_PROFILE))
+
+    def test_sure_only_and_off(self):
+        with mock.patch.object(auto_apply, "SUN_CONFIDENCE", "sure"):
+            self.assertIn("(likely;", auto_apply.skip_reason(self.real("545 EAST 14TH STREET", "06-H"), EXAMPLE_PROFILE))
+        with mock.patch.object(auto_apply, "SUN_CONFIDENCE", "any"):
+            self.assertIsNone(auto_apply.skip_reason(self.real("522 EAST 20TH STREET", "06-C"), EXAMPLE_PROFILE))
+            self.assertEqual(auto_apply.sun_filter_text(), "")
+
+    def test_a_minimum_sun_score(self):
+        with mock.patch.object(auto_apply, "MIN_SUN_SCORE", 50.0):
+            self.assertEqual(auto_apply.sun_filter_text(), "direction sure or likely, sun score 50+")
+            self.assertIsNone(auto_apply.skip_reason(self.real("330 FIRST AVENUE", "07-G"), EXAMPLE_PROFILE))  # 84
+            self.assertIn("sun score 0 is under 50", auto_apply.skip_reason(self.real("444 EAST 20TH STREET", "07-C"),
+                                                                             EXAMPLE_PROFILE))
 
 
 class ProfileTests(unittest.TestCase):

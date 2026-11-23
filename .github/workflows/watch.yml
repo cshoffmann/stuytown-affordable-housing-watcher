@@ -86,6 +86,11 @@ jobs:
           AUTO_APPLY_MODE: ${{ vars.AUTO_APPLY_MODE }}
           AUTO_APPLY_RULES: ${{ vars.AUTO_APPLY_RULES }}
           AUTO_APPLY_MAX_RENT: ${{ vars.AUTO_APPLY_MAX_RENT }}
+          # Sun map filter (unit_sun.py): only units whose direction is "sure" or
+          # "likely" by default; set to sure, or any to switch it off. Optional
+          # AUTO_APPLY_MIN_SUN_SCORE: the lowest sun score (0-100) to apply to.
+          AUTO_APPLY_SUN_CONFIDENCE: ${{ vars.AUTO_APPLY_SUN_CONFIDENCE }}
+          AUTO_APPLY_MIN_SUN_SCORE: ${{ vars.AUTO_APPLY_MIN_SUN_SCORE }}
           AUTO_APPLY_SELFTEST: ${{ inputs.auto_apply_selftest }}
           SITE_CHECK: ${{ inputs.site_check }}
         run: |

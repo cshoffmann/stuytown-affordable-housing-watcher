@@ -100,6 +100,15 @@ ENABLED = _MODE_SETTING in ("on", "true", "yes", "1")
 _MAX_RENT_SETTING = os.environ.get("AUTO_APPLY_MAX_RENT", "").strip()
 MAX_RENT = check_units.number(_MAX_RENT_SETTING)  # $/month, inclusive; None = not set
 
+# The sun map (unit_sun.py, data/sun) as a filter: only apply to units whose
+# direction it knows. AUTO_APPLY_SUN_CONFIDENCE: "likely" (the default: sure or
+# likely), "sure" (sure only) or "any" (no filter). AUTO_APPLY_MIN_SUN_SCORE:
+# optional, the lowest sun score (0-100) on the unit's floor to apply to.
+SUN_LEVELS = {"sure": ("sure",), "likely": ("sure", "likely"), "any": None}
+_SUN_SETTING = os.environ.get("AUTO_APPLY_SUN_CONFIDENCE", "").strip().lower() or "likely"
+SUN_CONFIDENCE = _SUN_SETTING if _SUN_SETTING in SUN_LEVELS else "likely"
+MIN_SUN_SCORE = check_units.number(os.environ.get("AUTO_APPLY_MIN_SUN_SCORE", "").strip())
+
 parse_rules = check_units.parse_rules  # "1:2200, 2:2700" -> ({1: 2200.0, 2: 2700.0}, [])
 RENT_RULES, RULE_PROBLEMS = check_units.parse_rules(os.environ.get("AUTO_APPLY_RULES", ""))  # {bedrooms: $/month}
 
@@ -340,12 +349,16 @@ def startup_check() -> None:
         print("Auto-apply: off -- rehearsal only: the first listed unit's form is filled in and checked; "
               "SUBMIT is never pressed and no alerts are sent (set AUTO_APPLY_MODE to on to apply)")
         return
+    if _SUN_SETTING not in SUN_LEVELS:
+        print(f"WARNING: AUTO_APPLY_SUN_CONFIDENCE={_SUN_SETTING!r} isn't sure, likely or any -- using likely.")
     if RULE_PROBLEMS:
         print(f"WARNING: AUTO_APPLY_RULES: couldn't read {', '.join(RULE_PROBLEMS)!r} "
               "(write it like 1:2200, 2:2700) -- ignoring that part.")
     profile = _profile_for_run()
     if profile:
-        print(f"Auto-apply: ON for {limits_text()} a month (applicant profile loaded)")
+        sun = sun_filter_text()
+        print(f"Auto-apply: ON for {limits_text()} a month" + (f", {sun} (sun map)" if sun else "")
+              + " (applicant profile loaded)")
         for warning in profile_warnings(profile):
             print(f"   WARNING: {warning} -- the site would refuse the application")
 
@@ -383,6 +396,32 @@ def skip_reason(unit: dict, profile: dict) -> str | None:
     if income is not None and required is not None and income < required:
         # Deliberately doesn't say what your income is: this goes in the log.
         return f"your annual income is below its ${required:,.0f} minimum"
+    return sun_skip_reason(unit)
+
+
+def sun_filter_text() -> str:
+    """'direction sure or likely, sun score 50+' -- '' when the sun filter is off."""
+    parts = []
+    if SUN_LEVELS[SUN_CONFIDENCE]:
+        parts.append("direction " + " or ".join(SUN_LEVELS[SUN_CONFIDENCE]))
+    if MIN_SUN_SCORE is not None:
+        parts.append(f"sun score {MIN_SUN_SCORE:g}+")
+    return ", ".join(parts)
+
+
+def sun_skip_reason(unit: dict) -> str | None:
+    """Why the sun map rules this unit out, or None. A dictionary lookup (the
+    map is read at start-up), so it costs nothing next to applying."""
+    allowed = SUN_LEVELS[SUN_CONFIDENCE]
+    if not allowed and MIN_SUN_SCORE is None:
+        return None
+    info = unit_sun.lookup(unit)
+    if info is None:
+        return "not in the sun map, so which way it faces isn't known"
+    if allowed and info["confidence"] not in allowed:
+        return f"which way it faces isn't certain enough ({info['confidence']}; AUTO_APPLY_SUN_CONFIDENCE={SUN_CONFIDENCE})"
+    if MIN_SUN_SCORE is not None and info["sun_score"] < MIN_SUN_SCORE:
+        return f"sun score {info['sun_score']} is under {MIN_SUN_SCORE:g} (AUTO_APPLY_MIN_SUN_SCORE)"
     return None
 
 

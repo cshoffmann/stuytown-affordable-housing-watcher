@@ -46,6 +46,11 @@ limits: `1:2300` means **1 bedroom or more for $2,300 or less**;
 `1:2300, 2:2800` gives 2+ bedrooms their own limit. `AUTO_APPLY_MAX_RENT`, if
 set, covers smaller units (studios).
 
+The sun map is a filter too: a unit qualifies only when the map knows which
+way it faces, i.e. its line is *sure* or *likely*, not *either way*
+(`AUTO_APPLY_SUN_CONFIDENCE`: `likely` by default, or `sure`, or `any` to switch
+it off). `AUTO_APPLY_MIN_SUN_SCORE` can also require a minimum sun score.
+
 - `AUTO_APPLY_MODE=off`: nothing is ever submitted and no alerts are sent. It
   **rehearses**: the first unit listed each morning gets its form opened and
   filled in from your profile, and every field is checked. **SUBMIT is never
@@ -143,6 +148,8 @@ Settings → Secrets and variables → Actions.
 | Variable `AUTO_APPLY_MODE` | `on` or `off` |
 | Variable `AUTO_APPLY_RULES` | Rent limits by bedrooms, $/month, inclusive: `1:2300` = 1+ bedrooms at $2,300 or less; `1:2300, 2:2800` gives 2+ beds their own limit |
 | Variable `AUTO_APPLY_MAX_RENT` | Optional: one limit for sizes the rules don't list |
+| Variable `AUTO_APPLY_SUN_CONFIDENCE` | Sun-map filter: `likely` (default) applies only to units whose direction is *sure* or *likely*; `sure` takes sure only; `any` switches it off |
+| Variable `AUTO_APPLY_MIN_SUN_SCORE` | Optional: also skip units whose sun score (0–100) on their floor is under this |
 | Secret `APPLICANT_PROFILE` | Your details as one JSON document (`applicant_profile.example.json` shows every key). Keep a copy: GitHub never shows it again |
 | Secrets `PUSHOVER_TOKEN`, `PUSHOVER_USER` | Pushover app token and user key |
 
