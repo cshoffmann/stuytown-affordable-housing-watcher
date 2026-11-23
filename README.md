@@ -46,6 +46,18 @@ limits: `1:2300` means **1 bedroom or more for $2,300 or less**;
 `1:2300, 2:2800` gives 2+ bedrooms their own limit. `AUTO_APPLY_MAX_RENT`, if
 set, covers smaller units (studios).
 
+The sun map is a filter too. By default a unit qualifies only when all
+three hold:
+
+- **Its direction is known:** the line is *sure* or *likely*, not *either way*
+  (`AUTO_APPLY_SUN_CONFIDENCE`).
+- **It gets real sun:** its sun score on its floor is at least **25**
+  (`AUTO_APPLY_MIN_SUN_SCORE`). Below 25 a typical line gets under half an hour of
+  morning sun and almost none in winter.
+- **No windows onto First Ave or 23rd St** (`AUTO_APPLY_AVOID_STREETS`).
+  14th St, 20th St and Avenue C are fine unless you add them. A window counts
+  as onto a street when nothing stands between it and that street.
+
 - `AUTO_APPLY_MODE=off`: nothing is ever submitted and no alerts are sent. It
   **rehearses**: the first unit listed each morning gets its form opened and
   filled in from your profile, and every field is checked. **SUBMIT is never
@@ -74,9 +86,65 @@ after appearing, which is why applying comes before everything else.
 | `data/run_stats/<date>.json` | Each morning: checks, API health, when each unit was posted and how long it lasted |
 | `data/applications.json`, `data/apply_runs/` | Each application's result and timeline; redacted recordings of the form |
 | `data/floorplans/` | Each layout's floorplan (SVG + PNG) and room sizes |
+| [`data/sun/`](data/sun/) | The sun map: which way every apartment line faces and its sun by floor (see below) |
 
 Nothing personal is committed (the repo is public). Your details are
 replaced with their key names, and tokens and API keys are scrubbed.
+
+## Sun map: how sunny a unit is, and which way it faces
+
+Every unit in the alerts and the summary gets a line like
+
+    Sun 84/100, top 2% on floor 7, #1 of 8 here · faces ESE + SSW (sure) · mornings: strong (4.3 h), afternoons 4.9 h, Dec 21 4 h
+
+- **Sun score (0–100)** is the number to compare by: all-day sun, with mornings
+  counting more. It's morning + 0.75 × afternoon + a bonus for having both,
+  measured in "full-sun hours":
+  - sun straight into the window counts fully; sun skimming along the wall barely counts
+  - October–March count 1.5×, because the dark months are when light matters most
+  - the courtyard trees take sun off floors 1–5, more in summer
+
+  100 means the sunniest apartments in the complex.
+- **Top 2%** compares the line with every apartment line on the same floor.
+  **#1 of 8 here** is its place in its own building.
+- **Faces** gives the window directions. Stuy Town's grid is turned 29°, so
+  "south" windows face SSW and "east" ones ESE; ESE gets the morning sun.
+  The label says how sure the direction is:
+  - *sure*: the building's own 2006 CBRE floor plan, or a building of the same design confirmed by several listings
+  - *likely*: one direction has 80%+ of the odds
+  - *either way*: two answers are about equally good, often north side or south side
+- **When it isn't sure**, the score is the odds-weighted average, with the
+  worst-to-best range ("could be 17–83") and the chance of 3+ hours of
+  morning sun.
+- **Hours** are plain hours of direct sun on an average day (the 21st of every
+  month), before and after noon, plus Dec 21, the shortest day.
+
+An apartment number is floor + line (07-F: floor 7, line F). Every apartment
+with the same letter in a building sits in the same spot, so the letter
+decides the direction.
+
+- **Map:** download [`data/sun/sun_map.html`](data/sun/sun_map.html) and open
+  it in a browser. You can look up any unit, see each building's lines
+  floor by floor, and rank every line for your floors (by score, or by worst
+  case if you'd rather not gamble on an *either way* line).
+- **Lookup:** `python unit_sun.py 287 AVENUE C 07-F`, or `unit_sun.describe(unit)`
+  in code. The data is [`data/sun/unit_lines.json`](data/sun/unit_lines.json);
+  [`data/sun/units_by_floor.csv`](data/sun/units_by_floor.csv) has every line and floor (score, rank, hours) for a spreadsheet.
+- **Getting sharper:**
+  - Each morning the watcher saves the market-rate listings
+    (`data/sun/market_seen.json`).
+  - The **Rebuild sun map** workflow uses them every Sunday, or whenever you
+    run it from the Actions tab. It commits only when an answer changed.
+  - When you confirm a line yourself (a viewing, the leasing office), record it:
+
+        python tools/sun_map/confirm.py "1 Stuyvesant Oval" 07-F --faces ENE --oval yes
+
+    One confirmed line fixes every other letter in that building at the next
+    rebuild.
+- **Buildings with no plan** (the Oval ring, 521–525 E 14th, 522–526 E 20th,
+  605–625 E 14th, 622–628 E 20th, 315–325 Ave C) are worked out from their
+  outline and the listings' Oval / river / Empire State view tags, so their
+  answers are odds.
 
 ## Settings
 
@@ -87,6 +155,9 @@ Settings → Secrets and variables → Actions.
 | Variable `AUTO_APPLY_MODE` | `on` or `off` |
 | Variable `AUTO_APPLY_RULES` | Rent limits by bedrooms, $/month, inclusive: `1:2300` = 1+ bedrooms at $2,300 or less; `1:2300, 2:2800` gives 2+ beds their own limit |
 | Variable `AUTO_APPLY_MAX_RENT` | Optional: one limit for sizes the rules don't list |
+| Variable `AUTO_APPLY_SUN_CONFIDENCE` | Sun-map filter: `likely` (default) applies only to units whose direction is *sure* or *likely*; `sure` takes sure only; `any` lets guesses through |
+| Variable `AUTO_APPLY_MIN_SUN_SCORE` | Lowest sun score (0–100) on the unit's floor; default `25` (below that, almost no direct sun); `0` switches it off. 50+ is roughly the top fifth |
+| Variable `AUTO_APPLY_AVOID_STREETS` | Streets its windows mustn't face; default `First Ave, 23rd St`; `none` switches it off. Names: First Ave, 14th St, 20th St, 23rd St, Avenue C |
 | Secret `APPLICANT_PROFILE` | Your details as one JSON document (`applicant_profile.example.json` shows every key). Keep a copy: GitHub never shows it again |
 | Secrets `PUSHOVER_TOKEN`, `PUSHOVER_USER` | Pushover app token and user key |
 
@@ -148,6 +219,9 @@ python site_check.py                    # the live site vs the watcher
 | `apply_recorder.py` | Redacted recordings of the form |
 | `run_stats.py`, `summary.py` | Each morning's stats; the summary page |
 | `floorplans.py` | Each layout's floorplan (SVG, PNG, room sizes) |
+| `unit_sun.py` | Which way a unit faces and its sun (reads `data/sun/`); saves the market listings it learns from |
+| `tools/sun_map/` | Builds the sun map: `build.py`, `confirm.py` (record a line you've confirmed), its inputs (OpenStreetMap outlines, CBRE plan labels, your notes) and the page template |
 | `site_check.py` | The live site vs the watcher |
 | `background.py` | The alert and logging workers |
 | `.github/workflows/watch.yml` | The workflow |
+| `.github/workflows/sun_map.yml` | Rebuild sun map (Sundays, or by hand from the Actions tab) |

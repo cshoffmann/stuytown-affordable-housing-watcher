@@ -10,7 +10,8 @@ read on GitHub (or your phone) -- rewritten at the end of every morning.
     Mornings       one line per morning: when units were posted, how many
                    qualified, what auto-apply did, how the API held up
     Units          every unit seen (newest first): posted, floor, size, rent,
-                   finish, layout, features, how long it stayed listed, what
+                   finish, layout, features, which way it faces and its sun
+                   (unit_sun.py, the sun map), how long it stayed listed, what
                    auto-apply did
     Layouts        each layout seen, with its floorplan and room sizes
     Patterns       posting times, how long units last, how fast we are
@@ -32,6 +33,8 @@ import statistics
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
+
+import unit_sun
 
 SUMMARY_FILE = "data/summary.md"
 UNITS_SHOWN_DAYS = 90
@@ -252,8 +255,8 @@ def render(events: list, stats: list, applications: dict, max_rent: float | None
     cutoff = now.date().toordinal() - UNITS_SHOWN_DAYS
     lines += ["", f"## Units (last {UNITS_SHOWN_DAYS} days, newest first)", "",
               "| Posted (ET) | Apartment | Floor | Beds | Sq ft | Rent | $/sq ft | Min. income | Finish "
-              "| Layout | Features | Listed for | Qualified | Auto-apply |",
-              "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+              "| Layout | Features | Sun score · rank · faces · h am/pm | Listed for | Qualified | Auto-apply |",
+              "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     for row in rows:
         if not row["posted"] or row["posted"].date().toordinal() < cutoff:
             continue
@@ -265,6 +268,7 @@ def render(events: list, stats: list, applications: dict, max_rent: float | None
             *unit_cells(row),
             f"${row['income']:,.0f}" if row["income"] else "?",
             *unit_detail_cells(row),
+            unit_sun.short(row["data"]) or "?",
             listed, "yes" if _qualifies(row, limits) else "no", _auto_apply_text(row, applications)]) + " |")
 
     lines += ["", "## Layouts", ""] + layouts_section(rows)

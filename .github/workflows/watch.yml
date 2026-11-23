@@ -86,6 +86,12 @@ jobs:
           AUTO_APPLY_MODE: ${{ vars.AUTO_APPLY_MODE }}
           AUTO_APPLY_RULES: ${{ vars.AUTO_APPLY_RULES }}
           AUTO_APPLY_MAX_RENT: ${{ vars.AUTO_APPLY_MAX_RENT }}
+          # Sun map filter (unit_sun.py), all optional -- unset means the defaults:
+          # direction sure or likely, sun score 25+, no windows onto First Ave or
+          # 23rd St. See the README's Settings table.
+          AUTO_APPLY_SUN_CONFIDENCE: ${{ vars.AUTO_APPLY_SUN_CONFIDENCE }}
+          AUTO_APPLY_MIN_SUN_SCORE: ${{ vars.AUTO_APPLY_MIN_SUN_SCORE }}
+          AUTO_APPLY_AVOID_STREETS: ${{ vars.AUTO_APPLY_AVOID_STREETS }}
           AUTO_APPLY_SELFTEST: ${{ inputs.auto_apply_selftest }}
           SITE_CHECK: ${{ inputs.site_check }}
         run: |

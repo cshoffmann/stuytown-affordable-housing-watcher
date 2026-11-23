@@ -93,11 +93,52 @@ import apply_recorder
 import background
 import check_units
 import direct_submit
+import unit_sun
 
 _MODE_SETTING = os.environ.get("AUTO_APPLY_MODE", "").strip().lower()
 ENABLED = _MODE_SETTING in ("on", "true", "yes", "1")
 _MAX_RENT_SETTING = os.environ.get("AUTO_APPLY_MAX_RENT", "").strip()
 MAX_RENT = check_units.number(_MAX_RENT_SETTING)  # $/month, inclusive; None = not set
+
+# The sun map (unit_sun.py, data/sun) as a filter, to skip units with poor
+# light or windows onto streets you don't want:
+#   AUTO_APPLY_SUN_CONFIDENCE  "likely" (default: the direction is sure or likely),
+#                              "sure" (sure only) or "any" (direction may be a guess)
+#   AUTO_APPLY_MIN_SUN_SCORE   lowest sun score (0-100) on the unit's floor; default 25,
+#                              below which there's almost no direct sun; 0 = off
+#   AUTO_APPLY_AVOID_STREETS   streets its windows mustn't face; default "First Ave,
+#                              23rd St"; "none" = off. Also: 14th St, 20th St, Avenue C
+SUN_LEVELS = {"sure": ("sure",), "likely": ("sure", "likely"), "any": None}
+_SUN_SETTING = os.environ.get("AUTO_APPLY_SUN_CONFIDENCE", "").strip().lower() or "likely"
+SUN_CONFIDENCE = _SUN_SETTING if _SUN_SETTING in SUN_LEVELS else "likely"
+DEFAULT_MIN_SUN_SCORE = 25
+_MIN_SUN_SETTING = os.environ.get("AUTO_APPLY_MIN_SUN_SCORE", "").strip()
+MIN_SUN_SCORE = check_units.number(_MIN_SUN_SETTING) if _MIN_SUN_SETTING else DEFAULT_MIN_SUN_SCORE
+MIN_SUN_SCORE = MIN_SUN_SCORE or None  # 0 = off
+STREET_NAMES = {"first ave": "First Ave", "1st ave": "First Ave", "first avenue": "First Ave", "1st avenue": "First Ave",
+                "23rd st": "23rd St", "23rd street": "23rd St", "14th st": "14th St", "14th street": "14th St",
+                "20th st": "20th St", "20th street": "20th St", "avenue c": "Avenue C", "ave c": "Avenue C",
+                "fdr": "Avenue C", "fdr drive": "Avenue C"}
+
+
+def parse_streets(text: str) -> tuple:
+    """'1st Ave, 23rd Street' -> (['First Ave', '23rd St'], []); 'none' -> ([], []). Second: what couldn't be read."""
+    names, problems = [], []
+    for part in re.split(r"[,;/]+", text or ""):
+        key = re.sub(r"\s+", " ", part).strip().lower().rstrip(".")
+        if not key or key in ("none", "off", "any"):
+            continue
+        if key in STREET_NAMES:
+            names.append(STREET_NAMES[key])
+        else:
+            problems.append(part.strip())
+    return sorted(set(names)), problems
+
+
+_AVOID_SETTING = os.environ.get("AUTO_APPLY_AVOID_STREETS")
+AVOID_STREETS, STREET_PROBLEMS = parse_streets("First Ave, 23rd St" if _AVOID_SETTING is None or not _AVOID_SETTING.strip()
+                                               else _AVOID_SETTING)
+STREET_RISK = 0.25  # skip when there's this much chance a window faces an avoided street
 
 parse_rules = check_units.parse_rules  # "1:2200, 2:2700" -> ({1: 2200.0, 2: 2700.0}, [])
 RENT_RULES, RULE_PROBLEMS = check_units.parse_rules(os.environ.get("AUTO_APPLY_RULES", ""))  # {bedrooms: $/month}
@@ -339,12 +380,19 @@ def startup_check() -> None:
         print("Auto-apply: off -- rehearsal only: the first listed unit's form is filled in and checked; "
               "SUBMIT is never pressed and no alerts are sent (set AUTO_APPLY_MODE to on to apply)")
         return
+    if _SUN_SETTING not in SUN_LEVELS:
+        print(f"WARNING: AUTO_APPLY_SUN_CONFIDENCE={_SUN_SETTING!r} isn't sure, likely or any -- using likely.")
+    if STREET_PROBLEMS:
+        print(f"WARNING: AUTO_APPLY_AVOID_STREETS: couldn't read {', '.join(STREET_PROBLEMS)!r} "
+              "(streets: First Ave, 14th St, 20th St, 23rd St, Avenue C) -- ignoring that part.")
     if RULE_PROBLEMS:
         print(f"WARNING: AUTO_APPLY_RULES: couldn't read {', '.join(RULE_PROBLEMS)!r} "
               "(write it like 1:2200, 2:2700) -- ignoring that part.")
     profile = _profile_for_run()
     if profile:
-        print(f"Auto-apply: ON for {limits_text()} a month (applicant profile loaded)")
+        sun = sun_filter_text()
+        print(f"Auto-apply: ON for {limits_text()} a month" + (f", {sun} (sun map)" if sun else "")
+              + " (applicant profile loaded)")
         for warning in profile_warnings(profile):
             print(f"   WARNING: {warning} -- the site would refuse the application")
 
@@ -382,6 +430,39 @@ def skip_reason(unit: dict, profile: dict) -> str | None:
     if income is not None and required is not None and income < required:
         # Deliberately doesn't say what your income is: this goes in the log.
         return f"your annual income is below its ${required:,.0f} minimum"
+    return sun_skip_reason(unit)
+
+
+def sun_filter_text() -> str:
+    """'direction sure or likely, sun score 50+' -- '' when the sun filter is off."""
+    parts = []
+    if SUN_LEVELS[SUN_CONFIDENCE]:
+        parts.append("direction " + " or ".join(SUN_LEVELS[SUN_CONFIDENCE]))
+    if MIN_SUN_SCORE is not None:
+        parts.append(f"sun score {MIN_SUN_SCORE:g}+")
+    if AVOID_STREETS:
+        parts.append("not facing " + " or ".join(AVOID_STREETS))
+    return ", ".join(parts)
+
+
+def sun_skip_reason(unit: dict) -> str | None:
+    """Why the sun map rules this unit out, or None. A dictionary lookup (the
+    map is read at start-up), so it costs nothing next to applying."""
+    allowed = SUN_LEVELS[SUN_CONFIDENCE]
+    if not allowed and MIN_SUN_SCORE is None and not AVOID_STREETS:
+        return None
+    info = unit_sun.lookup(unit)
+    if info is None:
+        return "not in the sun map, so which way it faces isn't known"
+    if allowed and info["confidence"] not in allowed:
+        return f"which way it faces isn't certain enough ({info['confidence']}; AUTO_APPLY_SUN_CONFIDENCE={SUN_CONFIDENCE})"
+    for street in AVOID_STREETS:
+        p = info.get("p_streets", {}).get(street, 0)
+        if p >= STREET_RISK:
+            odds = "" if p >= 0.95 else f" ({p:.0%} chance)"
+            return f"its windows face {street}{odds} (AUTO_APPLY_AVOID_STREETS)"
+    if MIN_SUN_SCORE is not None and info["sun_score"] < MIN_SUN_SCORE:
+        return f"sun score {info['sun_score']} is under {MIN_SUN_SCORE:g}: poor light (AUTO_APPLY_MIN_SUN_SCORE)"
     return None
 
 
@@ -1915,7 +1996,9 @@ def result_alert(unit: dict, attempt: Attempt, link: str | None = None) -> dict:
         title = f"[FORM CHECK] Filled the form for {label} - not submitted"
     else:
         title = f"Auto-apply failed: {label} - apply yourself now"
-    lines = [check_units._linked_line(unit)] + ([html.escape(facts)] if facts else []) + [html.escape(attempt.detail)]
+    sun = unit_sun.describe(unit)  # which way it faces, how much sun (data/sun, the sun map)
+    lines = ([check_units._linked_line(unit)] + ([html.escape(facts)] if facts else []) + ([html.escape(sun)] if sun else [])
+             + [html.escape(attempt.detail)])
     if attempt.problems:
         lines.append("Empty or not taking the value: " + html.escape("; ".join(attempt.problems)))
     if attempt.site_messages:
