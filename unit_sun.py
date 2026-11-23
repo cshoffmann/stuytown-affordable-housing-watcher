@@ -154,6 +154,9 @@ def lookup(unit_or_address, apartment=None, path: str = LINES_FILE) -> dict | No
             "faces": ranked[0]["faces"] if ranked else [],
             "p_faces": info.get("p_faces", {}), "p_oval": info.get("p_oval", 0.0), "p_street": info.get("p_street", 0.0),
             "street": sorted({st for o in ranked for st in o["street"]}) if info.get("p_street", 0) >= 0.3 else [],
+            # chance each street is outside one of its windows: {"First Ave": 0.5}
+            "p_streets": {st: round(sum(o["p"] for o in ranked if st in o["street"]), 2)
+                          for st in sorted({st for o in ranked for st in o["street"]})},
             "sun_score": score, "percentile": info["pct"][used_floor - 1],
             "top_percent": max(1, 100 - info["pct"][used_floor - 1]),
             "rank_text": rank_text(info["pct"][used_floor - 1]),
