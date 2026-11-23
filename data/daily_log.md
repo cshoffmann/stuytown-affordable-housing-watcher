@@ -13,3 +13,4 @@ One line per morning: units listed between 7 and 10 AM.
 | Fri 2026-11-20 | 1 | 07:30 Apt 07-A, 530 East 23rd Street, 1 bed, $5,094 |
 | Sat 2026-11-21 | 0 | none |
 | Sun 2026-11-22 | 0 | none |
+| Mon 2026-11-23 | 1 | 07:30 Apt 11-D, 625 East 14th Street, 1 bed, $4,293 |
