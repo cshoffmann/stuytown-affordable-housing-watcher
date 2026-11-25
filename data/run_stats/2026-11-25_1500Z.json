@@ -1,0 +1,99 @@
+{
+  "alerts": {
+    "problem": null
+  },
+  "applier": {
+    "browser_ready_seconds": [
+      1.78
+    ],
+    "direct_submit": {
+      "format_rules": {
+        "buildingAddress": "capitalized",
+        "cellPhone": "digits",
+        "householdSize": "text",
+        "totalAnnualEarnings": "whole",
+        "version": "the unit's",
+        "workPhone": "digits"
+      },
+      "format_site_version": "639298937513594692",
+      "ready": false,
+      "site_version": "639311113170218884",
+      "verified_utc": "2026-11-12T12:15:02.598Z",
+      "why_not": "the site's code changed since the request was checked (v639298937513594692)"
+    },
+    "idle_listings_page": {
+      "errors": {},
+      "loads": 46,
+      "requests_on_its_own": [],
+      "watched_minutes": 172.7,
+      "websockets": {}
+    },
+    "mode": "recording only",
+    "profile_warnings": [],
+    "recordings": [],
+    "workers": 1
+  },
+  "listings_api": {
+    "connections": {
+      "kept-open connection": 1037,
+      "new connection": 43
+    },
+    "distinct_responses": 1,
+    "etag": {
+      "seen": false
+    },
+    "failures": {},
+    "headers": {
+      "access-control-allow-origin": {
+        "*": 1080
+      },
+      "connection": {
+        "close": 42,
+        "keep-alive": 1038
+      },
+      "strict-transport-security": {
+        "max-age=15724800; includeSubDomains": 1080
+      },
+      "x-cache": {
+        "CONFIG_NOCACHE": 1080
+      }
+    },
+    "headers_present": {
+      "x-azure-ref": 1080
+    },
+    "requests": 1080,
+    "response_bytes": {
+      "max": 42,
+      "min": 42
+    },
+    "response_ms": {
+      "max": 576.3,
+      "median": 77.3,
+      "min": 68.2,
+      "p90": 88.4,
+      "p99": 294.5
+    },
+    "statuses": {
+      "200": 1080
+    },
+    "their_clock_minus_ours_exact_s": {
+      "at_least": -0.069,
+      "at_most": 0.994,
+      "best_guess": 0.463,
+      "consistent": true
+    },
+    "their_clock_minus_ours_s": {
+      "max": -0.1,
+      "median": -0.1,
+      "min": -0.6,
+      "p90": -0.1,
+      "p99": -0.1
+    }
+  },
+  "pace": [],
+  "run": {
+    "ended_utc": "2026-11-25T15:00:00.355Z",
+    "started_utc": "2026-11-25T11:59:02.575Z"
+  },
+  "units": {}
+}
