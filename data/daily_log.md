@@ -16,3 +16,4 @@ One line per morning: units listed between 7 and 10 AM.
 | Mon 2026-11-23 | 1 | 07:30 Apt 11-D, 625 East 14th Street, 1 bed, $4,293 |
 | Tue 2026-11-24 | 0 | none |
 | Wed 2026-11-25 | 0 | none |
+| Thu 2026-11-26 | 0 | none |
