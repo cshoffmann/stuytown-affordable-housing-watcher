@@ -17,3 +17,4 @@ One line per morning: units listed between 7 and 10 AM.
 | Tue 2026-11-24 | 0 | none |
 | Wed 2026-11-25 | 0 | none |
 | Thu 2026-11-26 | 0 | none |
+| Fri 2026-11-27 | 0 | none |
