@@ -12,7 +12,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.731396,
 "layout": "124",
 "lon": -73.97878,
@@ -51,7 +51,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.732468,
 "layout": "408z",
 "lon": -73.978745,
@@ -73,7 +73,7 @@
 "zCRRE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.731552,
 "layout": "183",
 "lon": -73.97661,
@@ -92,7 +92,7 @@
 "ZTS`"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.7315,
 "layout": "2-bed-412",
 "lon": -73.97633,
@@ -112,7 +112,7 @@
 "ZTS`"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.7315,
 "layout": "241",
 "lon": -73.97633,
@@ -149,7 +149,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.731396,
 "layout": "",
 "lon": -73.97593,
@@ -170,7 +170,7 @@
 "ZTS`"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.731396,
 "layout": "207",
 "lon": -73.97593,
@@ -190,7 +190,7 @@
 "zCRRE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73296,
 "layout": "124",
 "lon": -73.9794,
@@ -210,11 +210,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73508,
 "layout": "358",
 "lon": -73.977875,
-"price": 7048,
+"price": 7034,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~002~U~05-D"
 },
@@ -229,11 +229,11 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73508,
 "layout": "150",
 "lon": -73.977875,
-"price": 5911,
+"price": 5904,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~002~U~12-E"
 },
@@ -247,7 +247,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.731598,
 "layout": "",
 "lon": -73.98202,
@@ -269,7 +269,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.729164,
 "layout": "105",
 "lon": -73.97565,
@@ -292,7 +292,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.729164,
 "layout": "st1bedclassicflex",
 "lon": -73.97565,
@@ -332,7 +332,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.732315,
 "layout": "",
 "lon": -73.98151,
@@ -350,7 +350,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.732685,
 "layout": "3-bed-429",
 "lon": -73.980194,
@@ -371,7 +371,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.732952,
 "layout": "129",
 "lon": -73.979965,
@@ -389,7 +389,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.7301,
 "layout": "223",
 "lon": -73.974815,
@@ -412,7 +412,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73311,
 "layout": "st1bedclassicflex",
 "lon": -73.979866,
@@ -434,7 +434,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73311,
 "layout": "st1bedclassicflex",
 "lon": -73.979866,
@@ -454,7 +454,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73311,
 "layout": "2-bed-419",
 "lon": -73.979866,
@@ -474,7 +474,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73311,
 "layout": "3-bed-427",
 "lon": -73.979866,
@@ -497,7 +497,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73311,
 "layout": "st1bedclassicflex",
 "lon": -73.979866,
@@ -519,7 +519,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73311,
 "layout": "st1bedclassicflex",
 "lon": -73.979866,
@@ -541,7 +541,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73311,
 "layout": "st1bedcornerwbgflex",
 "lon": -73.979866,
@@ -564,7 +564,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73311,
 "layout": "st1bedclassicflex",
 "lon": -73.979866,
@@ -605,7 +605,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.730488,
 "layout": "st1bedclassicflex",
 "lon": -73.97567,
@@ -625,7 +625,7 @@
 "ZTS`"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.730488,
 "layout": "st1bedclassicflex",
 "lon": -73.97567,
@@ -644,7 +644,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73086,
 "layout": "st1bedclassicflex",
 "lon": -73.97526,
@@ -663,7 +663,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.731106,
 "layout": "st1bedcornerwbgflex",
 "lon": -73.97492,
@@ -685,7 +685,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.731106,
 "layout": "st1bedcorner",
 "lon": -73.97492,
@@ -704,7 +704,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.731106,
 "layout": "st1bedcorner",
 "lon": -73.97492,
@@ -725,11 +725,11 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.735214,
 "layout": "150",
 "lon": -73.97738,
-"price": 5909,
+"price": 5902,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~003~U~02-H"
 },
@@ -746,7 +746,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.735214,
 "layout": "250",
 "lon": -73.97738,
@@ -767,7 +767,7 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.735214,
 "layout": "358",
 "lon": -73.97738,
@@ -786,7 +786,7 @@
 "ZTS`"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73133,
 "layout": "241",
 "lon": -73.97911,
@@ -805,7 +805,7 @@
 "PS40"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733418,
 "layout": "3-bed-424",
 "lon": -73.98069,
@@ -822,7 +822,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733418,
 "layout": "",
 "lon": -73.98069,
@@ -842,7 +842,7 @@
 "ZTS`"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.730804,
 "layout": "224",
 "lon": -73.974304,
@@ -861,7 +861,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.730804,
 "layout": "224",
 "lon": -73.974304,
@@ -902,7 +902,7 @@
 "ZTS`"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73151,
 "layout": "2-bed-408-c",
 "lon": -73.97433,
@@ -923,7 +923,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73151,
 "layout": "212",
 "lon": -73.97433,
@@ -945,7 +945,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73151,
 "layout": "112",
 "lon": -73.97433,
@@ -968,7 +968,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73151,
 "layout": "207",
 "lon": -73.97433,
@@ -1009,7 +1009,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.731808,
 "layout": "407z",
 "lon": -73.974396,
@@ -1032,7 +1032,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.732044,
 "layout": "202",
 "lon": -73.974464,
@@ -1053,11 +1053,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-24T15:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.735092,
 "layout": "351",
 "lon": -73.979065,
-"price": 9025,
+"price": 9013,
 "sqft": 1211,
 "unitSpk": "P~NYPC21~B~350~U~09-B"
 },
@@ -1073,11 +1073,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.735493,
 "layout": "351",
 "lon": -73.978836,
-"price": 9124,
+"price": 9112,
 "sqft": 1211,
 "unitSpk": "P~NYPC21~B~360~U~08-G"
 },
@@ -1095,7 +1095,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.736195,
 "layout": "151",
 "lon": -73.9783,
@@ -1116,11 +1116,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.736195,
 "layout": "150",
 "lon": -73.9783,
-"price": 7126,
+"price": 7112,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~390~U~10-A"
 },
@@ -1135,11 +1135,11 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.736195,
 "layout": "150",
 "lon": -73.9783,
-"price": 5911,
+"price": 5904,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~390~U~11-E"
 },
@@ -1157,11 +1157,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.736195,
 "layout": "351",
 "lon": -73.9783,
-"price": 8953,
+"price": 8941,
 "sqft": 1211,
 "unitSpk": "P~NYPC21~B~390~U~14-B"
 },
@@ -1179,7 +1179,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.736195,
 "layout": "251",
 "lon": -73.9783,
@@ -1197,11 +1197,11 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73464,
 "layout": "150",
 "lon": -73.976814,
-"price": 5821,
+"price": 5814,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~004~U~13-E"
 },
@@ -1218,7 +1218,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73464,
 "layout": "150",
 "lon": -73.976814,
@@ -1235,7 +1235,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.730705,
 "layout": "125",
 "lon": -73.977646,
@@ -1257,7 +1257,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.734493,
 "layout": "st1bedclassicflex",
 "lon": -73.979614,
@@ -1279,7 +1279,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.734493,
 "layout": "st1bedclassicflex",
 "lon": -73.979614,
@@ -1300,7 +1300,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.731373,
 "layout": "st1bedclassic",
 "lon": -73.98167,
@@ -1320,11 +1320,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.735985,
 "layout": "351",
 "lon": -73.9777,
-"price": 9080,
+"price": 9068,
 "sqft": 1211,
 "unitSpk": "P~NYPC21~B~420~U~0M-F"
 },
@@ -1341,11 +1341,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.735985,
 "layout": "358",
 "lon": -73.9777,
-"price": 7048,
+"price": 7034,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~420~U~13-H"
 },
@@ -1363,7 +1363,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733974,
 "layout": "123",
 "lon": -73.97863,
@@ -1381,11 +1381,11 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73482,
 "layout": "150",
 "lon": -73.97841,
-"price": 6311,
+"price": 6304,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~431~U~06-A"
 },
@@ -1401,11 +1401,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73482,
 "layout": "358",
 "lon": -73.97841,
-"price": 7220,
+"price": 7206,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~431~U~11-E"
 },
@@ -1420,11 +1420,11 @@
 "PS40"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73482,
 "layout": "pcv2bed",
 "lon": -73.97841,
-"price": 8853,
+"price": 8841,
 "sqft": 943,
 "unitSpk": "P~NYPC21~B~431~U~13-F"
 },
@@ -1441,7 +1441,7 @@
 "TWAL"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733856,
 "layout": "208",
 "lon": -73.978325,
@@ -1463,11 +1463,11 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.735703,
 "layout": "150",
 "lon": -73.97703,
-"price": 6079,
+"price": 6072,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~440~U~03-A"
 },
@@ -1484,11 +1484,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.735703,
 "layout": "351",
 "lon": -73.97703,
-"price": 8792,
+"price": 8780,
 "sqft": 1211,
 "unitSpk": "P~NYPC21~B~440~U~05-G"
 },
@@ -1503,7 +1503,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.735703,
 "layout": "",
 "lon": -73.97703,
@@ -1543,11 +1543,11 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.734543,
 "layout": "150",
 "lon": -73.97775,
-"price": 5871,
+"price": 5864,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~441~U~04-D"
 },
@@ -1564,7 +1564,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-24T15:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.734543,
 "layout": "250",
 "lon": -73.97775,
@@ -1583,7 +1583,7 @@
 "PS40"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.734543,
 "layout": "150",
 "lon": -73.97775,
@@ -1603,7 +1603,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733604,
 "layout": "407z",
 "lon": -73.9795,
@@ -1622,7 +1622,7 @@
 "ZTS`"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733524,
 "layout": "st1bedclassicflex",
 "lon": -73.97929,
@@ -1645,7 +1645,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733524,
 "layout": "207",
 "lon": -73.97929,
@@ -1666,7 +1666,7 @@
 "ZTS`"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733524,
 "layout": "229",
 "lon": -73.97929,
@@ -1685,7 +1685,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733524,
 "layout": "",
 "lon": -73.97929,
@@ -1704,7 +1704,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.730762,
 "layout": "",
 "lon": -73.98052,
@@ -1723,7 +1723,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.730762,
 "layout": "224",
 "lon": -73.98052,
@@ -1741,7 +1741,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.730762,
 "layout": "402c",
 "lon": -73.98052,
@@ -1763,7 +1763,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733387,
 "layout": "207",
 "lon": -73.97898,
@@ -1784,7 +1784,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733387,
 "layout": "2-bed-412",
 "lon": -73.97898,
@@ -1803,7 +1803,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.731846,
 "layout": "407z",
 "lon": -73.98082,
@@ -1823,7 +1823,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733246,
 "layout": "423",
 "lon": -73.97863,
@@ -1844,7 +1844,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733246,
 "layout": "st1bedclassicflex",
 "lon": -73.97863,
@@ -1864,7 +1864,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.731773,
 "layout": "207",
 "lon": -73.98061,
@@ -1884,7 +1884,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.731773,
 "layout": "207",
 "lon": -73.98061,
@@ -1903,7 +1903,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.731773,
 "layout": "2-bed-407-b",
 "lon": -73.98061,
@@ -1922,7 +1922,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.731773,
 "layout": "125",
 "lon": -73.98061,
@@ -1942,7 +1942,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73165,
 "layout": "2-bed-407-b",
 "lon": -73.98032,
@@ -1960,7 +1960,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73165,
 "layout": "2-bed-410",
 "lon": -73.98032,
@@ -1978,7 +1978,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73165,
 "layout": "407c",
 "lon": -73.98032,
@@ -1999,7 +1999,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73165,
 "layout": "207",
 "lon": -73.98032,
@@ -2017,7 +2017,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73122,
 "layout": "401z",
 "lon": -73.9801,
@@ -2035,7 +2035,7 @@
 "MAVM"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73122,
 "layout": "127",
 "lon": -73.9801,
@@ -2056,11 +2056,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73473,
 "layout": "358",
 "lon": -73.976234,
-"price": 7199,
+"price": 7185,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~005~U~09-A"
 },
@@ -2079,7 +2079,7 @@
 "zCRRE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733723,
 "layout": "141",
 "lon": -73.977486,
@@ -2101,7 +2101,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733723,
 "layout": "210",
 "lon": -73.977486,
@@ -2124,11 +2124,11 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.7354,
 "layout": "150",
 "lon": -73.97632,
-"price": 5942,
+"price": 5935,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~510~U~14-H"
 },
@@ -2144,7 +2144,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.734238,
 "layout": "150",
 "lon": -73.97704,
@@ -2164,11 +2164,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-24T15:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.734238,
 "layout": "351",
 "lon": -73.97704,
-"price": 8898,
+"price": 8886,
 "sqft": 1211,
 "unitSpk": "P~NYPC21~B~511~U~07-B"
 },
@@ -2183,7 +2183,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73076,
 "layout": "ststudioplatinum2",
 "lon": -73.97895,
@@ -2202,7 +2202,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73076,
 "layout": "229",
 "lon": -73.97895,
@@ -2219,7 +2219,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73076,
 "layout": "",
 "lon": -73.97895,
@@ -2241,7 +2241,7 @@
 "zCRRE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733047,
 "layout": "229",
 "lon": -73.97743,
@@ -2260,7 +2260,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73286,
 "layout": "3-bed-flex-441",
 "lon": -73.976974,
@@ -2278,7 +2278,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-25T15:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.732746,
 "layout": "125",
 "lon": -73.97671,
@@ -2298,7 +2298,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733177,
 "layout": "210",
 "lon": -73.9762,
@@ -2318,7 +2318,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733177,
 "layout": "223",
 "lon": -73.9762,
@@ -2338,7 +2338,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733177,
 "layout": "202",
 "lon": -73.9762,
@@ -2357,7 +2357,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733177,
 "layout": "224",
 "lon": -73.9762,
@@ -2378,11 +2378,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.7351,
 "layout": "351",
 "lon": -73.9756,
-"price": 8778,
+"price": 8766,
 "sqft": 1211,
 "unitSpk": "P~NYPC21~B~530~U~01-C"
 },
@@ -2400,7 +2400,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.7351,
 "layout": "250",
 "lon": -73.9756,
@@ -2425,7 +2425,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.7351,
 "layout": "250",
 "lon": -73.9756,
@@ -2443,7 +2443,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73395,
 "layout": "150",
 "lon": -73.976364,
@@ -2463,7 +2463,7 @@
 "WNCLR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73395,
 "layout": "251",
 "lon": -73.976364,
@@ -2483,11 +2483,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73395,
 "layout": "351",
 "lon": -73.976364,
-"price": 8720,
+"price": 8708,
 "sqft": 1211,
 "unitSpk": "P~NYPC21~B~531~U~05-G"
 },
@@ -2503,7 +2503,7 @@
 "ZTS`"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73,
 "layout": "212",
 "lon": -73.97848,
@@ -2520,7 +2520,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73,
 "layout": "141",
 "lon": -73.97848,
@@ -2539,7 +2539,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733025,
 "layout": "",
 "lon": -73.97583,
@@ -2558,7 +2558,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733025,
 "layout": "408z",
 "lon": -73.97583,
@@ -2577,7 +2577,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733025,
 "layout": "2-bed-412",
 "lon": -73.97583,
@@ -2598,11 +2598,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733635,
 "layout": "358",
 "lon": -73.97563,
-"price": 7058,
+"price": 7044,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~541~U~09-E"
 },
@@ -2639,7 +2639,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733234,
 "layout": "250",
 "lon": -73.97505,
@@ -2659,11 +2659,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733234,
 "layout": "358",
 "lon": -73.97505,
-"price": 7034,
+"price": 7020,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~601~U~04-H"
 },
@@ -2678,11 +2678,11 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733234,
 "layout": "150",
 "lon": -73.97505,
-"price": 5713,
+"price": 5706,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~601~U~05-H"
 },
@@ -2697,11 +2697,11 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733234,
 "layout": "150",
 "lon": -73.97505,
-"price": 5788,
+"price": 5781,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~601~U~06-E"
 },
@@ -2716,11 +2716,11 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733234,
 "layout": "150",
 "lon": -73.97505,
-"price": 5788,
+"price": 5781,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~601~U~07-A"
 },
@@ -2754,11 +2754,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733234,
 "layout": "351",
 "lon": -73.97505,
-"price": 8374,
+"price": 8362,
 "sqft": 1341,
 "unitSpk": "P~NYPC21~B~601~U~0M-E"
 },
@@ -2775,7 +2775,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.732758,
 "layout": "202",
 "lon": -73.9752,
@@ -2795,7 +2795,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.732758,
 "layout": "108",
 "lon": -73.9752,
@@ -2814,7 +2814,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.732758,
 "layout": "",
 "lon": -73.9752,
@@ -2834,7 +2834,7 @@
 "ZTS`"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.72946,
 "layout": "407",
 "lon": -73.97723,
@@ -2854,7 +2854,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.732582,
 "layout": "208",
 "lon": -73.97487,
@@ -2876,7 +2876,7 @@
 "ZTS`"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.732582,
 "layout": "212",
 "lon": -73.97487,
@@ -2896,7 +2896,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-24T15:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.732372,
 "layout": "st1bedclassic",
 "lon": -73.97551,
@@ -2915,7 +2915,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.732372,
 "layout": "",
 "lon": -73.97551,
@@ -2934,7 +2934,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.732372,
 "layout": "133",
 "lon": -73.97551,
@@ -2953,7 +2953,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73201,
 "layout": "",
 "lon": -73.975716,
@@ -2974,7 +2974,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73201,
 "layout": "st1bedclassicflex",
 "lon": -73.975716,
@@ -2995,7 +2995,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.72933,
 "layout": "207",
 "lon": -73.9769,
@@ -3016,7 +3016,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.72933,
 "layout": "208",
 "lon": -73.9769,
@@ -3036,7 +3036,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.731796,
 "layout": "225",
 "lon": -73.9752,
@@ -3055,7 +3055,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.72898,
 "layout": "",
 "lon": -73.97629,
@@ -3074,7 +3074,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.72898,
 "layout": "",
 "lon": -73.97629,
@@ -3095,7 +3095,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.72898,
 "layout": "st1bedcornerwbgflex",
 "lon": -73.97629,
@@ -3114,7 +3114,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.72885,
 "layout": "123",
 "lon": -73.97599,
@@ -3133,7 +3133,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.72885,
 "layout": "107",
 "lon": -73.97599,
@@ -3152,7 +3152,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-24T15:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73026,
 "layout": "120",
 "lon": -73.97705,
@@ -3170,7 +3170,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73026,
 "layout": "120",
 "lon": -73.97705,
@@ -3191,7 +3191,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.730186,
 "layout": "207",
 "lon": -73.97685,
@@ -3209,7 +3209,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.72998,
 "layout": "407",
 "lon": -73.976364,
@@ -3230,7 +3230,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.72998,
 "layout": "207",
 "lon": -73.976364,
@@ -3251,7 +3251,7 @@
 "ZTS`"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.72998,
 "layout": "225",
 "lon": -73.976364,
@@ -3269,7 +3269,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.7307,
 "layout": "407",
 "lon": -73.97645,
@@ -3290,11 +3290,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73447,
 "layout": "358",
 "lon": -73.975365,
-"price": 6883,
+"price": 6869,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~007~U~01-D"
 },
@@ -3309,7 +3309,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73447,
 "layout": "150",
 "lon": -73.975365,
@@ -3329,11 +3329,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73447,
 "layout": "358",
 "lon": -73.975365,
-"price": 6983,
+"price": 6969,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~007~U~04-E"
 },
@@ -3348,7 +3348,7 @@
 "WNCLR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73447,
 "layout": "151",
 "lon": -73.975365,
@@ -3368,11 +3368,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73447,
 "layout": "358",
 "lon": -73.975365,
-"price": 6953,
+"price": 6939,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~007~U~06-E"
 },
@@ -3390,7 +3390,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73447,
 "layout": "250",
 "lon": -73.975365,
@@ -3411,11 +3411,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73447,
 "layout": "358",
 "lon": -73.975365,
-"price": 6970,
+"price": 6956,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~007~U~08-H"
 },
@@ -3432,11 +3432,11 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73447,
 "layout": "150",
 "lon": -73.975365,
-"price": 5769,
+"price": 5762,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~007~U~0M-A"
 },
@@ -3451,7 +3451,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73447,
 "layout": "150",
 "lon": -73.975365,
@@ -3470,11 +3470,11 @@
 "WNCLR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73447,
 "layout": "150",
 "lon": -73.975365,
-"price": 5671,
+"price": 5664,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~007~U~12-A"
 },
@@ -3491,7 +3491,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.73204,
 "layout": "208",
 "lon": -73.97935,
@@ -3513,7 +3513,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733936,
 "layout": "250",
 "lon": -73.97502,
@@ -3534,11 +3534,11 @@
 "WADR"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733936,
 "layout": "358",
 "lon": -73.97502,
-"price": 7125,
+"price": 7111,
 "sqft": 944,
 "unitSpk": "P~NYPC21~B~008~U~09-H"
 },
@@ -3553,7 +3553,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.733936,
 "layout": "3-bed-451",
 "lon": -73.97502,
@@ -3571,7 +3571,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-24T15:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.730865,
 "layout": "",
 "lon": -73.976654,
@@ -3591,7 +3591,7 @@
 "zROSE"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.732162,
 "layout": "2-bed-412",
 "lon": -73.979836,
@@ -3611,7 +3611,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.732162,
 "layout": "202",
 "lon": -73.979836,
@@ -3632,7 +3632,7 @@
 "zMET"
 ],
 "first_seen_utc": "2026-11-15T22:00:00Z",
-"last_seen_utc": "2026-11-27T15:00:00Z",
+"last_seen_utc": "2026-11-28T15:00:00Z",
 "lat": 40.732162,
 "layout": "208",
 "lon": -73.979836,
